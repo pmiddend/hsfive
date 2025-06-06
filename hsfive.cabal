@@ -1,0 +1,39 @@
+cabal-version:      3.14
+name:               hsfive
+version:            0.1.0.0
+synopsis:           Pure Haskell implementation of HDF5
+-- description:
+homepage:           http://github.com/pmiddend/hsfive
+license:            AGPL-3.0-or-later
+license-file:       LICENSE
+author:             Philipp Middendorf
+maintainer:         philipp.middendorf@desy.de
+-- copyright:
+category:           Codec
+build-type:         Simple
+extra-doc-files:    CHANGELOG.md
+-- extra-source-files:
+
+common warnings
+    ghc-options: -Wall
+
+library
+    import:           warnings
+    exposed-modules:  MyLib
+    -- other-modules:
+    -- other-extensions:
+    build-depends:    base ^>=4.19.2.0
+    hs-source-dirs:   lib
+    default-language: Haskell2010
+
+executable hsfive
+    import:           warnings
+    main-is:          Main.hs
+    -- other-modules:
+    -- other-extensions:
+    build-depends:
+        base ^>=4.19.2.0,
+        hsfive
+
+    hs-source-dirs:   app
+    default-language: Haskell2010
