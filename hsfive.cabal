@@ -1,4 +1,4 @@
-cabal-version:      3.14
+cabal-version:      3.4
 name:               hsfive
 version:            0.1.0.0
 synopsis:           Pure Haskell implementation of HDF5
@@ -19,7 +19,7 @@ common warnings
 
 library
     import:           warnings
-    exposed-modules:  MyLib
+    exposed-modules:  HsFive.Util
     -- other-modules:
     -- other-extensions:
     build-depends:    base ^>=4.19.2.0
@@ -33,7 +33,11 @@ executable hsfive
     -- other-extensions:
     build-depends:
         base ^>=4.19.2.0,
-        hsfive
+        hsfive,
+        bytestring,
+        file-io,
+        filepath,
+        binary
 
     hs-source-dirs:   app
     default-language: Haskell2010
