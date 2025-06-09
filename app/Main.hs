@@ -1,8 +1,11 @@
+{-# LANGUAGE BinaryLiterals #-}
+
 module Main where
 
 import Control.Monad (replicateM, void, when)
 import Data.Binary (Get, getWord8)
 import Data.Binary.Get (getByteString, getWord16le, getWord32le, getWord64le, runGet, runGetOrFail, skip)
+import Data.Bits (shiftR, (.&.))
 import qualified Data.ByteString as BS
 import qualified Data.ByteString.Lazy as BSL
 import Data.Word (Word16, Word32, Word64, Word8)
@@ -12,13 +15,27 @@ import System.File.OsPath (withBinaryFile)
 import System.IO (Handle, IOMode (ReadMode), SeekMode (AbsoluteSeek, SeekFromEnd), hSeek, hTell)
 import System.OsPath (encodeUtf)
 
-data ObjectHeader = ObjectHeader
-  { ohVersion :: !Word8,
-    ohObjectReferenceCount :: !Word32,
-    ohObjectHeaderSize :: !Word32,
-    ohHeaderMessages :: ![BS.ByteString]
-  }
-  deriving (Show)
+{-
+# General TODOs
+
+The superblock contains a "Base Address", which is the base address for all other addresses in the file.
+We should test if we handle the case of superblocks starting at anything other than byte 0 correctly, and what the
+base addresss is then.
+
+# Things we ignore for now
+
+- Fractal heaps
+- Version 2 B-trees
+- Shared Object Header Message Table
+
+# Dataspaces
+
+HDF5 dataspaces describe the shape of datasets in memory or in HDF5 files. Dataspaces can be empty (H5S_NULL), a singleton (H5S_SCALAR), or a multi-dimensional, regular grid (H5S_SIMPLE). Dataspaces can be re-shaped.
+
+A scalar dataspace, H5S_SCALAR, represents just one element, a scalar. Note that the datatype of this one element may be very complex; example would be a compound structure with members being of any allowed HDF5 datatype, including multidimensional arrays, strings, and nested compound structures. By convention, the rank of a scalar dataspace is always 0 (zero); think of it geometrically as a single, dimensionless point, though that point may be complex.
+
+A simple dataspace, H5S_SIMPLE , is a multidimensional array of elements. The dimensionality of the dataspace (or the rank of the array) is fixed and is defined at creation time. The size of each dimension can grow during the life time of the dataspace from the current size up to the maximum size. Both the current size and the maximum size are specified at creation time. The sizes of dimensions at any particular time in the life of a dataspace are called the current dimensions, or the dataspace extent. They can be queried along with the maximum sizes.
+-}
 
 readKey :: Handle -> Address -> IO BSL.ByteString
 readKey handle addr = do
@@ -26,19 +43,289 @@ readKey handle addr = do
   strData <- BSL.hGet handle 200
   pure (BSL.takeWhile (/= 0) strData)
 
+data DataspaceDimension = DataspaceDimension
+  { ddSize :: !Length,
+    ddMaxSize :: !(Maybe Length)
+  }
+  deriving (Show)
+
+getDataspaceDimension :: Bool -> Get DataspaceDimension
+getDataspaceDimension True = DataspaceDimension <$> getLength <*> getMaybeLength
+getDataspaceDimension False = DataspaceDimension <$> getLength <*> pure Nothing
+
+data DatatypeClass
+  = ClassFixedPoint
+  | ClassFloatingPoint
+  | ClassTime
+  | ClassString
+  | ClassBitField
+  | ClassOpaque
+  | ClassCompound
+  | ClassReference
+  | ClassEnumerated
+  | ClassVariableLength
+  | ClassArray
+  | ClassComplex
+  deriving (Show)
+
+getDatatypeClass :: Word8 -> Get DatatypeClass
+getDatatypeClass 0 = pure ClassFixedPoint
+getDatatypeClass 1 = pure ClassFloatingPoint
+getDatatypeClass 2 = pure ClassTime
+getDatatypeClass 3 = pure ClassString
+getDatatypeClass 4 = pure ClassBitField
+getDatatypeClass 5 = pure ClassOpaque
+getDatatypeClass 6 = pure ClassCompound
+getDatatypeClass 7 = pure ClassReference
+getDatatypeClass 8 = pure ClassEnumerated
+getDatatypeClass 9 = pure ClassVariableLength
+getDatatypeClass 10 = pure ClassArray
+getDatatypeClass 11 = pure ClassComplex
+getDatatypeClass n = fail ("invalid datatype class " <> show n)
+
+data DataStorageSpaceAllocationTime
+  = -- | Early allocation. Storage space for the entire dataset should
+    -- be allocated in the file when the dataset is created.
+    EarlyAllocation
+  | -- | Late allocation. Storage space for the entire dataset should not be allocated until the dataset is written to.
+    LateAllocation
+  | -- | Incremental allocation. Storage space for the dataset should not be allocated until the portion of the dataset is written to. This is currently used in conjunction with chunked data storage for datasets.
+    IncrementalAllocation
+  deriving (Show)
+
+data DataStorageFillValueWriteTime
+  = -- | On allocation. The fill value is always written to the raw data storage when the storage space is allocated.
+    OnAllocation
+  | -- | Never. The fill value should never be written to the raw data storage.
+    Never
+  | -- | Fill value written if set by user. The fill value will be written to the raw data storage when the storage space is allocated only if the user explicitly set the fill value. If the fill value is the library default or is undefined, it will not be written to the raw data storage.
+    IfSetByUser
+  deriving (Show)
+
+getDataStorageFillValueWriteTime :: Get DataStorageFillValueWriteTime
+getDataStorageFillValueWriteTime = do
+  s <- getWord8
+  case s of
+    0 -> pure OnAllocation
+    1 -> pure Never
+    2 -> pure IfSetByUser
+    n -> fail ("invalid data storage fill value write time value " <> show n)
+
+getDataStorageSpaceAllocationTime :: Get DataStorageSpaceAllocationTime
+getDataStorageSpaceAllocationTime = do
+  s <- getWord8
+  case s of
+    1 -> pure EarlyAllocation
+    2 -> pure LateAllocation
+    3 -> pure IncrementalAllocation
+    n -> fail ("invalid data storage space allocation time value " <> show n)
+
+data DataStoragePipelineFilter = DataStoragePipelineFilter
+  { dataStoragePipelineFilterId :: !Word16,
+    dataStoragePipelineFilterName :: !(Maybe BS.ByteString),
+    dataStoragePipelineFilterOptional :: !Bool,
+    dataStoragePipelineFilterClientDataValues :: ![Word32]
+  }
+  deriving (Show)
+
+data DataStorageLayoutClass
+  = LayoutClassCompact
+  | LayoutClassContiguous
+  | LayoutClassChunked
+  deriving (Show)
+
+getDataStorageLayoutClass :: Get DataStorageLayoutClass
+getDataStorageLayoutClass = do
+  s <- getWord8
+  case s of
+    1 -> pure LayoutClassCompact
+    2 -> pure LayoutClassContiguous
+    3 -> pure LayoutClassChunked
+    n -> fail ("invalid data storage layout class value " <> show n)
+
+data DataStorageLayout
+  = LayoutContiguous
+      { layoutContiguousRawDataAddress :: !Word32,
+        layoutContiguousSizes :: ![Word32]
+      }
+  | LayoutChunked
+      { layoutChunkedBTreeAddress :: !Address,
+        layoutChunkedSizes :: ![Word32],
+        layoutChunkedDatasetElementSize :: !Word32
+      }
+  | LayoutCompact {layoutCompactSizes :: ![Word32], layoutCompactDataSize :: !Word32}
+  deriving (Show)
+
+data Message
+  = NilMessage
+  | DataspaceMessage {dataspaceDimensions :: ![DataspaceDimension], dataspacePermutationIndices :: ![Length]}
+  | SymbolTableMessage
+      { symbolTableMessageV1BTreeAddress :: !Address,
+        symbolTableMessageLocalHeapAddress :: !Address
+      }
+  | ObjectHeaderContinuationMessage {objectHeaderContinuationMessageOffset :: !Address, objectHeaderContinuationMessageLength :: !Length}
+  | DatatypeMessage {datatypeMessageVersion :: !Word8, datatypeClass :: !DatatypeClass}
+  | DataStorageFillValueMessage {}
+  | -- | This message describes the filter pipeline which should be applied to the data stream by providing filter identification numbers, flags, a name, and client data. This message may be present in the object headers of both dataset and group objects. For datasets, it specifies the filters to apply to raw data. For groups, it specifies the filters to apply to the group’s fractal heap. Currently, only datasets using chunked data storage use the filter pipeline on their raw data.
+    DataStorageFilterPipelineMessage {filters :: ![DataStoragePipelineFilter]}
+  | -- | The Data Layout message describes how the elements of a multi-dimensional array are stored in the HDF5 file.
+    DataStorageLayoutMessage !DataStorageLayout
+  deriving (Show)
+
+getMessage :: Word16 -> Get Message
+getMessage 0 = pure NilMessage
+-- The dataspace message describes the number of dimensions (in other
+-- words, “rank”) and size of each dimension that the data object has.
+-- This message is only used for datasets which have a simple,
+-- rectilinear, array-like layout; datasets requiring a more complex
+-- layout are not yet supported.
+getMessage 1 = do
+  -- This value is used to determine the format of the Dataspace
+  -- Message. When the format of the information in the message is
+  -- changed, the version number is incremented and can be used to
+  -- determine how the information in the object header is formatted.
+  -- This document describes version one (1) (there was no version
+  -- zero (0)).
+  version <- getWord8
+  when (version /= 1) (fail ("dataspace version is not 1 but " <> show version))
+  -- This value is the number of dimensions that the data object has.
+  dimensionality <- getWord8
+  -- This field is used to store flags to indicate the presence of
+  -- parts of this message. Bit 0 (the least significant bit) is used
+  -- to indicate that maximum dimensions are present. Bit 1 is used to
+  -- indicate that permutation indices are present.
+  flags <- getWord8
+  let maxDimsStored :: Bool
+      maxDimsStored = flags .&. 1 > 0
+      permutationIndicesStored = flags .&. 2 > 0
+  -- Reserved
+  skip 5
+  dimensions <- replicateM (fromIntegral dimensionality) (getDataspaceDimension maxDimsStored)
+  permutationIndices <- if permutationIndicesStored then replicateM (fromIntegral dimensionality) getLength else pure []
+  -- TODO: This message has _lots_ more information to it
+  pure (DataspaceMessage dimensions permutationIndices)
+getMessage 0x0005 = do
+  version <- getWord8
+  case version of
+    1 -> do
+      spaceAllocationTime <- getDataStorageSpaceAllocationTime
+      fillValueWriteTime <- getDataStorageFillValueWriteTime
+      fillValueDefined <- getWord8
+      size <- getWord32le
+      -- TODO: the actual fill value depends on the datatype for the
+      -- dataset - this must be a parameter to this function then
+      _fillValue <- getByteString (fromIntegral size)
+      pure (DataStorageFillValueMessage {})
+    2 -> do
+      spaceAllocationTime <- getDataStorageSpaceAllocationTime
+      fillValueWriteTime <- getDataStorageFillValueWriteTime
+      fillValueDefined <- getWord8
+      case fillValueDefined of
+        -- No need to read the fill value and its size, since it's not defined
+        0 -> pure (DataStorageFillValueMessage {})
+        _ -> do
+          size <- getWord32le
+          -- TODO: the actual fill value depends on the datatype for the
+          -- dataset - this must be a parameter to this function then
+          _fillValue <- getByteString (fromIntegral size)
+          pure (DataStorageFillValueMessage {})
+    3 -> fail "version 3 of data storage fill value not supported yet (table in spec is weird)"
+    n -> fail ("invalid version of data storage fill value message " <> show n)
+getMessage 0x000b = do
+  version <- getWord8
+  when (version /= 1) (fail ("data storage filter pipeline message has invalid version " <> show version))
+  -- The total number of filters described in this message. The maximum possible number of filters in a message is 32.
+  numberOfFilters <- getWord8
+  -- All reserved
+  skip 6
+  filters' <- replicateM (fromIntegral numberOfFilters) $ do
+    -- Description to long, abbreviated: This value, often referred to
+    -- as a filter identifier, is designed to be a unique identifier
+    -- for the filter. Values from zero through 32,767 are reserved
+    -- for filters supported by The HDF Group in the HDF5 library and
+    -- for filters requested and supported by third parties.
+    --
+    -- Values from 32768 to 65535 are reserved for non-distributed
+    -- uses (for example, internal company usage) or for application
+    -- usage when testing a feature. The HDF Group does not track or
+    -- document the use of the filters with identifiers from this
+    -- range.
+    filterIdentification <- getWord16le
+    nameLength <- getWord16le
+    flags <- getWord16le
+    numberOfValuesForClientData <- getWord16le
+    name <- if nameLength == 0 then pure Nothing else Just <$> getByteString (fromIntegral nameLength)
+    -- Note that the spec is vague about this possibly being _signed_ integers?
+    clientData <- replicateM (fromIntegral numberOfValuesForClientData) getWord32le
+    -- 	Four bytes of zeroes are added to the message at this point if the Client Data Number of Values field contains an odd number.
+    when (numberOfValuesForClientData `mod` 2 == 1) (skip 4)
+    pure (DataStoragePipelineFilter filterIdentification name (flags .&. 1 == 1) clientData)
+  pure (DataStorageFilterPipelineMessage filters')
+getMessage 0x0008 = do
+  version <- getWord8
+  when (version == 3) (fail "version 3 of the data layout message is not supported yet")
+  dimensionality <- getWord8
+  layoutClass <- getDataStorageLayoutClass
+  -- Reserved
+  skip 5
+  case layoutClass of
+    LayoutClassContiguous -> do
+      rawDataAddress <- getWord32le
+      sizes <- replicateM (fromIntegral dimensionality) getWord32le
+      pure (DataStorageLayoutMessage (LayoutContiguous rawDataAddress sizes))
+    LayoutClassChunked -> do
+      bTreeAddress <- getAddress
+      sizes <- replicateM (fromIntegral dimensionality) getWord32le
+      datasetElementSize <- getWord32le
+      pure (DataStorageLayoutMessage (LayoutChunked bTreeAddress sizes datasetElementSize))
+    LayoutClassCompact -> do
+      sizes <- replicateM (fromIntegral dimensionality) getWord32le
+      compactDataSize <- getWord32le
+      -- TODO: We need the datatype size to read the actual compact data
+      pure (DataStorageLayoutMessage (LayoutCompact sizes compactDataSize))
+getMessage 0x0010 = ObjectHeaderContinuationMessage <$> getAddress <*> getLength
+getMessage 0x0011 = SymbolTableMessage <$> getAddress <*> getAddress
+-- Explanation of "datatype" in general
+--
+-- https://support.hdfgroup.org/documentation/hdf5/latest/_l_b_datatypes.html
+getMessage 0x003 = do
+  classAndVersion <- getWord8
+  let classNumeric = classAndVersion .&. 0b1111
+      version = (classAndVersion .&. 0b11110000) `shiftR` 4
+  class' <- getDatatypeClass classNumeric
+  bits0to7 <- getWord8
+  bits8to15 <- getWord8
+  bits16to23 <- getWord8
+  size <- getWord32le
+  pure (DatatypeMessage version class')
+getMessage n = fail ("invalid message type " <> show n)
+
+data ObjectHeader = ObjectHeader
+  { ohVersion :: !Word8,
+    ohObjectReferenceCount :: !Word32,
+    ohObjectHeaderSize :: !Word32,
+    onHeaderMessages :: ![Message]
+    -- ohHeaderMessages :: ![(Word16, BS.ByteString)]
+  }
+  deriving (Show)
+
 getObjectHeader :: Get ObjectHeader
 getObjectHeader = do
   version <- getWord8
+  when (version /= 1) (fail ("object header version was not 1 but " <> show version))
   skip 1
   messageCount <- getWord16le
   objectReferenceCount <- getWord32le
   objectHeaderSize <- getWord32le
+  skip 4
   let readMessage = do
         messageType <- getWord16le
         headerMessageDataSize <- getWord16le
         flags <- getWord8
         skip 3
-        getByteString (fromIntegral headerMessageDataSize)
+        getMessage messageType
+  -- rawContent <- getByteString (fromIntegral headerMessageDataSize)
+  -- pure (messageType, getMessage rawContent)
   messages <- replicateM (fromIntegral messageCount) readMessage
   pure (ObjectHeader version objectReferenceCount objectHeaderSize messages)
 
@@ -74,7 +361,7 @@ getSymbolTableEntry = do
       -- scratch pad is aways 16 bytes
       skip 12
       pure (SymbolTableEntry linkNameOffset objectHeaderAddress scratchPad)
-    _ -> fail "invalid symbol table cache type"
+    n -> fail ("invalid symbol table cache type: " <> show n)
 
 data GroupSymbolTableNode = GroupSymbolTableNode
   { gstnVersion :: !Word8,
@@ -125,6 +412,23 @@ getMaybeAddress = do
       then Nothing
       else Just a
 
+-- This is very weird. Addresses and lengths are different in the spec
+-- (they can have different sizes), but in the definition of the level
+-- 1 "heap" we read:
+--
+--   This is the offset within the heap data segment of the first free
+--   block (or the undefined address if there is no no free block).
+--
+-- So we assume that addresses and lengths are of the same size and
+-- can be treated the same way.
+getMaybeLength :: Get (Maybe Word64)
+getMaybeLength = do
+  a <- getWord64le
+  pure $
+    if a == 0xffffffffffffffff
+      then Nothing
+      else Just a
+
 getLength :: Get Length
 getLength = getWord64le
 
@@ -164,10 +468,10 @@ data Superblock = Superblock
     h5sbGroupLeafNodeK :: !Word16,
     h5sbGroupInternalNodeK :: !Word16,
     h5sbFileConsistencyFlags :: !Word32,
-    h5sbBaseAddress :: !Word64,
-    h5sbFileFreeSpaceInfoAddress :: !Word64,
-    h5sbEndOfFileAddress :: !Word64,
-    h5sbDriverInformationBlockAddress :: !Word64,
+    h5sbBaseAddress :: !Address,
+    h5sbFileFreeSpaceInfoAddress :: !(Maybe Address),
+    h5sbEndOfFileAddress :: !Address,
+    h5sbDriverInformationBlockAddress :: !(Maybe Address),
     h5sbSymbolTableEntry :: !SymbolTableEntry
   }
   deriving (Show)
@@ -183,21 +487,42 @@ getSuperblock = do
       superblockVersion <- getWord8
       if superblockVersion /= 0
         then fail "superblock version is not 0"
-        else
-          Superblock superblockVersion
-            <$> getWord8
-            <*> getWord8
-            <*> (getWord8 *> getWord8)
-            <*> getWord8
-            <*> (getWord8 <* getWord8)
-            <*> getWord16le
-            <*> getWord16le
-            <*> getWord32le
-            <*> getWord64le
-            <*> getWord64le
-            <*> getWord64le
-            <*> getWord64le
-            <*> getSymbolTableEntry
+        else do
+          sb <-
+            Superblock superblockVersion
+              <$> getWord8
+              <*> getWord8
+              <*> (getWord8 *> getWord8)
+              <*> getWord8
+              <*> (getWord8 <* getWord8)
+              <*> getWord16le
+              <*> getWord16le
+              <*> getWord32le
+              <*> getAddress
+              <*> getMaybeAddress
+              <*> getAddress
+              <*> getMaybeAddress
+              <*> getSymbolTableEntry
+          -- Fix this to 0 for now, but just out of extreme caution for our parsing algorithm
+          when (h5sbVersionFreeSpaceInfo sb /= 0) $ do
+            fail ("superblock free space info isn't 0 but " <> show (h5sbVersionFreeSpaceInfo sb))
+          -- Fix this to 0 for now, but just out of extreme caution for our parsing algorithm
+          when (h5sbVersionRootGroupSymbolTableEntry sb /= 0) $ do
+            fail ("Version Number of the Root Group Symbol Table Entry isn't 0 but " <> show (h5sbVersionRootGroupSymbolTableEntry sb))
+          -- Fix this to 0 for now, but just out of extreme caution for our parsing algorithm
+          when (h5sbVersionSharedHeaderMessageFormat sb /= 0) $ do
+            fail ("Version Number of the Shared Header Message Format isn't 0 but " <> show (h5sbVersionSharedHeaderMessageFormat sb))
+          -- No real reason to constrain this, we should support different sizes here
+          when (h5sbOffsetSize sb /= 8) $ do
+            fail ("Size of Offsets isn't 8 but " <> show (h5sbOffsetSize sb))
+          -- No real reason to constrain this, we should support different sizes here
+          when (h5sbLengthSize sb /= 8) $ do
+            fail ("Size of Lengths isn't 8 but " <> show (h5sbLengthSize sb))
+          when (h5sbGroupLeafNodeK sb == 0) $ do
+            fail ("Group Leaf Node K must be greater than zero, but is " <> show (h5sbGroupLeafNodeK sb))
+          when (h5sbGroupInternalNodeK sb == 0) $ do
+            fail ("Group Internal Node K must be greater than zero, but is " <> show (h5sbGroupInternalNodeK sb))
+          pure sb
     else fail "couldn't get magic 8 bytes"
 
 readSuperblock' :: Handle -> Integer -> Integer -> IO (Maybe Superblock)
@@ -222,7 +547,7 @@ readSuperblock handle = do
 data Heap = Heap
   { heapVersion :: !Word8,
     heapDataSegmentSize :: !Length,
-    heapOffsetToHeadOfFreeList :: !Length,
+    heapOffsetToHeadOfFreeList :: !(Maybe Length),
     heapDataSegmentAddress :: !Address
   }
   deriving (Show)
@@ -232,7 +557,7 @@ getHeap = do
   signature' <- getByteString 4
   -- "HEAP" in ASCII
   when (signature' /= BS.pack [72, 69, 65, 80]) (fail "invalid heap signature")
-  Heap <$> (getWord8 <* getWord16le <* getWord8) <*> getLength <*> getLength <*> getAddress
+  Heap <$> (getWord8 <* getWord16le <* getWord8) <*> getLength <*> getMaybeLength <*> getAddress
 
 recurseIntoSymbolTableEntry :: Handle -> Int -> Maybe Address -> SymbolTableEntry -> IO ()
 recurseIntoSymbolTableEntry handle depth maybeHeapAddress e =
@@ -241,7 +566,12 @@ recurseIntoSymbolTableEntry handle depth maybeHeapAddress e =
       printWithPrefix = putStrLn . (prefix <>) . show
       putStrLnWithPrefix x = putStrLn (prefix <> x)
    in do
-        putStrLn (prefix <> "start recursion for " <> show e)
+        hSeek handle AbsoluteSeek (fromIntegral (h5steObjectHeaderAddress e))
+        objectHeaderData <- BSL.hGet handle 2000
+        case runGetOrFail getObjectHeader objectHeaderData of
+          Left e' -> putStrLnWithPrefix ("invalid object header at symbol table entry: " <> show e')
+          Right (_, _, header) -> putStrLnWithPrefix ("object header: " <> show header)
+        putStrLnWithPrefix ("start recursion for " <> show e)
         case h5steScratchpad e of
           ScratchpadSymbolicLinkMetadata offsetToLinkValue' ->
             putStrLnWithPrefix "symbolic metadata"
@@ -250,7 +580,11 @@ recurseIntoSymbolTableEntry handle depth maybeHeapAddress e =
               Nothing -> putStrLnWithPrefix "have no heap address, cannot resolve stuff inside this group"
               Just heapAddress -> do
                 k <- readKey handle (fromIntegral (heapAddress + h5steLinkNameOffset e))
-                printWithPrefix k
+                putStrLnWithPrefix ("key value " <> show k)
+                putStrLnWithPrefix ("object address " <> show (h5steObjectHeaderAddress e))
+                hSeek handle AbsoluteSeek (fromIntegral (h5steObjectHeaderAddress e))
+                heapData <- BSL.hGet handle 2000
+                printWithPrefix (runGet getSymbolTableEntry heapData)
           ScratchpadObjectHeaderMetadata btreeAddress heapAddress -> do
             hSeek handle AbsoluteSeek (fromIntegral btreeAddress)
             blinkTreenode <- BSL.hGet handle 200
@@ -274,11 +608,13 @@ recurseIntoSymbolTableEntry handle depth maybeHeapAddress e =
                           pure (runGet getGroupSymbolTableNode rawData)
                     keysOnHeap <- mapM (readKey handle) keyAddressesOnHeap
                     childrenOnHeap <- mapM readChild childAddressesOnHeap
-                    printWithPrefix heap
-                    printWithPrefix keysOnHeap
-                    printWithPrefix childrenOnHeap
+                    putStrLnWithPrefix ("heap: " <> show heap)
+                    putStrLnWithPrefix ("keys on heap: " <> show keysOnHeap)
+                    putStrLnWithPrefix ("children: " <> show childrenOnHeap)
 
                     mapM_ (recurseIntoSymbolTableEntry handle (depth + 2) (Just (heapDataSegmentAddress heap))) (concatMap gstnEntries childrenOnHeap)
+
+                    putStrLnWithPrefix "finish recursion"
 
 main :: IO ()
 main = do
@@ -293,3 +629,5 @@ main = do
         print superblock
 
         recurseIntoSymbolTableEntry handle 0 Nothing (h5sbSymbolTableEntry superblock')
+
+        putStrLn "done recursion"
