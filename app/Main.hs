@@ -4,7 +4,7 @@ module Main where
 
 import Control.Monad (replicateM, void, when)
 import Data.Binary (Get, getWord8)
-import Data.Binary.Get (getByteString, getWord16le, getWord32le, getWord64le, runGet, runGetOrFail, skip)
+import Data.Binary.Get (getByteString, getWord16le, getWord32le, getWord64le, isEmpty, isolate, runGet, runGetOrFail, skip)
 import Data.Bits (shiftR, (.&.))
 import qualified Data.ByteString as BS
 import qualified Data.ByteString.Lazy as BSL
@@ -144,16 +144,21 @@ getDataStorageLayoutClass = do
     n -> fail ("invalid data storage layout class value " <> show n)
 
 data DataStorageLayout
-  = LayoutContiguous
-      { layoutContiguousRawDataAddress :: !Word32,
-        layoutContiguousSizes :: ![Word32]
+  = LayoutContiguousOld
+      { layoutContiguousOldRawDataAddress :: !Word32,
+        layoutContiguousOldSizes :: ![Word32]
+      }
+  | LayoutContiguous
+      { layoutContiguousRawDataAddress :: !(Maybe Address),
+        layoutContiguousSize :: !Length
       }
   | LayoutChunked
-      { layoutChunkedBTreeAddress :: !Address,
+      { layoutChunkedBTreeAddress :: !(Maybe Address),
         layoutChunkedSizes :: ![Word32],
         layoutChunkedDatasetElementSize :: !Word32
       }
-  | LayoutCompact {layoutCompactSizes :: ![Word32], layoutCompactDataSize :: !Word32}
+  | LayoutCompactOld {layoutCompactOldSizes :: ![Word32], layoutCompactOldDataSize :: !Word32}
+  | LayoutCompact {layoutCompactSize :: !Word16}
   deriving (Show)
 
 data Message
@@ -173,13 +178,13 @@ data Message
   deriving (Show)
 
 getMessage :: Word16 -> Get Message
-getMessage 0 = pure NilMessage
+getMessage 0x0000 = pure NilMessage
 -- The dataspace message describes the number of dimensions (in other
 -- words, “rank”) and size of each dimension that the data object has.
 -- This message is only used for datasets which have a simple,
 -- rectilinear, array-like layout; datasets requiring a more complex
 -- layout are not yet supported.
-getMessage 1 = do
+getMessage 0x0001 = do
   -- This value is used to determine the format of the Dataspace
   -- Message. When the format of the information in the message is
   -- changed, the version number is incremented and can be used to
@@ -204,6 +209,19 @@ getMessage 1 = do
   permutationIndices <- if permutationIndicesStored then replicateM (fromIntegral dimensionality) getLength else pure []
   -- TODO: This message has _lots_ more information to it
   pure (DataspaceMessage dimensions permutationIndices)
+-- Explanation of "datatype" in general
+--
+-- https://support.hdfgroup.org/documentation/hdf5/latest/_l_b_datatypes.html
+getMessage 0x003 = do
+  classAndVersion <- getWord8
+  let classNumeric = classAndVersion .&. 0b1111
+      version = (classAndVersion .&. 0b11110000) `shiftR` 4
+  class' <- getDatatypeClass classNumeric
+  bits0to7 <- getWord8
+  bits8to15 <- getWord8
+  bits16to23 <- getWord8
+  size <- getWord32le
+  pure (DatatypeMessage version class')
 getMessage 0x0005 = do
   version <- getWord8
   case version of
@@ -263,41 +281,71 @@ getMessage 0x000b = do
   pure (DataStorageFilterPipelineMessage filters')
 getMessage 0x0008 = do
   version <- getWord8
-  when (version == 3) (fail "version 3 of the data layout message is not supported yet")
-  dimensionality <- getWord8
-  layoutClass <- getDataStorageLayoutClass
-  -- Reserved
-  skip 5
-  case layoutClass of
-    LayoutClassContiguous -> do
-      rawDataAddress <- getWord32le
-      sizes <- replicateM (fromIntegral dimensionality) getWord32le
-      pure (DataStorageLayoutMessage (LayoutContiguous rawDataAddress sizes))
-    LayoutClassChunked -> do
-      bTreeAddress <- getAddress
-      sizes <- replicateM (fromIntegral dimensionality) getWord32le
-      datasetElementSize <- getWord32le
-      pure (DataStorageLayoutMessage (LayoutChunked bTreeAddress sizes datasetElementSize))
-    LayoutClassCompact -> do
-      sizes <- replicateM (fromIntegral dimensionality) getWord32le
-      compactDataSize <- getWord32le
-      -- TODO: We need the datatype size to read the actual compact data
-      pure (DataStorageLayoutMessage (LayoutCompact sizes compactDataSize))
+  case version of
+    3 -> do
+      layoutClass <- getDataStorageLayoutClass
+
+      case layoutClass of
+        -- Order of appearance in the spec
+        LayoutClassCompact -> do
+          -- (Note: The dimensionality information is in the Dataspace message)
+          -- This field contains the size of the raw data for the
+          -- dataset array, in bytes.
+          size <- getWord16le
+
+          -- This field contains the raw data for the dataset array.
+          -- TODO: interpretation of this data needs type information
+          void $ getByteString (fromIntegral size)
+
+          pure (DataStorageLayoutMessage (LayoutCompact size))
+        LayoutClassContiguous -> do
+          -- This is the address of the raw data in the file. The
+          -- address may have the undefined address value, to indicate
+          -- that storage has not yet been allocated for this array.
+          rawDataAddress <- getMaybeAddress
+          size <- getLength
+          pure (DataStorageLayoutMessage (LayoutContiguous rawDataAddress size))
+        LayoutClassChunked -> do
+          -- A chunk has a fixed dimensionality. This field specifies
+          -- the number of dimension size fields later in the message.
+          dimensionality <- getWord8
+          skip 3
+          -- This is the address of the III.A.1. Disk Format: Level
+          -- 1A1 - Version 1 B-trees that is used to look up the
+          -- addresses of the chunks that actually store portions of
+          -- the array data.
+          address <- getMaybeAddress
+          -- These values define the dimension size of a single chunk,
+          -- in units of array elements (not bytes). The first
+          -- dimension stored in the list of dimensions is the slowest
+          -- changing dimension and the last dimension stored is the
+          -- fastest changing dimension.
+          sizes <- replicateM (fromIntegral dimensionality) getWord32le
+          datasetElementSize <- getWord32le
+          pure (DataStorageLayoutMessage (LayoutChunked address sizes datasetElementSize))
+    _ -> do
+      when (version /= 1 && version /= 2) (fail ("version of the data layout message is not supported yet: " <> show version))
+      dimensionality <- getWord8
+      layoutClass <- getDataStorageLayoutClass
+      -- Reserved
+      skip 5
+      case layoutClass of
+        LayoutClassContiguous -> do
+          rawDataAddress <- getWord32le
+          sizes <- replicateM (fromIntegral dimensionality) getWord32le
+          pure (DataStorageLayoutMessage (LayoutContiguousOld rawDataAddress sizes))
+        LayoutClassChunked -> do
+          bTreeAddress <- getMaybeAddress
+          sizes <- replicateM (fromIntegral dimensionality) getWord32le
+          datasetElementSize <- getWord32le
+          pure (DataStorageLayoutMessage (LayoutChunked bTreeAddress sizes datasetElementSize))
+        LayoutClassCompact -> do
+          sizes <- replicateM (fromIntegral dimensionality) getWord32le
+          compactDataSize <- getWord32le
+          -- TODO: We need the datatype size to read the actual compact data
+          pure (DataStorageLayoutMessage (LayoutCompactOld sizes compactDataSize))
 getMessage 0x0010 = ObjectHeaderContinuationMessage <$> getAddress <*> getLength
 getMessage 0x0011 = SymbolTableMessage <$> getAddress <*> getAddress
--- Explanation of "datatype" in general
---
--- https://support.hdfgroup.org/documentation/hdf5/latest/_l_b_datatypes.html
-getMessage 0x003 = do
-  classAndVersion <- getWord8
-  let classNumeric = classAndVersion .&. 0b1111
-      version = (classAndVersion .&. 0b11110000) `shiftR` 4
-  class' <- getDatatypeClass classNumeric
-  bits0to7 <- getWord8
-  bits8to15 <- getWord8
-  bits16to23 <- getWord8
-  size <- getWord32le
-  pure (DatatypeMessage version class')
 getMessage n = fail ("invalid message type " <> show n)
 
 data ObjectHeader = ObjectHeader
@@ -314,19 +362,46 @@ getObjectHeader = do
   version <- getWord8
   when (version /= 1) (fail ("object header version was not 1 but " <> show version))
   skip 1
+  -- This value determines the total number of messages listed in
+  -- object headers for this object. This value includes the messages
+  -- in continuation messages for this object.
   messageCount <- getWord16le
+  -- This value specifies the number of “hard links” to this object
+  -- within the current file. References to the object from external
+  -- files, “soft links” in this file and object references in this
+  -- file are not tracked.
   objectReferenceCount <- getWord32le
+  -- This value specifies the number of bytes of header message data
+  -- following this length field that contain object header messages
+  -- for this object header. This value does not include the size of
+  -- object header continuation blocks for this object elsewhere in
+  -- the file.
   objectHeaderSize <- getWord32le
   skip 4
+  -- The following code looks a little weird, but the problem is that
+  -- "messageCount" above doesn't give us the number of messages
+  -- \*only* in this object header. It could give us the number "4",
+  -- but there is just one message here: a continuation message. So we
+  -- isolate to the number of bytes we expect and ready until we don't
+  -- have any bytes anymore.
   let readMessage = do
         messageType <- getWord16le
         headerMessageDataSize <- getWord16le
         flags <- getWord8
         skip 3
         getMessage messageType
+      decodeMessages = do
+        empty <- isEmpty
+        if empty
+          then pure []
+          else do
+            m <- readMessage
+            ms <- decodeMessages
+            pure (m : ms)
+  messages <- isolate (fromIntegral objectHeaderSize) decodeMessages
   -- rawContent <- getByteString (fromIntegral headerMessageDataSize)
   -- pure (messageType, getMessage rawContent)
-  messages <- replicateM (fromIntegral messageCount) readMessage
+  -- messages <- replicateM (fromIntegral messageCount) readMessage
   pure (ObjectHeader version objectReferenceCount objectHeaderSize messages)
 
 data SymbolTableScratchpad
@@ -566,12 +641,13 @@ recurseIntoSymbolTableEntry handle depth maybeHeapAddress e =
       printWithPrefix = putStrLn . (prefix <>) . show
       putStrLnWithPrefix x = putStrLn (prefix <> x)
    in do
+        putStrLnWithPrefix $ "seeking to " <> show (h5steObjectHeaderAddress e)
         hSeek handle AbsoluteSeek (fromIntegral (h5steObjectHeaderAddress e))
         objectHeaderData <- BSL.hGet handle 2000
         case runGetOrFail getObjectHeader objectHeaderData of
-          Left e' -> putStrLnWithPrefix ("invalid object header at symbol table entry: " <> show e')
+          Left (_, bytesConsumed, e') -> putStrLnWithPrefix ("invalid object header at symbol table entry (consumed " <> show bytesConsumed <> " bytes): " <> show e')
           Right (_, _, header) -> putStrLnWithPrefix ("object header: " <> show header)
-        putStrLnWithPrefix ("start recursion for " <> show e)
+        putStrLnWithPrefix ("at symbol table entry: " <> show e)
         case h5steScratchpad e of
           ScratchpadSymbolicLinkMetadata offsetToLinkValue' ->
             putStrLnWithPrefix "symbolic metadata"
@@ -591,7 +667,7 @@ recurseIntoSymbolTableEntry handle depth maybeHeapAddress e =
             case runGetOrFail getBLinkTreeNode blinkTreenode of
               Left _ -> error (prefix <> "error reading b-link node")
               Right (_, _, node@(BLinkTreeNodeGroup {})) -> do
-                printWithPrefix node
+                putStrLnWithPrefix ("tree node: " <> show node)
 
                 hSeek handle AbsoluteSeek (fromIntegral heapAddress)
                 heapData <- BSL.hGet handle 200
@@ -612,7 +688,13 @@ recurseIntoSymbolTableEntry handle depth maybeHeapAddress e =
                     putStrLnWithPrefix ("keys on heap: " <> show keysOnHeap)
                     putStrLnWithPrefix ("children: " <> show childrenOnHeap)
 
-                    mapM_ (recurseIntoSymbolTableEntry handle (depth + 2) (Just (heapDataSegmentAddress heap))) (concatMap gstnEntries childrenOnHeap)
+                    mapM_
+                      ( recurseIntoSymbolTableEntry
+                          handle
+                          (depth + 2)
+                          (Just (heapDataSegmentAddress heap))
+                      )
+                      (concatMap gstnEntries childrenOnHeap)
 
                     putStrLnWithPrefix "finish recursion"
 
