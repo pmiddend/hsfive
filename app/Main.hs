@@ -4,12 +4,12 @@ module Main where
 
 import Control.Monad (replicateM, void, when)
 import Data.Binary (Get, getWord8)
-import Data.Binary.Get (getByteString, getWord16le, getWord32le, getWord64le, isEmpty, isolate, runGet, runGetOrFail, skip)
+import Data.Binary.Get (bytesRead, getByteString, getRemainingLazyByteString, getWord16le, getWord32le, getWord64le, isEmpty, isolate, runGet, runGetOrFail, skip)
 import Data.Bits (shiftR, (.&.))
 import qualified Data.ByteString as BS
 import qualified Data.ByteString.Lazy as BSL
 import Data.Word (Word16, Word32, Word64, Word8)
-import Debug.Trace (traceShowId)
+import Debug.Trace (trace, traceShowId)
 import HsFive.Util
 import System.File.OsPath (withBinaryFile)
 import System.IO (Handle, IOMode (ReadMode), SeekMode (AbsoluteSeek, SeekFromEnd), hSeek, hTell)
@@ -138,9 +138,9 @@ getDataStorageLayoutClass :: Get DataStorageLayoutClass
 getDataStorageLayoutClass = do
   s <- getWord8
   case s of
-    1 -> pure LayoutClassCompact
-    2 -> pure LayoutClassContiguous
-    3 -> pure LayoutClassChunked
+    0 -> pure LayoutClassCompact
+    1 -> pure LayoutClassContiguous
+    2 -> pure LayoutClassChunked
     n -> fail ("invalid data storage layout class value " <> show n)
 
 data DataStorageLayout
@@ -205,10 +205,17 @@ getMessage 0x0001 = do
       permutationIndicesStored = flags .&. 2 > 0
   -- Reserved
   skip 5
-  dimensions <- replicateM (fromIntegral dimensionality) (getDataspaceDimension maxDimsStored)
-  permutationIndices <- if permutationIndicesStored then replicateM (fromIntegral dimensionality) getLength else pure []
+  dimensions <- replicateM (fromIntegral dimensionality) getLength
+  maxSizes <-
+    if maxDimsStored
+      then replicateM (fromIntegral dimensionality) getMaybeLength
+      else pure (replicate (fromIntegral dimensionality) Nothing)
+  permutationIndices <-
+    if permutationIndicesStored
+      then replicateM (fromIntegral dimensionality) getLength
+      else pure []
   -- TODO: This message has _lots_ more information to it
-  pure (DataspaceMessage dimensions permutationIndices)
+  pure (DataspaceMessage (zipWith DataspaceDimension dimensions maxSizes) permutationIndices)
 -- Explanation of "datatype" in general
 --
 -- https://support.hdfgroup.org/documentation/hdf5/latest/_l_b_datatypes.html
@@ -221,6 +228,9 @@ getMessage 0x003 = do
   bits8to15 <- getWord8
   bits16to23 <- getWord8
   size <- getWord32le
+  case class' of
+    ClassFixedPoint -> skip 8
+    _ -> fail ("class " <> show class' <> " properties not supported yet")
   pure (DatatypeMessage version class')
 getMessage 0x0005 = do
   version <- getWord8
@@ -257,7 +267,7 @@ getMessage 0x000b = do
   -- All reserved
   skip 6
   filters' <- replicateM (fromIntegral numberOfFilters) $ do
-    -- Description to long, abbreviated: This value, often referred to
+    -- Description too long, abbreviated: This value, often referred to
     -- as a filter identifier, is designed to be a unique identifier
     -- for the filter. Values from zero through 32,767 are reserved
     -- for filters supported by The HDF Group in the HDF5 library and
@@ -309,7 +319,7 @@ getMessage 0x0008 = do
           -- A chunk has a fixed dimensionality. This field specifies
           -- the number of dimension size fields later in the message.
           dimensionality <- getWord8
-          skip 3
+          -- skip 3
           -- This is the address of the III.A.1. Disk Format: Level
           -- 1A1 - Version 1 B-trees that is used to look up the
           -- addresses of the chunks that actually store portions of
@@ -390,15 +400,23 @@ getObjectHeader = do
         flags <- getWord8
         skip 3
         getMessage messageType
-      decodeMessages = do
+      -- decodeMessages 0 = pure []
+      decodeMessages 0 = getRemainingLazyByteString >> pure []
+      decodeMessages maxMessages = do
         empty <- isEmpty
+        bytesRead <- bytesRead
+        let remainder = bytesRead `mod` 8
+        skip (trace ("skipping " <> show remainder <> " byte(s)") (fromIntegral remainder))
         if empty
           then pure []
           else do
             m <- readMessage
-            ms <- decodeMessages
+            ms <- decodeMessages (maxMessages - 1)
             pure (m : ms)
-  messages <- isolate (fromIntegral objectHeaderSize) decodeMessages
+  messages <-
+    isolate
+      (fromIntegral objectHeaderSize)
+      (decodeMessages (trace ("message count: " <> show messageCount) messageCount))
   -- rawContent <- getByteString (fromIntegral headerMessageDataSize)
   -- pure (messageType, getMessage rawContent)
   -- messages <- replicateM (fromIntegral messageCount) readMessage
