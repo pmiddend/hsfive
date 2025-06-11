@@ -172,9 +172,11 @@ data Message
   | DatatypeMessage {datatypeMessageVersion :: !Word8, datatypeClass :: !DatatypeClass}
   | DataStorageFillValueMessage {}
   | -- | This message describes the filter pipeline which should be applied to the data stream by providing filter identification numbers, flags, a name, and client data. This message may be present in the object headers of both dataset and group objects. For datasets, it specifies the filters to apply to raw data. For groups, it specifies the filters to apply to the group’s fractal heap. Currently, only datasets using chunked data storage use the filter pipeline on their raw data.
-    DataStorageFilterPipelineMessage {filters :: ![DataStoragePipelineFilter]}
+    DataStorageFilterPipelineMessage {dataStorageFilterPipelineFilters :: ![DataStoragePipelineFilter]}
   | -- | The Data Layout message describes how the elements of a multi-dimensional array are stored in the HDF5 file.
     DataStorageLayoutMessage !DataStorageLayout
+  | -- | The object modification time is a timestamp which indicates the time of the last modification of an object. The time is updated when any object header message changes according to the system clock where the change was posted.
+    ObjectModificationTimeMessage {objectModificationTime :: !Word32}
   deriving (Show)
 
 getMessage :: Word16 -> Get Message
@@ -332,6 +334,8 @@ getMessage 0x0008 = do
           -- fastest changing dimension.
           sizes <- replicateM (fromIntegral dimensionality) getWord32le
           datasetElementSize <- getWord32le
+          -- The need to skip this is _very_ weird. Not sure why we need it, it's not in the spec.
+          skip 1
           pure (DataStorageLayoutMessage (LayoutChunked address sizes datasetElementSize))
     _ -> do
       when (version /= 1 && version /= 2) (fail ("version of the data layout message is not supported yet: " <> show version))
@@ -356,6 +360,12 @@ getMessage 0x0008 = do
           pure (DataStorageLayoutMessage (LayoutCompactOld sizes compactDataSize))
 getMessage 0x0010 = ObjectHeaderContinuationMessage <$> getAddress <*> getLength
 getMessage 0x0011 = SymbolTableMessage <$> getAddress <*> getAddress
+getMessage 0x0012 = do
+  version <- getWord8
+  when (version /= 1) (fail ("invalid object modification time version " <> show version))
+  -- Reserved
+  skip 3
+  ObjectModificationTimeMessage <$> getWord32le
 getMessage n = fail ("invalid message type " <> show n)
 
 data ObjectHeader = ObjectHeader
@@ -392,7 +402,7 @@ getObjectHeader = do
   -- "messageCount" above doesn't give us the number of messages
   -- \*only* in this object header. It could give us the number "4",
   -- but there is just one message here: a continuation message. So we
-  -- isolate to the number of bytes we expect and ready until we don't
+  -- isolate to the number of bytes we expect and read until we don't
   -- have any bytes anymore.
   let readMessage = do
         messageType <- getWord16le
