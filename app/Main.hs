@@ -8,8 +8,9 @@ import Data.Binary.Get (bytesRead, getByteString, getRemainingLazyByteString, ge
 import Data.Bits (shiftR, (.&.))
 import qualified Data.ByteString as BS
 import qualified Data.ByteString.Lazy as BSL
+import Data.Foldable (forM_)
 import Data.Word (Word16, Word32, Word64, Word8)
-import Debug.Trace (trace, traceShowId)
+import Debug.Trace (trace, traceShowId, traceWith)
 import HsFive.Util
 import System.File.OsPath (withBinaryFile)
 import System.IO (Handle, IOMode (ReadMode), SeekMode (AbsoluteSeek, SeekFromEnd), hSeek, hTell)
@@ -82,6 +83,16 @@ getDatatypeClass 9 = pure ClassVariableLength
 getDatatypeClass 10 = pure ClassArray
 getDatatypeClass 11 = pure ClassComplex
 getDatatypeClass n = fail ("invalid datatype class " <> show n)
+
+data VariableLengthStringPadding = PaddingNullTerminate | PaddingNull | PaddingSpace deriving (Show)
+
+data VariableLengthStringCharacterSet = CharacterSetAscii | CharacterSetUtf8 deriving (Show)
+
+data Datatype
+  = DatatypeFixedPoint
+  | DatatypeVariableLengthSequence
+  | DatatypeVariableLengthString VariableLengthStringPadding VariableLengthStringCharacterSet
+  deriving (Show)
 
 data DataStorageSpaceAllocationTime
   = -- | Early allocation. Storage space for the entire dataset should
@@ -169,7 +180,7 @@ data Message
         symbolTableMessageLocalHeapAddress :: !Address
       }
   | ObjectHeaderContinuationMessage {objectHeaderContinuationMessageOffset :: !Address, objectHeaderContinuationMessageLength :: !Length}
-  | DatatypeMessage {datatypeMessageVersion :: !Word8, datatypeClass :: !DatatypeClass}
+  | DatatypeMessage {datatypeMessageVersion :: !Word8, datatypeClass :: !Datatype}
   | DataStorageFillValueMessage {}
   | -- | This message describes the filter pipeline which should be applied to the data stream by providing filter identification numbers, flags, a name, and client data. This message may be present in the object headers of both dataset and group objects. For datasets, it specifies the filters to apply to raw data. For groups, it specifies the filters to apply to the group’s fractal heap. Currently, only datasets using chunked data storage use the filter pipeline on their raw data.
     DataStorageFilterPipelineMessage {dataStorageFilterPipelineFilters :: ![DataStoragePipelineFilter]}
@@ -177,6 +188,7 @@ data Message
     DataStorageLayoutMessage !DataStorageLayout
   | -- | The object modification time is a timestamp which indicates the time of the last modification of an object. The time is updated when any object header message changes according to the system clock where the change was posted.
     ObjectModificationTimeMessage {objectModificationTime :: !Word32}
+  | AttributeMessage {attributeName :: BS.ByteString}
   deriving (Show)
 
 getMessage :: Word16 -> Get Message
@@ -229,11 +241,24 @@ getMessage 0x003 = do
   bits0to7 <- getWord8
   bits8to15 <- getWord8
   bits16to23 <- getWord8
+  -- The size of a datatype element in bytes.
   size <- getWord32le
   case class' of
-    ClassFixedPoint -> skip 8
+    ClassFixedPoint -> do
+      skip 8
+      pure (DatatypeMessage version DatatypeFixedPoint)
+    ClassVariableLength -> do
+      let variableType = bits0to7 .&. 0b1111
+      case variableType of
+        0 -> pure (DatatypeMessage version DatatypeVariableLengthSequence)
+        1 -> do
+          let paddingTypeNumeric = (bits0to7 .&. 0b11110000) `shiftR` 4
+          paddingType <- if paddingTypeNumeric == 0 then pure PaddingNullTerminate else if paddingTypeNumeric == 1 then pure PaddingNull else if paddingTypeNumeric == 2 then pure PaddingSpace else fail ("invalid variable length string padding type " <> show paddingTypeNumeric)
+          let characterSetNumeric = bits8to15 .&. 0b1111
+          characterSet <- if characterSetNumeric == 0 then pure CharacterSetAscii else if characterSetNumeric == 1 then pure CharacterSetUtf8 else fail ("invalid variable length string character set " <> show characterSetNumeric)
+          pure (DatatypeMessage version (DatatypeVariableLengthString paddingType characterSet))
+        _ -> fail $ "variable length which is neither sequence nor string, bits are: " <> show variableType
     _ -> fail ("class " <> show class' <> " properties not supported yet")
-  pure (DatatypeMessage version class')
 getMessage 0x0005 = do
   version <- getWord8
   case version of
@@ -366,19 +391,39 @@ getMessage 0x0012 = do
   -- Reserved
   skip 3
   ObjectModificationTimeMessage <$> getWord32le
+getMessage 0x000c = do
+  version <- getWord8
+  when (version /= 1) (fail ("invalid attribute message version " <> show version))
+  -- Reserved
+  skip 1
+  nameSize <- getWord16le
+  datatypeSize <- getWord16le
+  dataspaceSize <- getWord16le
+  name <- getByteString (fromIntegral nameSize)
+  let skipTo8 s = do
+        let r = s `mod` 8
+        when (r > 0) (skip (traceWith (\r8 -> "skipping " <> show r8) (fromIntegral (8 - r))))
+  skipTo8 nameSize
+  datatypeMessage <- getMessage 0x003
+  -- datatypeRaw <- getByteString (fromIntegral (trace ("name " <> show name) datatypeSize))
+  skipTo8 (trace ("received data type message " <> show datatypeMessage) datatypeSize)
+  dataspaceRaw <- getByteString (fromIntegral dataspaceSize)
+  skipTo8 dataspaceSize
+  remainder <- getRemainingLazyByteString
+  pure (AttributeMessage name)
 getMessage n = fail ("invalid message type " <> show n)
 
 data ObjectHeader = ObjectHeader
   { ohVersion :: !Word8,
     ohObjectReferenceCount :: !Word32,
     ohObjectHeaderSize :: !Word32,
-    onHeaderMessages :: ![Message]
+    ohHeaderMessages :: ![Message]
     -- ohHeaderMessages :: ![(Word16, BS.ByteString)]
   }
   deriving (Show)
 
-getObjectHeader :: Get ObjectHeader
-getObjectHeader = do
+getObjectHeaderV1 :: Get ObjectHeader
+getObjectHeaderV1 = do
   version <- getWord8
   when (version /= 1) (fail ("object header version was not 1 but " <> show version))
   skip 1
@@ -409,14 +454,15 @@ getObjectHeader = do
         headerMessageDataSize <- getWord16le
         flags <- getWord8
         skip 3
-        getMessage messageType
+        isolate (fromIntegral headerMessageDataSize) (getMessage messageType)
       -- decodeMessages 0 = pure []
       decodeMessages 0 = getRemainingLazyByteString >> pure []
       decodeMessages maxMessages = do
         empty <- isEmpty
-        bytesRead <- bytesRead
-        let remainder = bytesRead `mod` 8
-        skip (trace ("skipping " <> show remainder <> " byte(s)") (fromIntegral remainder))
+        bytesRead' <- bytesRead
+        let remainder = bytesRead' `mod` 8
+        -- skip (trace ("skipping " <> show remainder <> " byte(s)") (fromIntegral remainder))
+        skip (fromIntegral remainder)
         if empty
           then pure []
           else do
@@ -426,7 +472,8 @@ getObjectHeader = do
   messages <-
     isolate
       (fromIntegral objectHeaderSize)
-      (decodeMessages (trace ("message count: " <> show messageCount) messageCount))
+      -- (decodeMessages (trace ("message count: " <> show messageCount) messageCount))
+      (decodeMessages messageCount)
   -- rawContent <- getByteString (fromIntegral headerMessageDataSize)
   -- pure (messageType, getMessage rawContent)
   -- messages <- replicateM (fromIntegral messageCount) readMessage
@@ -669,62 +716,137 @@ recurseIntoSymbolTableEntry handle depth maybeHeapAddress e =
       printWithPrefix = putStrLn . (prefix <>) . show
       putStrLnWithPrefix x = putStrLn (prefix <> x)
    in do
+        putStrLnWithPrefix ("at symbol table entry: " <> show e)
         putStrLnWithPrefix $ "seeking to " <> show (h5steObjectHeaderAddress e)
         hSeek handle AbsoluteSeek (fromIntegral (h5steObjectHeaderAddress e))
         objectHeaderData <- BSL.hGet handle 2000
-        case runGetOrFail getObjectHeader objectHeaderData of
-          Left (_, bytesConsumed, e') -> putStrLnWithPrefix ("invalid object header at symbol table entry (consumed " <> show bytesConsumed <> " bytes): " <> show e')
-          Right (_, _, header) -> putStrLnWithPrefix ("object header: " <> show header)
-        putStrLnWithPrefix ("at symbol table entry: " <> show e)
-        case h5steScratchpad e of
-          ScratchpadSymbolicLinkMetadata offsetToLinkValue' ->
-            putStrLnWithPrefix "symbolic metadata"
-          ScratchpadNoContent ->
-            case maybeHeapAddress of
-              Nothing -> putStrLnWithPrefix "have no heap address, cannot resolve stuff inside this group"
-              Just heapAddress -> do
-                k <- readKey handle (fromIntegral (heapAddress + h5steLinkNameOffset e))
-                putStrLnWithPrefix ("key value " <> show k)
-                putStrLnWithPrefix ("object address " <> show (h5steObjectHeaderAddress e))
-                hSeek handle AbsoluteSeek (fromIntegral (h5steObjectHeaderAddress e))
-                heapData <- BSL.hGet handle 2000
-                printWithPrefix (runGet getSymbolTableEntry heapData)
-          ScratchpadObjectHeaderMetadata btreeAddress heapAddress -> do
-            hSeek handle AbsoluteSeek (fromIntegral btreeAddress)
-            blinkTreenode <- BSL.hGet handle 200
-            case runGetOrFail getBLinkTreeNode blinkTreenode of
-              Left _ -> error (prefix <> "error reading b-link node")
-              Right (_, _, node@(BLinkTreeNodeGroup {})) -> do
-                putStrLnWithPrefix ("tree node: " <> show node)
+        case runGetOrFail getObjectHeaderV1 objectHeaderData of
+          Left (_, bytesConsumed, e') ->
+            putStrLnWithPrefix
+              ( "invalid object header at symbol table entry (consumed "
+                  <> show bytesConsumed
+                  <> " bytes): "
+                  <> show e'
+              )
+          Right (_, _, header) -> do
+            putStrLnWithPrefix ("object header: " <> show header)
+            putStrLnWithPrefix "iterating over messages"
+            forM_ (ohHeaderMessages header) $ \message -> do
+              putStrLnWithPrefix ("message: " <> show message)
+              case message of
+                SymbolTableMessage btreeAddress heapAddress -> do
+                  putStrLnWithPrefix $ "seeking to " <> show btreeAddress <> "; check btree for symbol table"
+                  hSeek handle AbsoluteSeek (fromIntegral btreeAddress)
+                  blinkTreenode <- BSL.hGet handle 200
+                  case runGetOrFail getBLinkTreeNode blinkTreenode of
+                    Left _ -> error (prefix <> "error reading b-link node")
+                    Right (_, _, node@(BLinkTreeNodeGroup {})) -> do
+                      putStrLnWithPrefix ("tree node: " <> show node)
 
-                hSeek handle AbsoluteSeek (fromIntegral heapAddress)
-                heapData <- BSL.hGet handle 200
-                case runGetOrFail getHeap heapData of
-                  Left _ -> error "error reading heap"
-                  Right (_, _, heap) -> do
-                    let keyAddressesOnHeap :: [Address]
-                        keyAddressesOnHeap = (\len -> heapDataSegmentAddress heap + len) <$> bltnKeyOffsets node
-                        childAddressesOnHeap = bltnChildPointers node
-                        readChild :: Address -> IO GroupSymbolTableNode
-                        readChild addr = do
-                          hSeek handle AbsoluteSeek (fromIntegral addr)
-                          rawData <- BSL.hGet handle 200
-                          pure (runGet getGroupSymbolTableNode rawData)
-                    keysOnHeap <- mapM (readKey handle) keyAddressesOnHeap
-                    childrenOnHeap <- mapM readChild childAddressesOnHeap
-                    putStrLnWithPrefix ("heap: " <> show heap)
-                    putStrLnWithPrefix ("keys on heap: " <> show keysOnHeap)
-                    putStrLnWithPrefix ("children: " <> show childrenOnHeap)
+                      putStrLnWithPrefix $ "seeking to heap at " <> show heapAddress
+                      hSeek handle AbsoluteSeek (fromIntegral heapAddress)
+                      heapData <- BSL.hGet handle 200
+                      case runGetOrFail getHeap heapData of
+                        Left _ -> error "error reading heap"
+                        Right (_, _, heap) -> do
+                          let keyAddressesOnHeap :: [Address]
+                              keyAddressesOnHeap = (\len -> heapDataSegmentAddress heap + len) <$> bltnKeyOffsets node
+                              childAddressesOnHeap = bltnChildPointers node
+                              readChild :: Address -> IO GroupSymbolTableNode
+                              readChild addr = do
+                                hSeek handle AbsoluteSeek (fromIntegral addr)
+                                rawData <- BSL.hGet handle 200
+                                pure (runGet getGroupSymbolTableNode rawData)
+                          keysOnHeap <- mapM (readKey handle) keyAddressesOnHeap
+                          childrenOnHeap <- mapM readChild childAddressesOnHeap
+                          putStrLnWithPrefix ("heap: " <> show heap)
+                          putStrLnWithPrefix ("keys on heap: " <> show keysOnHeap)
+                          putStrLnWithPrefix ("children: " <> show childrenOnHeap)
 
-                    mapM_
-                      ( recurseIntoSymbolTableEntry
-                          handle
-                          (depth + 2)
-                          (Just (heapDataSegmentAddress heap))
-                      )
-                      (concatMap gstnEntries childrenOnHeap)
+                          mapM_
+                            ( recurseIntoSymbolTableEntry
+                                handle
+                                (depth + 2)
+                                (Just (heapDataSegmentAddress heap))
+                            )
+                            (concatMap gstnEntries childrenOnHeap)
+                ObjectHeaderContinuationMessage continuationAddress length' -> do
+                  putStrLnWithPrefix ("header continuation, seeking to " <> show continuationAddress)
+                  hSeek handle AbsoluteSeek (fromIntegral continuationAddress)
+                  data' <- BSL.hGet handle (fromIntegral length')
+                  let readMessage = do
+                        messageType <- getWord16le
+                        headerMessageDataSize <- getWord16le
+                        flags <- getWord8
+                        skip 3
+                        isolate (fromIntegral (trace ("message type " <> show messageType <> ", size " <> show headerMessageDataSize) headerMessageDataSize)) (getMessage messageType)
+                      decodeMessages = do
+                        empty <- isEmpty
+                        bytesRead' <- bytesRead
+                        let remainder = bytesRead' `mod` 8
+                        skip (trace ("skipping " <> show remainder <> " byte(s)") (fromIntegral remainder))
+                        -- skip (fromIntegral remainder)
+                        if empty
+                          then pure []
+                          else do
+                            m <- readMessage
+                            ms <- decodeMessages
+                            pure (m : ms)
+                  case runGetOrFail decodeMessages data' of
+                    Left (_, _, e') -> error ("parsing continuation messages failed: " <> show e')
+                    Right (_, _, messages) -> putStrLnWithPrefix ("decoded these messages: " <> show messages)
+                _ -> putStrLnWithPrefix ("ignoring message " <> show message)
 
-                    putStrLnWithPrefix "finish recursion"
+--             putStrLnWithPrefix "finish recursion"
+-- case h5steScratchpad e of
+--   ScratchpadSymbolicLinkMetadata offsetToLinkValue' ->
+--     putStrLnWithPrefix "symbolic metadata"
+--   ScratchpadNoContent ->
+--     case maybeHeapAddress of
+--       Nothing -> putStrLnWithPrefix "have no heap address, cannot resolve stuff inside this group"
+--       Just heapAddress -> do
+--         k <- readKey handle (fromIntegral (heapAddress + h5steLinkNameOffset e))
+--         putStrLnWithPrefix ("key value " <> show k)
+--         putStrLnWithPrefix ("object address " <> show (h5steObjectHeaderAddress e))
+--         hSeek handle AbsoluteSeek (fromIntegral (h5steObjectHeaderAddress e))
+--         heapData <- BSL.hGet handle 2000
+--         printWithPrefix (runGet getSymbolTableEntry heapData)
+--   ScratchpadObjectHeaderMetadata btreeAddress heapAddress -> do
+--     hSeek handle AbsoluteSeek (fromIntegral btreeAddress)
+--     blinkTreenode <- BSL.hGet handle 200
+--     case runGetOrFail getBLinkTreeNode blinkTreenode of
+--       Left _ -> error (prefix <> "error reading b-link node")
+--       Right (_, _, node@(BLinkTreeNodeGroup {})) -> do
+--         putStrLnWithPrefix ("tree node: " <> show node)
+
+--         hSeek handle AbsoluteSeek (fromIntegral heapAddress)
+--         heapData <- BSL.hGet handle 200
+--         case runGetOrFail getHeap heapData of
+--           Left _ -> error "error reading heap"
+--           Right (_, _, heap) -> do
+--             let keyAddressesOnHeap :: [Address]
+--                 keyAddressesOnHeap = (\len -> heapDataSegmentAddress heap + len) <$> bltnKeyOffsets node
+--                 childAddressesOnHeap = bltnChildPointers node
+--                 readChild :: Address -> IO GroupSymbolTableNode
+--                 readChild addr = do
+--                   hSeek handle AbsoluteSeek (fromIntegral addr)
+--                   rawData <- BSL.hGet handle 200
+--                   pure (runGet getGroupSymbolTableNode rawData)
+--             keysOnHeap <- mapM (readKey handle) keyAddressesOnHeap
+--             childrenOnHeap <- mapM readChild childAddressesOnHeap
+--             putStrLnWithPrefix ("heap: " <> show heap)
+--             putStrLnWithPrefix ("keys on heap: " <> show keysOnHeap)
+--             putStrLnWithPrefix ("children: " <> show childrenOnHeap)
+
+--             mapM_
+--               ( recurseIntoSymbolTableEntry
+--                   handle
+--                   (depth + 2)
+--                   (Just (heapDataSegmentAddress heap))
+--               )
+--               (concatMap gstnEntries childrenOnHeap)
+
+--             putStrLnWithPrefix "finish recursion"
 
 main :: IO ()
 main = do
