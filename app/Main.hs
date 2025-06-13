@@ -91,7 +91,7 @@ data VariableLengthStringCharacterSet = CharacterSetAscii | CharacterSetUtf8 der
 data Datatype
   = DatatypeFixedPoint
   | DatatypeVariableLengthSequence
-  | DatatypeVariableLengthString VariableLengthStringPadding VariableLengthStringCharacterSet
+  | DatatypeVariableLengthString !VariableLengthStringPadding !VariableLengthStringCharacterSet !Word32
   deriving (Show)
 
 data DataStorageSpaceAllocationTime
@@ -192,7 +192,9 @@ data Message
   deriving (Show)
 
 getMessage :: Word16 -> Get Message
-getMessage 0x0000 = pure NilMessage
+getMessage 0x0000 = do
+  void getRemainingLazyByteString
+  pure NilMessage
 -- The dataspace message describes the number of dimensions (in other
 -- words, “rank”) and size of each dimension that the data object has.
 -- This message is only used for datasets which have a simple,
@@ -219,17 +221,20 @@ getMessage 0x0001 = do
       permutationIndicesStored = flags .&. 2 > 0
   -- Reserved
   skip 5
-  dimensions <- replicateM (fromIntegral dimensionality) getLength
-  maxSizes <-
-    if maxDimsStored
-      then replicateM (fromIntegral dimensionality) getMaybeLength
-      else pure (replicate (fromIntegral dimensionality) Nothing)
-  permutationIndices <-
-    if permutationIndicesStored
-      then replicateM (fromIntegral dimensionality) getLength
-      else pure []
-  -- TODO: This message has _lots_ more information to it
-  pure (DataspaceMessage (zipWith DataspaceDimension dimensions maxSizes) permutationIndices)
+  if dimensionality == 0
+    then pure (DataspaceMessage [] [])
+    else do
+      dimensions <- replicateM (fromIntegral dimensionality) getLength
+      maxSizes <-
+        if maxDimsStored
+          then replicateM (fromIntegral dimensionality) getMaybeLength
+          else pure (replicate (fromIntegral dimensionality) Nothing)
+      permutationIndices <-
+        if permutationIndicesStored
+          then replicateM (fromIntegral dimensionality) getLength
+          else pure []
+      -- TODO: This message has _lots_ more information to it
+      pure (DataspaceMessage (zipWith DataspaceDimension dimensions maxSizes) permutationIndices)
 -- Explanation of "datatype" in general
 --
 -- https://support.hdfgroup.org/documentation/hdf5/latest/_l_b_datatypes.html
@@ -256,7 +261,9 @@ getMessage 0x003 = do
           paddingType <- if paddingTypeNumeric == 0 then pure PaddingNullTerminate else if paddingTypeNumeric == 1 then pure PaddingNull else if paddingTypeNumeric == 2 then pure PaddingSpace else fail ("invalid variable length string padding type " <> show paddingTypeNumeric)
           let characterSetNumeric = bits8to15 .&. 0b1111
           characterSet <- if characterSetNumeric == 0 then pure CharacterSetAscii else if characterSetNumeric == 1 then pure CharacterSetUtf8 else fail ("invalid variable length string character set " <> show characterSetNumeric)
-          pure (DatatypeMessage version (DatatypeVariableLengthString paddingType characterSet))
+          -- for now, skip the content (the size)
+          skip (fromIntegral (trace ("skipping over variable length content of size " <> show size) size))
+          pure (DatatypeMessage version (DatatypeVariableLengthString paddingType characterSet size))
         _ -> fail $ "variable length which is neither sequence nor string, bits are: " <> show variableType
     _ -> fail ("class " <> show class' <> " properties not supported yet")
 getMessage 0x0005 = do
@@ -402,13 +409,14 @@ getMessage 0x000c = do
   name <- getByteString (fromIntegral nameSize)
   let skipTo8 s = do
         let r = s `mod` 8
-        when (r > 0) (skip (traceWith (\r8 -> "skipping " <> show r8) (fromIntegral (8 - r))))
+        when (r > 0) (skip (traceWith (\r8 -> "attribute message: skipping " <> show r8) (fromIntegral (8 - r))))
   skipTo8 nameSize
-  datatypeMessage <- getMessage 0x003
+  datatypeMessage <- getMessage 0x0003
   -- datatypeRaw <- getByteString (fromIntegral (trace ("name " <> show name) datatypeSize))
-  skipTo8 (trace ("received data type message " <> show datatypeMessage) datatypeSize)
-  dataspaceRaw <- getByteString (fromIntegral dataspaceSize)
-  skipTo8 dataspaceSize
+  -- skipTo8 (trace ("received data type message " <> show datatypeMessage) datatypeSize)
+  -- dataspaceRaw <- getByteString (fromIntegral (trace ("skipping over dataspace " <> show dataspaceSize) dataspaceSize))
+  dataspaceMessage <- getMessage 0x0001
+  skipTo8 (trace ("dataspace message " <> show dataspaceMessage) dataspaceSize)
   remainder <- getRemainingLazyByteString
   pure (AttributeMessage name)
 getMessage n = fail ("invalid message type " <> show n)
@@ -458,11 +466,11 @@ getObjectHeaderV1 = do
       -- decodeMessages 0 = pure []
       decodeMessages 0 = getRemainingLazyByteString >> pure []
       decodeMessages maxMessages = do
-        empty <- isEmpty
         bytesRead' <- bytesRead
         let remainder = bytesRead' `mod` 8
-        -- skip (trace ("skipping " <> show remainder <> " byte(s)") (fromIntegral remainder))
-        skip (fromIntegral remainder)
+        skip (trace ("object header: skipping " <> show remainder <> " byte(s)") (fromIntegral remainder))
+        -- skip (fromIntegral remainder)
+        empty <- isEmpty
         if empty
           then pure []
           else do
@@ -781,11 +789,11 @@ recurseIntoSymbolTableEntry handle depth maybeHeapAddress e =
                         skip 3
                         isolate (fromIntegral (trace ("message type " <> show messageType <> ", size " <> show headerMessageDataSize) headerMessageDataSize)) (getMessage messageType)
                       decodeMessages = do
-                        empty <- isEmpty
                         bytesRead' <- bytesRead
                         let remainder = bytesRead' `mod` 8
-                        skip (trace ("skipping " <> show remainder <> " byte(s)") (fromIntegral remainder))
+                        skip (trace ("skipping " <> show remainder <> " byte(s) between messages") (fromIntegral remainder))
                         -- skip (fromIntegral remainder)
+                        empty <- isEmpty
                         if empty
                           then pure []
                           else do
