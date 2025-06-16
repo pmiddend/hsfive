@@ -5,21 +5,16 @@
 
 module Main where
 
-import Control.Monad (replicateM, void, when)
 -- import Debug.Trace (trace, traceShowId, traceWith)
-
 import Control.Monad.State (State, evalState, get, put)
-import Data.Binary (Get, getWord8)
-import Data.Binary.Get (bytesRead, getByteString, getRemainingLazyByteString, getWord16le, getWord32le, getWord64le, isEmpty, isolate, runGet, runGetOrFail, skip)
-import Data.Bits (shiftR, (.&.))
+import Data.Binary (getWord8)
+import Data.Binary.Get (bytesRead, getWord16le, isEmpty, isolate, runGet, runGetOrFail, skip)
 import qualified Data.ByteString as BS
 import qualified Data.ByteString.Lazy as BSL
-import Data.Foldable (forM_)
 import Data.List (intercalate)
 import Data.Traversable (forM)
-import Data.Word (Word16, Word32, Word64, Word8)
+import Data.Word (Word32)
 import HsFive.CoreTypes
-import HsFive.Util
 import System.File.OsPath (withBinaryFile)
 import System.IO (Handle, IOMode (ReadMode), SeekMode (AbsoluteSeek, SeekFromEnd), hSeek, hTell)
 import System.OsPath (OsPath, encodeUtf)
@@ -94,16 +89,20 @@ A simple dataspace, H5S_SIMPLE , is a multidimensional array of elements. The di
 -}
 -- TODO: add link name here
 
-data GraphSymbolTableEntry = GraphSymbolTableEntry GraphObjectHeader
+data GraphSymbolTableEntry = GraphSymbolTableEntry Address GraphObjectHeader
 
-graphSymbolTableEntryMessages (GraphSymbolTableEntry (GraphObjectHeader messages)) = messages
+graphSymbolTableEntryObjectHeaderAddress :: GraphSymbolTableEntry -> Address
+graphSymbolTableEntryObjectHeaderAddress (GraphSymbolTableEntry a _) = a
+
+graphSymbolTableEntryMessages :: GraphSymbolTableEntry -> [GraphMessage]
+graphSymbolTableEntryMessages (GraphSymbolTableEntry _ (GraphObjectHeader messages)) = messages
 
 data GraphHeap = GraphHeap [BSL.ByteString]
 
 data GraphTree = GraphTree [GraphSymbolTableEntry]
 
 data GraphMessage
-  = GraphSymbolTableMessage GraphTree GraphHeap
+  = GraphSymbolTableMessage Address GraphTree GraphHeap
   | GraphContinuationMessage [GraphMessage]
   | GraphDataspaceMessage DataspaceMessageData
   | GraphDatatypeMessage DatatypeMessageData
@@ -115,6 +114,32 @@ data GraphMessage
   | GraphNilMessage
 
 data GraphObjectHeader = GraphObjectHeader [GraphMessage]
+
+data GraphvizState = GraphvizState
+  { gvCounter :: Int,
+    gvDefinitions :: [String],
+    gvArrows :: [String]
+  }
+
+newtype GraphvizNode = GraphvizNode String
+
+instance Show GraphvizNode where
+  show (GraphvizNode s) = s
+
+type GraphvizStateTransformer = State GraphvizState
+
+addNode :: String -> Maybe String -> GraphvizStateTransformer GraphvizNode
+addNode prefix addition = do
+  current <- get
+  let newNodeName = prefix <> show (gvCounter current)
+      newNode = newNodeName <> maybe ("[label=<" <> prefix <> ">]") (\addition' -> "[" <> addition' <> "]") addition
+  put (current {gvCounter = gvCounter current + 1, gvDefinitions = newNode : gvDefinitions current})
+  pure (GraphvizNode newNodeName)
+
+addArrow :: GraphvizNode -> GraphvizNode -> GraphvizStateTransformer ()
+addArrow (GraphvizNode from) (GraphvizNode to) = do
+  current <- get
+  put (current {gvArrows = (from <> " -> " <> to) : gvArrows current})
 
 readGraphSymbolTableEntry :: Handle -> Int -> SymbolTableEntry -> IO GraphSymbolTableEntry
 readGraphSymbolTableEntry handle depth e =
@@ -140,7 +165,7 @@ readGraphSymbolTableEntry handle depth e =
               forM
                 (ohHeaderMessages header)
                 (readGraphMessage depth putStrLnWithPrefix handle prefix)
-            pure (GraphSymbolTableEntry (GraphObjectHeader messages))
+            pure (GraphSymbolTableEntry (h5steObjectHeaderAddress e) (GraphObjectHeader messages))
 
 readGraphMessage :: Int -> (String -> IO ()) -> Handle -> [Char] -> Message -> IO GraphMessage
 readGraphMessage depth putStrLnWithPrefix handle prefix message = do
@@ -182,7 +207,7 @@ readGraphMessage depth putStrLnWithPrefix handle prefix message = do
                   (readGraphSymbolTableEntry handle (depth + 2))
                   (concatMap gstnEntries childrenOnHeap)
 
-              pure (GraphSymbolTableMessage (GraphTree treeEntries) (GraphHeap keysOnHeap))
+              pure (GraphSymbolTableMessage btreeAddress (GraphTree treeEntries) (GraphHeap keysOnHeap))
     ObjectHeaderContinuationMessage continuationAddress length' -> do
       putStrLnWithPrefix ("header continuation, seeking to " <> show continuationAddress)
       hSeek handle AbsoluteSeek (fromIntegral continuationAddress)
@@ -256,66 +281,78 @@ readAndIncrement = do
   put (current + 1)
   pure current
 
-messageToDot :: String -> GraphMessage -> State Int ([String], [String])
-messageToDot origin (GraphSymbolTableMessage (GraphTree symbolTableEntries) _heap) = do
-  c <- readAndIncrement
-  let thisNode = "symbol_table_message" <> show c
-      subMessages :: [GraphMessage]
-      subMessages = symbolTableEntries >>= graphSymbolTableEntryMessages
-  outgoingNodesDefsAndArrows <- mapM (messageToDot thisNode) subMessages
-  let definitions = concatMap fst outgoingNodesDefsAndArrows
-      arrows = concatMap snd outgoingNodesDefsAndArrows
-  pure (definitions, [origin <> " -> " <> thisNode] <> arrows)
+entryNodeToDot origin (GraphSymbolTableEntry address objectHeader) = do
+  thisNode <-
+    addNode
+      "symbol_table_entry"
+      (Just ("label=<symbol table entry<br/><i>@" <> show address <> "</i>>"))
+  addArrow origin thisNode
+  let objectHeaderToDot (GraphObjectHeader messages) = do
+        thisOHNode <- addNode "object_header" Nothing
+        addArrow thisNode thisOHNode
+        mapM_ (messageToDot thisOHNode) messages
+  objectHeaderToDot objectHeader
+
+messageToDot :: GraphvizNode -> GraphMessage -> GraphvizStateTransformer ()
+messageToDot origin (GraphSymbolTableMessage treeAddress (GraphTree symbolTableEntries) _heap) = do
+  thisNode <-
+    addNode
+      "symbol_table_message"
+      (Just ("label=<symbol table message<br/><i>@" <> show treeAddress <> "</i>>"))
+  addArrow origin thisNode
+  mapM_ (entryNodeToDot thisNode) symbolTableEntries
 messageToDot origin (GraphContinuationMessage messages) = do
-  c <- readAndIncrement
-  let thisNode = "continuation_message" <> show c
-  outgoingNodesDefsAndArrows <- mapM (messageToDot thisNode) messages
-  let definitions = concatMap fst outgoingNodesDefsAndArrows
-      arrows = concatMap snd outgoingNodesDefsAndArrows
-  pure (definitions, [origin <> " -> " <> thisNode] <> arrows)
+  thisNode <- addNode "continuation_message" Nothing
+  addArrow origin thisNode
+  mapM_ (messageToDot thisNode) messages
 messageToDot origin (GraphDataspaceMessage _messageData) = do
-  c <- readAndIncrement
-  pure ([], [origin <> " -> dataspace_message" <> show c])
+  thisNode <- addNode "dataspace_message" Nothing
+  addArrow origin thisNode
 messageToDot origin (GraphDatatypeMessage _messageData) = do
-  c <- readAndIncrement
-  pure ([], [origin <> " -> datatype_message" <> show c])
+  thisNode <- addNode "datatype_message" Nothing
+  addArrow origin thisNode
 messageToDot origin GraphDataStorageFillValueMessage = do
-  c <- readAndIncrement
-  pure ([], [origin <> " -> data_storage_fill_value_message" <> show c])
+  thisNode <- addNode "data_storage_fill_value_message" Nothing
+  addArrow origin thisNode
 messageToDot origin (GraphDataStorageFilterPipelineMessage _messageData) = do
-  c <- readAndIncrement
-  pure ([], [origin <> " -> data_storage_filter_pipeline_message" <> show c])
+  thisNode <- addNode "data_storage_filter_pipeline_message" Nothing
+  addArrow origin thisNode
 messageToDot origin (GraphDataStorageLayoutMessage _messageData) = do
-  c <- readAndIncrement
-  pure ([], [origin <> " -> data_storage_layout_message" <> show c])
+  thisNode <- addNode "data_storage_layout_message" Nothing
+  addArrow origin thisNode
 messageToDot origin (GraphObjectModificationTimeMessage _messageData) = do
-  c <- readAndIncrement
-  pure ([], [origin <> " -> object_modification_time_message" <> show c])
+  thisNode <- addNode "object_modification_time_message" Nothing
+  addArrow origin thisNode
 messageToDot origin (GraphAttributeMessage _attributeName) = do
-  c <- readAndIncrement
-  pure ([], [origin <> " -> attribute_message" <> show c])
+  thisNode <- addNode "attribute_message" Nothing
+  addArrow origin thisNode
 messageToDot origin GraphNilMessage = do
-  c <- readAndIncrement
-  pure ([], [origin <> " -> nil_message" <> show c])
+  thisNode <- addNode "nil" Nothing
+  addArrow origin thisNode
 
 graphToDot :: GraphSymbolTableEntry -> String
-graphToDot entry = evalState graphToDot' 0
+graphToDot entry = evalState graphToDot' (GraphvizState 0 [] [])
   where
     graphToDot' = do
-      st <- readAndIncrement
-      oh <- readAndIncrement
-      let rootNode = "symbol_table_entry" <> show st
-          objectHeaderNode = "object_header" <> show oh
-      definitionsAndArrowsList <- mapM (messageToDot objectHeaderNode) (graphSymbolTableEntryMessages entry)
-      let definitions = concatMap fst definitionsAndArrowsList
-          arrows = concatMap snd definitionsAndArrowsList
-          surround s = "digraph G {\n" <> s <> "\n}"
+      rootNode <- addNode "symbol_table_entry" Nothing
+      objectHeaderNode <-
+        addNode
+          "object_header"
+          ( Just $
+              "label=<object header<br/><i>@"
+                <> show (graphSymbolTableEntryObjectHeaderAddress entry)
+                <> "</i>>"
+          )
+      mapM_ (messageToDot objectHeaderNode) (graphSymbolTableEntryMessages entry)
+      let surround s = "digraph G {\n" <> s <> "\n}"
+      current <- get
       pure $
         surround $
-          intercalate ";\n" definitions
+          intercalate ";\n" (gvDefinitions current)
+            <> ";\n"
             <> intercalate
               ";\n"
-              (["superblock -> " <> rootNode, rootNode <> " -> " <> objectHeaderNode] <> arrows)
+              (["superblock -> " <> show rootNode, show rootNode <> " -> " <> show objectHeaderNode] <> gvArrows current)
 
 main :: IO ()
 main = do
