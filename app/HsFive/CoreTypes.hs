@@ -23,6 +23,8 @@ data DataspaceDimension = DataspaceDimension
   }
   deriving (Show)
 
+data ByteOrder = LittleEndian | BigEndian deriving (Show)
+
 data DatatypeClass
   = ClassFixedPoint
   | ClassFloatingPoint
@@ -44,6 +46,14 @@ data VariableLengthStringCharacterSet = CharacterSetAscii | CharacterSetUtf8 der
 
 data Datatype
   = DatatypeFixedPoint
+      { fixedPointDataElementSize :: !Word32,
+        fixedPointByteOrder :: !ByteOrder,
+        fixedPointLoPadBit :: !Bool,
+        fixedPointHiPadBit :: !Bool,
+        fixedPointSigned :: !Bool,
+        fixedPointBitOffset :: !Word16,
+        fixedPointBitPrecision :: !Word16
+      }
   | DatatypeVariableLengthSequence
   | DatatypeVariableLengthString !VariableLengthStringPadding !VariableLengthStringCharacterSet !Word32
   deriving (Show)
@@ -418,8 +428,28 @@ getMessage 0x003 = do
   size <- getWord32le
   case class' of
     ClassFixedPoint -> do
-      skip 8
-      pure (DatatypeMessage (DatatypeMessageData version DatatypeFixedPoint))
+      let byteOrder = if bits0to7 .&. 1 == 0 then LittleEndian else BigEndian
+          loPadBit = bits0to7 .&. 0b0000010 > 0
+          hiPadBit = bits0to7 .&. 0b0000100 > 0
+          signed = bits0to7 .&. 0b0001000 > 0
+      bitOffset <- getWord16le
+      bitPrecision <- getWord16le
+      skip 4
+      pure
+        ( DatatypeMessage
+            ( DatatypeMessageData
+                version
+                ( DatatypeFixedPoint
+                    size
+                    byteOrder
+                    loPadBit
+                    hiPadBit
+                    signed
+                    bitOffset
+                    bitPrecision
+                )
+            )
+        )
     ClassVariableLength -> do
       let variableType = bits0to7 .&. 0b1111
       case variableType of
