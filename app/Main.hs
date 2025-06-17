@@ -89,13 +89,14 @@ A simple dataspace, H5S_SIMPLE , is a multidimensional array of elements. The di
 -}
 -- TODO: add link name here
 
-data GraphSymbolTableEntry = GraphSymbolTableEntry Address GraphObjectHeader
+data GraphSymbolTableEntry = GraphSymbolTableEntry
+  { gsteAddress :: Address,
+    gsteName :: BSL.ByteString,
+    gsteObjectHeader :: GraphObjectHeader
+  }
 
-graphSymbolTableEntryObjectHeaderAddress :: GraphSymbolTableEntry -> Address
-graphSymbolTableEntryObjectHeaderAddress (GraphSymbolTableEntry a _) = a
-
-graphSymbolTableEntryMessages :: GraphSymbolTableEntry -> [GraphMessage]
-graphSymbolTableEntryMessages (GraphSymbolTableEntry _ (GraphObjectHeader messages)) = messages
+gsteMessages :: GraphSymbolTableEntry -> [GraphMessage]
+gsteMessages (GraphSymbolTableEntry _ _ (GraphObjectHeader messages)) = messages
 
 data GraphHeap = GraphHeap [BSL.ByteString]
 
@@ -141,12 +142,18 @@ addArrow (GraphvizNode from) (GraphvizNode to) = do
   current <- get
   put (current {gvArrows = (from <> " -> " <> to) : gvArrows current})
 
-readGraphSymbolTableEntry :: Handle -> Int -> SymbolTableEntry -> IO GraphSymbolTableEntry
-readGraphSymbolTableEntry handle depth e =
+readGraphSymbolTableEntry :: Handle -> Int -> Maybe HeapWithData -> SymbolTableEntry -> IO GraphSymbolTableEntry
+readGraphSymbolTableEntry handle depth maybeHeap e =
   let prefix = replicate depth ' ' <> " | "
       putStrLnWithPrefix x = putStrLn (prefix <> x)
    in do
         putStrLnWithPrefix ("at symbol table entry: " <> show e)
+        let linkName =
+              case maybeHeap of
+                Nothing -> BSL.empty
+                Just (HeapWithData _heapHeader heapData') ->
+                  BSL.takeWhile (/= 0) (BSL.drop (fromIntegral (h5steLinkNameOffset e)) heapData')
+        putStrLnWithPrefix $ "link name " <> show linkName
         putStrLnWithPrefix $ "seeking to " <> show (h5steObjectHeaderAddress e)
         hSeek handle AbsoluteSeek (fromIntegral (h5steObjectHeaderAddress e))
         objectHeaderData <- BSL.hGet handle 2000
@@ -165,7 +172,7 @@ readGraphSymbolTableEntry handle depth e =
               forM
                 (ohHeaderMessages header)
                 (readGraphMessage depth putStrLnWithPrefix handle prefix)
-            pure (GraphSymbolTableEntry (h5steObjectHeaderAddress e) (GraphObjectHeader messages))
+            pure (GraphSymbolTableEntry (h5steObjectHeaderAddress e) linkName (GraphObjectHeader messages))
 
 readGraphMessage :: Int -> (String -> IO ()) -> Handle -> [Char] -> Message -> IO GraphMessage
 readGraphMessage depth putStrLnWithPrefix handle prefix message = do
@@ -184,12 +191,14 @@ readGraphMessage depth putStrLnWithPrefix handle prefix message = do
 
           putStrLnWithPrefix $ "seeking to heap at " <> show heapAddress
           hSeek handle AbsoluteSeek (fromIntegral heapAddress)
-          heapData <- BSL.hGet handle 200
-          case runGetOrFail getHeap heapData of
+          heapHeaderData <- BSL.hGet handle 200
+          case runGetOrFail getHeapHeader heapHeaderData of
             Left _ -> error "error reading heap"
-            Right (_, _, heap) -> do
+            Right (_, _, heapHeader') -> do
+              hSeek handle AbsoluteSeek (fromIntegral (heapDataSegmentAddress heapHeader'))
+              heapData' <- BSL.hGet handle (fromIntegral (heapDataSegmentSize heapHeader'))
               let keyAddressesOnHeap :: [Address]
-                  keyAddressesOnHeap = (\len -> heapDataSegmentAddress heap + len) <$> bltnKeyOffsets node
+                  keyAddressesOnHeap = (\len -> heapDataSegmentAddress heapHeader' + len) <$> bltnKeyOffsets node
                   childAddressesOnHeap = bltnChildPointers node
                   readChild :: Address -> IO GroupSymbolTableNode
                   readChild addr = do
@@ -198,13 +207,13 @@ readGraphMessage depth putStrLnWithPrefix handle prefix message = do
                     pure (runGet getGroupSymbolTableNode rawData)
               keysOnHeap <- mapM (readKey handle) keyAddressesOnHeap
               childrenOnHeap <- mapM readChild childAddressesOnHeap
-              putStrLnWithPrefix ("heap: " <> show heap)
+              putStrLnWithPrefix ("heap header: " <> show heapHeader')
               putStrLnWithPrefix ("keys on heap: " <> show keysOnHeap)
               putStrLnWithPrefix ("children: " <> show childrenOnHeap)
 
               treeEntries <-
                 mapM
-                  (readGraphSymbolTableEntry handle (depth + 2))
+                  (readGraphSymbolTableEntry handle (depth + 2) (Just (HeapWithData heapHeader' heapData')))
                   (concatMap gstnEntries childrenOnHeap)
 
               pure (GraphSymbolTableMessage btreeAddress (GraphTree treeEntries) (GraphHeap keysOnHeap))
@@ -254,7 +263,7 @@ readH5ToGraph fileNameEncoded = do
       Just superblock' -> do
         print superblock
 
-        readGraphSymbolTableEntry handle 0 (h5sbSymbolTableEntry superblock')
+        readGraphSymbolTableEntry handle 0 Nothing (h5sbSymbolTableEntry superblock')
 
 readSuperblock' :: Handle -> Integer -> Integer -> IO (Maybe Superblock)
 readSuperblock' handle fileSize start = do
@@ -281,11 +290,11 @@ readAndIncrement = do
   put (current + 1)
   pure current
 
-entryNodeToDot origin (GraphSymbolTableEntry address objectHeader) = do
+entryNodeToDot origin (GraphSymbolTableEntry address name objectHeader) = do
   thisNode <-
     addNode
       "symbol_table_entry"
-      (Just ("label=<symbol table entry<br/><i>@" <> show address <> "</i>>"))
+      (Just ("label=<symbol table entry<br/>" <> show name <> "<br/><i>@" <> show address <> "</i>>"))
   addArrow origin thisNode
   let objectHeaderToDot (GraphObjectHeader messages) = do
         thisOHNode <- addNode "object_header" Nothing
@@ -340,10 +349,10 @@ graphToDot entry = evalState graphToDot' (GraphvizState 0 [] [])
           "object_header"
           ( Just $
               "label=<object header<br/><i>@"
-                <> show (graphSymbolTableEntryObjectHeaderAddress entry)
+                <> show (gsteAddress entry)
                 <> "</i>>"
           )
-      mapM_ (messageToDot objectHeaderNode) (graphSymbolTableEntryMessages entry)
+      mapM_ (messageToDot objectHeaderNode) (gsteMessages entry)
       let surround s = "digraph G {\n" <> s <> "\n}"
       current <- get
       pure $

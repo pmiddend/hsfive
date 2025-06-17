@@ -109,7 +109,11 @@ data DataspaceMessageData = DataspaceMessageData
   }
   deriving (Show)
 
-data DatatypeMessageData = DatatypeMessageData {datatypeMessageVersion :: !Word8, datatypeClass :: !Datatype} deriving (Show)
+data DatatypeMessageData = DatatypeMessageData
+  { datatypeMessageVersion :: !Word8,
+    datatypeClass :: !Datatype
+  }
+  deriving (Show)
 
 data DataStorageFilterPipelineMessageData
   = DataStorageFilterPipelineMessageData {dataStorageFilterPipelineFilters :: ![DataStoragePipelineFilter]}
@@ -196,11 +200,17 @@ data Superblock = Superblock
   }
   deriving (Show)
 
-data Heap = Heap
+data HeapHeader = HeapHeader
   { heapVersion :: !Word8,
     heapDataSegmentSize :: !Length,
     heapOffsetToHeadOfFreeList :: !(Maybe Length),
     heapDataSegmentAddress :: !Address
+  }
+  deriving (Show)
+
+data HeapWithData = HeapWithData
+  { heapHeader :: HeapHeader,
+    heapData :: BSL.ByteString
   }
   deriving (Show)
 
@@ -636,12 +646,12 @@ getObjectHeaderV1 = do
   -- messages <- replicateM (fromIntegral messageCount) readMessage
   pure (ObjectHeader version objectReferenceCount objectHeaderSize messages)
 
-getHeap :: Get Heap
-getHeap = do
+getHeapHeader :: Get HeapHeader
+getHeapHeader = do
   signature' <- getByteString 4
   -- "HEAP" in ASCII
   when (signature' /= BS.pack [72, 69, 65, 80]) (fail "invalid heap signature")
-  Heap <$> (getWord8 <* getWord16le <* getWord8) <*> getLength <*> getMaybeLength <*> getAddress
+  HeapHeader <$> (getWord8 <* getWord16le <* getWord8) <*> getLength <*> getMaybeLength <*> getAddress
 
 getSuperblock :: Get Superblock
 getSuperblock = do
