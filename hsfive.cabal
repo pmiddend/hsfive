@@ -29,7 +29,7 @@ library
 executable hsfive
     import:           warnings
     main-is:          Main.hs
-    other-modules:    HsFive.CoreTypes
+    other-modules:    HsFive.CoreTypes, HsFive.UtilityFunctions
     -- other-extensions:
     build-depends:
         base ^>=4.19.2.0,
@@ -38,7 +38,8 @@ executable hsfive
         file-io,
         filepath,
         binary,
-        mtl
+        mtl,
+        safe
 
     hs-source-dirs:   app
     default-language: Haskell2010

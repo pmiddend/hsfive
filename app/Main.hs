@@ -1,7 +1,7 @@
 {-# LANGUAGE BinaryLiterals #-}
-{-# OPTIONS_GHC -Wno-unrecognised-pragmas #-}
-
 {-# HLINT ignore "Use newtype instead of data" #-}
+{-# LANGUAGE NamedFieldPuns #-}
+{-# OPTIONS_GHC -Wno-unrecognised-pragmas #-}
 
 module Main where
 
@@ -12,9 +12,11 @@ import Data.Binary.Get (bytesRead, getWord16le, isEmpty, isolate, runGet, runGet
 import qualified Data.ByteString as BS
 import qualified Data.ByteString.Lazy as BSL
 import Data.List (intercalate)
+import Data.Maybe (mapMaybe)
 import Data.Traversable (forM)
 import Data.Word (Word32)
 import HsFive.CoreTypes
+import Safe (headMay)
 import System.File.OsPath (withBinaryFile)
 import System.IO (Handle, IOMode (ReadMode), SeekMode (AbsoluteSeek, SeekFromEnd), hSeek, hTell)
 import System.OsPath (OsPath, encodeUtf)
@@ -26,47 +28,6 @@ traceWith :: (a -> String) -> a -> a
 traceWith x f = f
 
 {-
-Graphviz:
-digraph G {
-    object_header_0[label=<object header 0<br/>@96>];
-    btree_1[label=<btree 1<br />@136>];
-    heap_1[label=<heap 1<br />@680>];
-    btree_2[label=<btree 2<br />@840>];
-    heap_2[label=<heap 2<br />@1384>];
-    object_header_1[label=<object header 1<br/>@800>];
-    attribute_message_1[label=<attribute message 1<br/><i>NX_class</i>>];
-    group_symbol_table_1[label=<group symbol table 1<br/><i>entry</i>>];
-    group_symbol_table_2[label=<group symbol table 2<br/><i>data</i>>];
-    object_header_2[label=<object header 2<br/>@1960>];
-    attribute_message_2[label=<attribute message 2<br/><i>NX_class</i>>];
-    btree_3[label=<btree 3<br />@6144>];
-    heap_3[label=<heap 3<br />@6688>];
-
-    superblock -> symbol_table_entry_0;
-    symbol_table_entry_0 -> object_header_0;
-    object_header_0 -> symbol_table_message_1;
-    symbol_table_message_1 -> btree_1;
-    symbol_table_message_1 -> heap_1;
-    btree_1 -> group_symbol_table_1;
-    group_symbol_table_1 -> symbol_table_entry_2;
-    symbol_table_entry_2 -> object_header_1;
-    object_header_1 -> continuation_message_1;
-    continuation_message_1 -> symbol_table_message_3;
-    continuation_message_1 -> attribute_message_1;
-    symbol_table_message_3 -> btree_2;
-    symbol_table_message_3 -> heap_2;
-    btree_2 -> group_symbol_table_2;
-    group_symbol_table_2 -> symbol_table_entry_3;
-    symbol_table_entry_3 -> object_header_2;
-    object_header_2 -> continuation_message_2;
-    continuation_message_2 -> symbol_table_message_4;
-    continuation_message_2 -> attribute_message_2;
-    continuation_message_2 -> nil_message_1;
-    symbol_table_message_4 -> btree_3;
-    symbol_table_message_4 -> heap_3;
-    btree_3 -> group_symbol_table_3;
-}
-
 # General TODOs
 
 The superblock contains a "Base Address", which is the base address for all other addresses in the file.
@@ -184,8 +145,9 @@ readGraphMessage depth putStrLnWithPrefix handle prefix message = do
       putStrLnWithPrefix $ "seeking to " <> show btreeAddress <> "; check btree for symbol table"
       hSeek handle AbsoluteSeek (fromIntegral btreeAddress)
       blinkTreenode <- BSL.hGet handle 200
-      case runGetOrFail getBLinkTreeNode blinkTreenode of
+      case runGetOrFail (getBLinkTreeNode Nothing) blinkTreenode of
         Left _ -> error (prefix <> "error reading b-link node")
+        Right (_, _, node@(BLinkTreeNodeChunkedRawData {})) -> fail "got chunked data node inside tree"
         Right (_, _, node@(BLinkTreeNodeGroup {})) -> do
           putStrLnWithPrefix ("tree node: " <> show node)
 
@@ -290,6 +252,7 @@ readAndIncrement = do
   put (current + 1)
   pure current
 
+entryNodeToDot :: GraphvizNode -> GraphSymbolTableEntry -> State GraphvizState ()
 entryNodeToDot origin (GraphSymbolTableEntry address name objectHeader) = do
   thisNode <-
     addNode
@@ -363,8 +326,43 @@ graphToDot entry = evalState graphToDot' (GraphvizState 0 [] [])
               ";\n"
               (["superblock -> " <> show rootNode, show rootNode <> " -> " <> show objectHeaderNode] <> gvArrows current)
 
+readChunkedLayouts :: Handle -> GraphSymbolTableEntry -> IO ()
+readChunkedLayouts handle g = mapM_ (descend Nothing) (gsteMessages g)
+  where
+    searchDataspace :: GraphObjectHeader -> Maybe DataspaceMessageData
+    searchDataspace (GraphObjectHeader messages) =
+      let finder (GraphDataspaceMessage d) = Just d
+          finder _ = Nothing
+       in headMay (mapMaybe finder messages)
+    descend :: Maybe DataspaceMessageData -> GraphMessage -> IO ()
+    descend maybeDataspace (GraphContinuationMessage xs) = mapM_ (descend maybeDataspace) xs
+    descend _ (GraphSymbolTableMessage _ (GraphTree entries) _) = mapM_ descendToEntry entries
+    descend maybeDataspace (GraphDataStorageLayoutMessage (LayoutChunked {layoutChunkedBTreeAddress})) =
+      case layoutChunkedBTreeAddress of
+        Nothing -> pure ()
+        Just addr -> do
+          hSeek handle AbsoluteSeek (fromIntegral addr)
+          data' <- BSL.hGet handle 2000
+          case runGetOrFail (getBLinkTreeNode maybeDataspace) data' of
+            Left (_, bytesConsumed, e') ->
+              error
+                ( "invalid b tree node (consumed "
+                    <> show bytesConsumed
+                    <> " bytes): "
+                    <> show e'
+                )
+            Right (_, _, node) -> do
+              putStrLn ("tree node: " <> show node)
+    descend _ _ = pure ()
+    descendToEntry :: GraphSymbolTableEntry -> IO ()
+    descendToEntry e = do
+      mapM_ (descend (searchDataspace (gsteObjectHeader e))) (gsteMessages e)
+
 main :: IO ()
 main = do
   fileNameEncoded <- encodeUtf "/home/pmidden/178_data-00000.nx5"
   graph <- readH5ToGraph fileNameEncoded
-  putStrLn (graphToDot graph)
+  withBinaryFile fileNameEncoded ReadMode $ \handle -> do
+    readChunkedLayouts handle graph
+
+-- putStrLn (graphToDot graph)

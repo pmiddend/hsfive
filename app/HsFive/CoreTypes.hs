@@ -1,7 +1,8 @@
 {-# LANGUAGE BinaryLiterals #-}
+{-# HLINT ignore "Use newtype instead of data" #-}
+{-# LANGUAGE NamedFieldPuns #-}
 {-# OPTIONS_GHC -Wno-unrecognised-pragmas #-}
 
-{-# HLINT ignore "Use newtype instead of data" #-}
 module HsFive.CoreTypes where
 
 import Control.Monad (replicateM, void, when)
@@ -11,8 +12,11 @@ import Data.Bits (shiftR, (.&.))
 import qualified Data.ByteString as BS
 import qualified Data.ByteString.Lazy as BSL
 import Data.Foldable (forM_)
+import Data.List (singleton)
 import Data.Word (Word16, Word32, Word64, Word8)
+import Debug.Trace (trace)
 import HsFive.Util
+import HsFive.UtilityFunctions (unfoldWhileM)
 import System.File.OsPath (withBinaryFile)
 import System.IO (Handle, IOMode (ReadMode), SeekMode (AbsoluteSeek, SeekFromEnd), hSeek, hTell)
 import System.OsPath (OsPath, encodeUtf)
@@ -182,14 +186,31 @@ type Length = Word64
 
 type Address = Word64
 
-data BLinkTreeNode = BLinkTreeNodeGroup
-  { bltnNodeLevel :: !Word8,
-    bltnEntriesUsed :: !Word16,
-    bltnLeftSiblingAddress :: !(Maybe Word64),
-    bltnRightSiblingAddress :: !(Maybe Word64),
-    bltnKeyOffsets :: ![Length],
-    bltnChildPointers :: ![Address]
+data ChunkInfo a = ChunkInfo
+  { ciSize :: !Word32,
+    ciFilterMask :: !Word32,
+    ciChunkOffsets :: ![Length],
+    ciChunkPointer :: !a
   }
+  deriving (Show)
+
+data BLinkTreeNode
+  = BLinkTreeNodeGroup
+      { bltnNodeLevel :: !Word8,
+        bltnEntriesUsed :: !Word16,
+        bltnLeftSiblingAddress :: !(Maybe Word64),
+        bltnRightSiblingAddress :: !(Maybe Word64),
+        bltnKeyOffsets :: ![Length],
+        bltnChildPointers :: ![Address]
+      }
+  | BLinkTreeNodeChunkedRawData
+      { bltnNodeLevel :: !Word8,
+        bltnEntriesUsed :: !Word16,
+        bltnLeftSiblingAddress :: !(Maybe Word64),
+        bltnRightSiblingAddress :: !(Maybe Word64),
+        bltnChunks :: ![ChunkInfo Address],
+        bltnLastChunk :: !(ChunkInfo (Maybe Address))
+      }
   deriving (Show)
 
 data Superblock = Superblock
@@ -295,18 +316,35 @@ getLength = getWord64le
 getAddress :: Get Address
 getAddress = getWord64le
 
-getBLinkTreeNode :: Get BLinkTreeNode
-getBLinkTreeNode = do
+getBLinkTreeNode :: Maybe DataspaceMessageData -> Get BLinkTreeNode
+getBLinkTreeNode maybeDataspace = do
   signature' <- getByteString 4
   -- "TREE" in ASCII
   when (signature' /= BS.pack [84, 82, 69, 69]) (fail "invalid B tree node signature")
   nodeType <- getBLinkTreeNodeTypeEnum
+  nodeLevel <- getWord8
+  entriesUsed <- getWord16le
+  leftSiblingAddress <- getMaybeAddress
+  rightSiblingAddress <- getMaybeAddress
   case nodeType of
+    BLinkTreeNodeEnumRawData ->
+      case maybeDataspace of
+        Nothing -> fail "cannot parse raw data node: got no data space"
+        Just (DataspaceMessageData {dataspaceDimensions}) -> do
+          let getChunk :: Get a -> Get (ChunkInfo a)
+              getChunk getAddress' = ChunkInfo <$> getWord32le <*> getWord32le <*> replicateM (length dataspaceDimensions) getLength <*> (getLength *> getAddress')
+          chunks <- replicateM (fromIntegral entriesUsed) (getChunk getAddress)
+          lastChunk <- getChunk (pure Nothing)
+          pure
+            ( BLinkTreeNodeChunkedRawData
+                nodeLevel
+                entriesUsed
+                leftSiblingAddress
+                rightSiblingAddress
+                (trace ("chunks: " <> show chunks) chunks)
+                lastChunk
+            )
     BLinkTreeNodeEnumGroup -> do
-      nodeLevel <- getWord8
-      entriesUsed <- getWord16le
-      leftSiblingAddress <- getMaybeAddress
-      rightSiblingAddress <- getMaybeAddress
       keysAndPointers <- replicateM (fromIntegral (2 * entriesUsed + 1)) getLength
       pure
         ( BLinkTreeNodeGroup
