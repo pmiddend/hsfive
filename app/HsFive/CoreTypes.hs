@@ -27,7 +27,7 @@ data DataspaceDimension = DataspaceDimension
   }
   deriving (Show)
 
-data ByteOrder = LittleEndian | BigEndian deriving (Show)
+data ByteOrder = LittleEndian | BigEndian deriving (Show, Eq)
 
 data DatatypeClass
   = ClassFixedPoint
@@ -316,8 +316,8 @@ getLength = getWord64le
 getAddress :: Get Address
 getAddress = getWord64le
 
-getBLinkTreeNode :: Maybe DataspaceMessageData -> Get BLinkTreeNode
-getBLinkTreeNode maybeDataspace = do
+getBLinkTreeNode :: Maybe DataspaceMessageData -> Maybe DatatypeMessageData -> Get BLinkTreeNode
+getBLinkTreeNode maybeDataspace maybeDatatype = do
   signature' <- getByteString 4
   -- "TREE" in ASCII
   when (signature' /= BS.pack [84, 82, 69, 69]) (fail "invalid B tree node signature")
@@ -332,7 +332,12 @@ getBLinkTreeNode maybeDataspace = do
         Nothing -> fail "cannot parse raw data node: got no data space"
         Just (DataspaceMessageData {dataspaceDimensions}) -> do
           let getChunk :: Get a -> Get (ChunkInfo a)
-              getChunk getAddress' = ChunkInfo <$> getWord32le <*> getWord32le <*> replicateM (length dataspaceDimensions) getLength <*> (getLength *> getAddress')
+              getChunk getAddress' =
+                ChunkInfo
+                  <$> getWord32le
+                  <*> getWord32le
+                  <*> replicateM (length dataspaceDimensions) getLength
+                  <*> (getLength *> getAddress')
           chunks <- replicateM (fromIntegral entriesUsed) (getChunk getAddress)
           lastChunk <- getChunk (pure Nothing)
           pure

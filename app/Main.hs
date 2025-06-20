@@ -6,9 +6,11 @@
 module Main where
 
 -- import Debug.Trace (trace, traceShowId, traceWith)
+
+import Control.Monad (replicateM)
 import Control.Monad.State (State, evalState, get, put)
 import Data.Binary (getWord8)
-import Data.Binary.Get (bytesRead, getWord16le, isEmpty, isolate, runGet, runGetOrFail, skip)
+import Data.Binary.Get (bytesRead, getDoublele, getInt64le, getWord16le, getWord64le, isEmpty, isolate, runGet, runGetOrFail, skip)
 import qualified Data.ByteString as BS
 import qualified Data.ByteString.Lazy as BSL
 import Data.List (intercalate)
@@ -145,7 +147,7 @@ readGraphMessage depth putStrLnWithPrefix handle prefix message = do
       putStrLnWithPrefix $ "seeking to " <> show btreeAddress <> "; check btree for symbol table"
       hSeek handle AbsoluteSeek (fromIntegral btreeAddress)
       blinkTreenode <- BSL.hGet handle 200
-      case runGetOrFail (getBLinkTreeNode Nothing) blinkTreenode of
+      case runGetOrFail (getBLinkTreeNode Nothing Nothing) blinkTreenode of
         Left _ -> error (prefix <> "error reading b-link node")
         Right (_, _, node@(BLinkTreeNodeChunkedRawData {})) -> fail "got chunked data node inside tree"
         Right (_, _, node@(BLinkTreeNodeGroup {})) -> do
@@ -327,23 +329,35 @@ graphToDot entry = evalState graphToDot' (GraphvizState 0 [] [])
               (["superblock -> " <> show rootNode, show rootNode <> " -> " <> show objectHeaderNode] <> gvArrows current)
 
 readChunkedLayouts :: Handle -> GraphSymbolTableEntry -> IO ()
-readChunkedLayouts handle g = mapM_ (descend Nothing) (gsteMessages g)
+readChunkedLayouts handle g = mapM_ (descend Nothing Nothing Nothing) (gsteMessages g)
   where
+    searchMessage :: GraphObjectHeader -> (GraphMessage -> Maybe a) -> Maybe a
+    searchMessage (GraphObjectHeader messages) finder = headMay (mapMaybe finder messages)
     searchDataspace :: GraphObjectHeader -> Maybe DataspaceMessageData
-    searchDataspace (GraphObjectHeader messages) =
-      let finder (GraphDataspaceMessage d) = Just d
-          finder _ = Nothing
-       in headMay (mapMaybe finder messages)
-    descend :: Maybe DataspaceMessageData -> GraphMessage -> IO ()
-    descend maybeDataspace (GraphContinuationMessage xs) = mapM_ (descend maybeDataspace) xs
-    descend _ (GraphSymbolTableMessage _ (GraphTree entries) _) = mapM_ descendToEntry entries
-    descend maybeDataspace (GraphDataStorageLayoutMessage (LayoutChunked {layoutChunkedBTreeAddress})) =
+    searchDataspace header =
+      let dataspaceFinder (GraphDataspaceMessage d) = Just d
+          dataspaceFinder _ = Nothing
+       in searchMessage header dataspaceFinder
+    searchDatatype :: GraphObjectHeader -> Maybe DatatypeMessageData
+    searchDatatype header =
+      let datatypeFinder (GraphDatatypeMessage d) = Just d
+          datatypeFinder _ = Nothing
+       in searchMessage header datatypeFinder
+    searchFilters :: GraphObjectHeader -> Maybe DataStorageFilterPipelineMessageData
+    searchFilters header =
+      let filtersFinder (GraphDataStorageFilterPipelineMessage d) = Just d
+          filtersFinder _ = Nothing
+       in searchMessage header filtersFinder
+    descend :: Maybe DataspaceMessageData -> Maybe DatatypeMessageData -> Maybe DataStorageFilterPipelineMessageData -> GraphMessage -> IO ()
+    descend maybeDataspace maybeDatatype maybeFilters (GraphContinuationMessage xs) = mapM_ (descend maybeDataspace maybeDatatype maybeFilters) xs
+    descend _ _ _ (GraphSymbolTableMessage _ (GraphTree entries) _) = mapM_ descendToEntry entries
+    descend maybeDataspace maybeDatatype maybeFilters (GraphDataStorageLayoutMessage (LayoutChunked {layoutChunkedBTreeAddress})) =
       case layoutChunkedBTreeAddress of
         Nothing -> pure ()
         Just addr -> do
           hSeek handle AbsoluteSeek (fromIntegral addr)
           data' <- BSL.hGet handle 2000
-          case runGetOrFail (getBLinkTreeNode maybeDataspace) data' of
+          case runGetOrFail (getBLinkTreeNode maybeDataspace maybeDatatype) data' of
             Left (_, bytesConsumed, e') ->
               error
                 ( "invalid b tree node (consumed "
@@ -351,12 +365,38 @@ readChunkedLayouts handle g = mapM_ (descend Nothing) (gsteMessages g)
                     <> " bytes): "
                     <> show e'
                 )
-            Right (_, _, node) -> do
+            Right (_, _, node@(BLinkTreeNodeChunkedRawData {bltnChunks})) -> do
               putStrLn ("tree node: " <> show node)
-    descend _ _ = pure ()
+              let readSingleChunk :: ChunkInfo Address -> IO ()
+                  readSingleChunk ci = do
+                    putStrLn ("seeking to " <> show (ciChunkPointer ci))
+                    hSeek handle AbsoluteSeek (fromIntegral (ciChunkPointer ci))
+                    chunkData <- BSL.hGet handle (fromIntegral (ciSize ci))
+                    case datatypeClass <$> maybeDatatype of
+                      Just (DatatypeFixedPoint {fixedPointDataElementSize, fixedPointByteOrder}) ->
+                        case dataspaceDimensions <$> maybeDataspace of
+                          Nothing -> error "fixed point data without dataspace?"
+                          Just [DataspaceDimension {ddSize}] ->
+                            if fixedPointDataElementSize == 8 && fixedPointByteOrder == LittleEndian
+                              then case runGetOrFail (replicateM (fromIntegral ddSize) getInt64le) chunkData of
+                                Left (_, bytesConsumed, e') ->
+                                  error
+                                    ( "invalid chunk (consumed "
+                                        <> show bytesConsumed
+                                        <> " bytes): "
+                                        <> show e'
+                                    )
+                                Right (_, _, numbers) -> do
+                                  putStrLn ("read numbers " <> show numbers)
+                              else putStrLn "chunk isn't 8 byte little endian"
+                          Just dimensions -> putStrLn ("unsupported dimensions " <> show dimensions)
+                      _ -> putStrLn "invalid data type (not fixed point or not there)"
+              mapM_ readSingleChunk bltnChunks
+            Right (_, _, _) -> error "got an inner node but expected a chunk"
+    descend _ _ _ _ = pure ()
     descendToEntry :: GraphSymbolTableEntry -> IO ()
     descendToEntry e = do
-      mapM_ (descend (searchDataspace (gsteObjectHeader e))) (gsteMessages e)
+      mapM_ (descend (searchDataspace (gsteObjectHeader e)) (searchDatatype (gsteObjectHeader e)) (searchFilters (gsteObjectHeader e))) (gsteMessages e)
 
 main :: IO ()
 main = do
