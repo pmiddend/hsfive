@@ -119,7 +119,7 @@ readGraphSymbolTableEntry handle depth maybeHeap e =
         putStrLnWithPrefix $ "link name " <> show linkName
         putStrLnWithPrefix $ "seeking to " <> show (h5steObjectHeaderAddress e)
         hSeek handle AbsoluteSeek (fromIntegral (h5steObjectHeaderAddress e))
-        objectHeaderData <- BSL.hGet handle 2000
+        objectHeaderData <- BSL.hGet handle 4096
         case runGetOrFail getObjectHeaderV1 objectHeaderData of
           Left (_, bytesConsumed, e') ->
             error
@@ -146,7 +146,7 @@ readGraphMessage depth putStrLnWithPrefix handle prefix message = do
     SymbolTableMessage btreeAddress heapAddress -> do
       putStrLnWithPrefix $ "seeking to " <> show btreeAddress <> "; check btree for symbol table"
       hSeek handle AbsoluteSeek (fromIntegral btreeAddress)
-      blinkTreenode <- BSL.hGet handle 200
+      blinkTreenode <- BSL.hGet handle 2048
       case runGetOrFail (getBLinkTreeNode Nothing Nothing) blinkTreenode of
         Left _ -> error (prefix <> "error reading b-link node")
         Right (_, _, node@(BLinkTreeNodeChunkedRawData {})) -> fail "got chunked data node inside tree"
@@ -155,7 +155,7 @@ readGraphMessage depth putStrLnWithPrefix handle prefix message = do
 
           putStrLnWithPrefix $ "seeking to heap at " <> show heapAddress
           hSeek handle AbsoluteSeek (fromIntegral heapAddress)
-          heapHeaderData <- BSL.hGet handle 200
+          heapHeaderData <- BSL.hGet handle 2048
           case runGetOrFail getHeapHeader heapHeaderData of
             Left _ -> error "error reading heap"
             Right (_, _, heapHeader') -> do
@@ -167,7 +167,7 @@ readGraphMessage depth putStrLnWithPrefix handle prefix message = do
                   readChild :: Address -> IO GroupSymbolTableNode
                   readChild addr = do
                     hSeek handle AbsoluteSeek (fromIntegral addr)
-                    rawData <- BSL.hGet handle 200
+                    rawData <- BSL.hGet handle 2048
                     pure (runGet getGroupSymbolTableNode rawData)
               keysOnHeap <- mapM (readKey handle) keyAddressesOnHeap
               childrenOnHeap <- mapM readChild childAddressesOnHeap
@@ -233,7 +233,7 @@ readSuperblock' :: Handle -> Integer -> Integer -> IO (Maybe Superblock)
 readSuperblock' handle fileSize start = do
   putStrLn $ "trying at " <> show start
   hSeek handle AbsoluteSeek start
-  superblockCandidate <- BSL.hGet handle 200
+  superblockCandidate <- BSL.hGet handle 2048
   case runGetOrFail getSuperblock superblockCandidate of
     Left _ ->
       let newStart = if start == 0 then 512 else start * 2
@@ -356,7 +356,7 @@ readChunkedLayouts handle g = mapM_ (descend Nothing Nothing Nothing) (gsteMessa
         Nothing -> pure ()
         Just addr -> do
           hSeek handle AbsoluteSeek (fromIntegral addr)
-          data' <- BSL.hGet handle 2000
+          data' <- BSL.hGet handle 2048
           case runGetOrFail (getBLinkTreeNode maybeDataspace maybeDatatype) data' of
             Left (_, bytesConsumed, e') ->
               error
@@ -400,7 +400,7 @@ readChunkedLayouts handle g = mapM_ (descend Nothing Nothing Nothing) (gsteMessa
 
 main :: IO ()
 main = do
-  fileNameEncoded <- encodeUtf "/home/pmidden/178_data-00000.nx5"
+  fileNameEncoded <- encodeUtf "/home/pmidden/Downloads/water_224.h5"
   graph <- readH5ToGraph fileNameEncoded
   withBinaryFile fileNameEncoded ReadMode $ \handle -> do
     readChunkedLayouts handle graph

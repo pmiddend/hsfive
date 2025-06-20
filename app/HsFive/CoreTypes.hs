@@ -44,9 +44,15 @@ data DatatypeClass
   | ClassComplex
   deriving (Show)
 
-data VariableLengthStringPadding = PaddingNullTerminate | PaddingNull | PaddingSpace deriving (Show)
+data StringPadding = PaddingNullTerminate | PaddingNull | PaddingSpace deriving (Show)
 
-data VariableLengthStringCharacterSet = CharacterSetAscii | CharacterSetUtf8 deriving (Show)
+data CharacterSet = CharacterSetAscii | CharacterSetUtf8 deriving (Show)
+
+data MantissaNormalization
+  = NoNormalization
+  | MostSignificantMantissaAlwaysSet
+  | MostSignificantMantissaImplied
+  deriving (Show, Eq)
 
 data Datatype
   = DatatypeFixedPoint
@@ -59,7 +65,23 @@ data Datatype
         fixedPointBitPrecision :: !Word16
       }
   | DatatypeVariableLengthSequence
-  | DatatypeVariableLengthString !VariableLengthStringPadding !VariableLengthStringCharacterSet !Word32
+  | DatatypeVariableLengthString !StringPadding !CharacterSet !Word32
+  | DatatypeString !StringPadding !CharacterSet
+  | DatatypeFloatingPoint
+      { floatingPointByteOrder :: !ByteOrder,
+        floatingPointLowBitPad :: !Bool,
+        floatingPointHighBitPad :: !Bool,
+        floatingPointInternalBitPad :: !Bool,
+        floatingPointMantissaNormalization :: !MantissaNormalization,
+        floatingPointSignLocation :: !Int,
+        floatingPointBitOffset :: !Word16,
+        floatingPointBitPrecision :: !Word16,
+        floatingPointExponentLocation :: !Word8,
+        floatingPointExponentSize :: !Word8,
+        floatingPointMantissaLocation :: !Word8,
+        floatingPointMantissaSize :: !Word8,
+        floatingPointExponentBias :: !Word32
+      }
   deriving (Show)
 
 data DataStorageSpaceAllocationTime
@@ -459,7 +481,7 @@ getMessage 0x0001 = do
 -- Explanation of "datatype" in general
 --
 -- https://support.hdfgroup.org/documentation/hdf5/latest/_l_b_datatypes.html
-getMessage 0x003 = do
+getMessage 0x0003 = do
   classAndVersion <- getWord8
   let classNumeric = classAndVersion .&. 0b1111
       version = (classAndVersion .&. 0b11110000) `shiftR` 4
@@ -477,6 +499,7 @@ getMessage 0x003 = do
           signed = bits0to7 .&. 0b0001000 > 0
       bitOffset <- getWord16le
       bitPrecision <- getWord16le
+      -- not sure why this is necessary
       skip 4
       pure
         ( DatatypeMessage
@@ -506,6 +529,54 @@ getMessage 0x003 = do
           skip (fromIntegral size)
           pure (DatatypeMessage (DatatypeMessageData version (DatatypeVariableLengthString paddingType characterSet size)))
         _ -> fail $ "variable length which is neither sequence nor string, bits are: " <> show variableType
+    ClassString -> do
+      let paddingTypeNumeric = (bits0to7 .&. 0b11110000) `shiftR` 4
+      paddingType <- if paddingTypeNumeric == 0 then pure PaddingNullTerminate else if paddingTypeNumeric == 1 then pure PaddingNull else if paddingTypeNumeric == 2 then pure PaddingSpace else fail ("invalid variable length string padding type " <> show paddingTypeNumeric)
+      let characterSetNumeric = bits8to15 .&. 0b1111
+      characterSet <- if characterSetNumeric == 0 then pure CharacterSetAscii else if characterSetNumeric == 1 then pure CharacterSetUtf8 else fail ("invalid variable length string character set " <> show characterSetNumeric)
+      pure (DatatypeMessage (DatatypeMessageData version (DatatypeString paddingType characterSet)))
+    ClassFloatingPoint -> do
+      when (bits0to7 .&. 1 == 3) (fail "floating point values with VAX-endianness are not supported")
+      let byteOrder = if bits0to7 .&. 1 == 0 then LittleEndian else BigEndian
+          mantissaNormalizationBits = bits0to7 .&. 0b11000
+      mantissaNormalization <-
+        case mantissaNormalizationBits of
+          0 -> pure NoNormalization
+          1 -> pure MostSignificantMantissaAlwaysSet
+          2 -> pure MostSignificantMantissaImplied
+          _ -> fail ("invalid mantissa normalization for floating point value " <> show mantissaNormalizationBits)
+
+      bitOffset <- getWord16le
+      bitPrecision <- getWord16le
+      exponentLocation <- getWord8
+      exponentSize <- getWord8
+      mantissaLocation <- getWord8
+      mantissaSize <- getWord8
+      exponentBias <- getWord32le
+
+      -- not sure why this is necessary
+      skip 4
+      pure
+        ( DatatypeMessage
+            ( DatatypeMessageData
+                version
+                ( DatatypeFloatingPoint
+                    byteOrder
+                    (bits0to7 .&. 0b10 > 0)
+                    (bits0to7 .&. 0b100 > 0)
+                    (bits0to7 .&. 0b1000 > 0)
+                    mantissaNormalization
+                    (fromIntegral bits8to15)
+                    bitOffset
+                    bitPrecision
+                    exponentLocation
+                    exponentSize
+                    mantissaLocation
+                    mantissaSize
+                    exponentBias
+                )
+            )
+        )
     _ -> fail ("class " <> show class' <> " properties not supported yet")
 getMessage 0x0005 = do
   version <- getWord8
@@ -570,7 +641,7 @@ getMessage 0x0008 = do
     3 -> do
       layoutClass <- getDataStorageLayoutClass
 
-      case layoutClass of
+      case (trace ("layout class: " <> show layoutClass) layoutClass) of
         -- Order of appearance in the spec
         LayoutClassCompact -> do
           -- (Note: The dimensionality information is in the Dataspace message)
@@ -589,6 +660,8 @@ getMessage 0x0008 = do
           -- that storage has not yet been allocated for this array.
           rawDataAddress <- getMaybeAddress
           size <- getLength
+          -- Apparently theres "crap" at the end of this message?
+          void getRemainingLazyByteString
           pure (DataStorageLayoutMessage (LayoutContiguous rawDataAddress size))
         LayoutClassChunked -> do
           -- A chunk has a fixed dimensionality. This field specifies
@@ -599,16 +672,20 @@ getMessage 0x0008 = do
           -- 1A1 - Version 1 B-trees that is used to look up the
           -- addresses of the chunks that actually store portions of
           -- the array data.
-          address <- getMaybeAddress
+          address <- trace ("chunked dimensionality" <> show dimensionality) getMaybeAddress
           -- These values define the dimension size of a single chunk,
           -- in units of array elements (not bytes). The first
           -- dimension stored in the list of dimensions is the slowest
           -- changing dimension and the last dimension stored is the
           -- fastest changing dimension.
-          sizes <- replicateM (fromIntegral dimensionality) getWord32le
+          --
+          -- The spec isn't explicit about it, but it seems like the dimensionality has to be "minus-oned"
+          sizes <- replicateM (fromIntegral dimensionality - 1) getWord32le
           datasetElementSize <- getWord32le
           -- The need to skip this is _very_ weird. Not sure why we need it, it's not in the spec.
-          skip 1
+          -- skip 1
+          void getRemainingLazyByteString
+
           pure (DataStorageLayoutMessage (LayoutChunked address sizes datasetElementSize))
     _ -> do
       when (version /= 1 && version /= 2) (fail ("version of the data layout message is not supported yet: " <> show version))
@@ -691,8 +768,8 @@ getObjectHeaderV1 = do
   -- have any bytes anymore.
   let readMessage = do
         messageType <- getWord16le
-        headerMessageDataSize <- getWord16le
-        flags <- getWord8
+        headerMessageDataSize <- (trace ("reading message type " <> show messageType) getWord16le)
+        flags <- trace ("header size " <> show headerMessageDataSize) getWord8
         skip 3
         isolate (fromIntegral headerMessageDataSize) (getMessage messageType)
       -- decodeMessages 0 = pure []
