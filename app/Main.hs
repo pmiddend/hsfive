@@ -7,20 +7,22 @@ module Main where
 
 -- import Debug.Trace (trace, traceShowId, traceWith)
 
-import Control.Monad (replicateM)
+import Control.Monad (join, replicateM)
 import Control.Monad.State (State, evalState, get, put)
 import Data.Binary (getWord8)
 import Data.Binary.Get (bytesRead, getDoublele, getInt64le, getWord16le, getWord64le, isEmpty, isolate, runGet, runGetOrFail, skip)
 import qualified Data.ByteString as BS
+import qualified Data.ByteString.Char8 as BS8
 import qualified Data.ByteString.Lazy as BSL
-import Data.List (intercalate)
+import qualified Data.ByteString.Lazy.Char8 as BSL8
+import Data.List (intercalate, sortOn)
 import Data.Maybe (mapMaybe)
 import Data.Traversable (forM)
 import Data.Word (Word32)
 import HsFive.CoreTypes
 import Safe (headMay)
-import System.File.OsPath (withBinaryFile)
-import System.IO (Handle, IOMode (ReadMode), SeekMode (AbsoluteSeek, SeekFromEnd), hSeek, hTell)
+import System.File.OsPath (withBinaryFile, withFile)
+import System.IO (Handle, IOMode (ReadMode, WriteMode), SeekMode (AbsoluteSeek, SeekFromEnd), hPutStrLn, hSeek, hTell)
 import System.OsPath (OsPath, encodeUtf)
 
 trace :: String -> a -> a
@@ -67,14 +69,13 @@ data GraphTree = GraphTree [GraphSymbolTableEntry]
 
 data GraphMessage
   = GraphSymbolTableMessage Address GraphTree GraphHeap
-  | GraphContinuationMessage [GraphMessage]
   | GraphDataspaceMessage DataspaceMessageData
   | GraphDatatypeMessage DatatypeMessageData
   | GraphDataStorageFillValueMessage
   | GraphDataStorageFilterPipelineMessage DataStorageFilterPipelineMessageData
   | GraphDataStorageLayoutMessage DataStorageLayout
   | GraphObjectModificationTimeMessage Word32
-  | GraphAttributeMessage BS.ByteString
+  | GraphAttributeMessage BS.ByteString DatatypeMessageData DataspaceMessageData AttributeData
   | GraphNilMessage
 
 data GraphObjectHeader = GraphObjectHeader [GraphMessage]
@@ -132,17 +133,18 @@ readGraphSymbolTableEntry handle depth maybeHeap e =
             putStrLnWithPrefix ("object header: " <> show header)
             putStrLnWithPrefix "iterating over messages"
             messages <-
-              forM
-                (ohHeaderMessages header)
-                (readGraphMessage depth putStrLnWithPrefix handle prefix)
+              join
+                <$> forM
+                  (ohHeaderMessages header)
+                  (readGraphMessage depth putStrLnWithPrefix handle prefix)
             pure (GraphSymbolTableEntry (h5steObjectHeaderAddress e) linkName (GraphObjectHeader messages))
 
-readGraphMessage :: Int -> (String -> IO ()) -> Handle -> [Char] -> Message -> IO GraphMessage
+readGraphMessage :: Int -> (String -> IO ()) -> Handle -> [Char] -> Message -> IO [GraphMessage]
 readGraphMessage depth putStrLnWithPrefix handle prefix message = do
   putStrLnWithPrefix ("message: " <> show message)
   case message of
-    NilMessage -> pure GraphNilMessage
-    DataspaceMessage d -> pure (GraphDataspaceMessage d)
+    NilMessage -> pure []
+    DataspaceMessage d -> pure [GraphDataspaceMessage d]
     SymbolTableMessage btreeAddress heapAddress -> do
       putStrLnWithPrefix $ "seeking to " <> show btreeAddress <> "; check btree for symbol table"
       hSeek handle AbsoluteSeek (fromIntegral btreeAddress)
@@ -180,7 +182,7 @@ readGraphMessage depth putStrLnWithPrefix handle prefix message = do
                   (readGraphSymbolTableEntry handle (depth + 2) (Just (HeapWithData heapHeader' heapData')))
                   (concatMap gstnEntries childrenOnHeap)
 
-              pure (GraphSymbolTableMessage btreeAddress (GraphTree treeEntries) (GraphHeap keysOnHeap))
+              pure [GraphSymbolTableMessage btreeAddress (GraphTree treeEntries) (GraphHeap keysOnHeap)]
     ObjectHeaderContinuationMessage continuationAddress length' -> do
       putStrLnWithPrefix ("header continuation, seeking to " <> show continuationAddress)
       hSeek handle AbsoluteSeek (fromIntegral continuationAddress)
@@ -207,14 +209,13 @@ readGraphMessage depth putStrLnWithPrefix handle prefix message = do
         Left (_, _, e') -> error ("parsing continuation messages failed: " <> show e')
         Right (_, _, messages) -> do
           putStrLnWithPrefix ("decoded these messages: " <> show messages)
-          subMessages <- forM messages (readGraphMessage depth putStrLnWithPrefix handle prefix)
-          pure (GraphContinuationMessage subMessages)
-    DatatypeMessage d -> pure (GraphDatatypeMessage d)
-    DataStorageFillValueMessage -> pure GraphDataStorageFillValueMessage
-    DataStorageFilterPipelineMessage d -> pure (GraphDataStorageFilterPipelineMessage d)
-    DataStorageLayoutMessage d -> pure (GraphDataStorageLayoutMessage d)
-    ObjectModificationTimeMessage t -> pure (GraphObjectModificationTimeMessage t)
-    AttributeMessage n -> pure (GraphAttributeMessage n)
+          join <$> forM messages (readGraphMessage depth putStrLnWithPrefix handle prefix)
+    DatatypeMessage d -> pure [GraphDatatypeMessage d]
+    DataStorageFillValueMessage -> pure [GraphDataStorageFillValueMessage]
+    DataStorageFilterPipelineMessage d -> pure [GraphDataStorageFilterPipelineMessage d]
+    DataStorageLayoutMessage d -> pure [GraphDataStorageLayoutMessage d]
+    ObjectModificationTimeMessage t -> pure [GraphObjectModificationTimeMessage t]
+    AttributeMessage n datatype dataspace data' -> pure [GraphAttributeMessage n datatype dataspace data']
 
 readH5ToGraph :: OsPath -> IO GraphSymbolTableEntry
 readH5ToGraph fileNameEncoded = do
@@ -275,10 +276,6 @@ messageToDot origin (GraphSymbolTableMessage treeAddress (GraphTree symbolTableE
       (Just ("label=<symbol table message<br/><i>@" <> show treeAddress <> "</i>>"))
   addArrow origin thisNode
   mapM_ (entryNodeToDot thisNode) symbolTableEntries
-messageToDot origin (GraphContinuationMessage messages) = do
-  thisNode <- addNode "continuation_message" Nothing
-  addArrow origin thisNode
-  mapM_ (messageToDot thisNode) messages
 messageToDot origin (GraphDataspaceMessage _messageData) = do
   thisNode <- addNode "dataspace_message" Nothing
   addArrow origin thisNode
@@ -297,8 +294,8 @@ messageToDot origin (GraphDataStorageLayoutMessage _messageData) = do
 messageToDot origin (GraphObjectModificationTimeMessage _messageData) = do
   thisNode <- addNode "object_modification_time_message" Nothing
   addArrow origin thisNode
-messageToDot origin (GraphAttributeMessage _attributeName) = do
-  thisNode <- addNode "attribute_message" Nothing
+messageToDot origin (GraphAttributeMessage attributeName _ _ _) = do
+  thisNode <- addNode "attribute_message" (Just ("label=<attribute " <> BS8.unpack (BS.filter (/= 0) attributeName) <> ">"))
   addArrow origin thisNode
 messageToDot origin GraphNilMessage = do
   thisNode <- addNode "nil" Nothing
@@ -328,8 +325,42 @@ graphToDot entry = evalState graphToDot' (GraphvizState 0 [] [])
               ";\n"
               (["superblock -> " <> show rootNode, show rootNode <> " -> " <> show objectHeaderNode] <> gvArrows current)
 
+data ProcessedObjectHeader = ProcessedObjectHeader
+  { pohDataspace :: DataspaceMessageData,
+    pohDatatype :: DatatypeMessageData,
+    pohLayout :: DataStorageLayout,
+    pohFilterPipeline :: Maybe DataStorageFilterPipelineMessageData
+  }
+
+collectObjectHeaders :: GraphSymbolTableEntry -> Maybe ProcessedObjectHeader
+collectObjectHeaders (GraphSymbolTableEntry {gsteObjectHeader}) =
+  ProcessedObjectHeader <$> searchDataspace gsteObjectHeader <*> searchDatatype gsteObjectHeader <*> searchLayout gsteObjectHeader <*> pure (searchFilters gsteObjectHeader)
+  where
+    searchMessage :: GraphObjectHeader -> (GraphMessage -> Maybe a) -> Maybe a
+    searchMessage (GraphObjectHeader messages) finder = headMay (mapMaybe finder messages)
+    searchDataspace :: GraphObjectHeader -> Maybe DataspaceMessageData
+    searchDataspace header =
+      let dataspaceFinder (GraphDataspaceMessage d) = Just d
+          dataspaceFinder _ = Nothing
+       in searchMessage header dataspaceFinder
+    searchLayout :: GraphObjectHeader -> Maybe DataStorageLayout
+    searchLayout header =
+      let dataspaceFinder (GraphDataStorageLayoutMessage d) = Just d
+          dataspaceFinder _ = Nothing
+       in searchMessage header dataspaceFinder
+    searchDatatype :: GraphObjectHeader -> Maybe DatatypeMessageData
+    searchDatatype header =
+      let datatypeFinder (GraphDatatypeMessage d) = Just d
+          datatypeFinder _ = Nothing
+       in searchMessage header datatypeFinder
+    searchFilters :: GraphObjectHeader -> Maybe DataStorageFilterPipelineMessageData
+    searchFilters header =
+      let filtersFinder (GraphDataStorageFilterPipelineMessage d) = Just d
+          filtersFinder _ = Nothing
+       in searchMessage header filtersFinder
+
 readChunkedLayouts :: Handle -> GraphSymbolTableEntry -> IO ()
-readChunkedLayouts handle g = mapM_ (descend Nothing Nothing Nothing) (gsteMessages g)
+readChunkedLayouts handle g = mapM_ (descend Nothing) (gsteMessages g)
   where
     searchMessage :: GraphObjectHeader -> (GraphMessage -> Maybe a) -> Maybe a
     searchMessage (GraphObjectHeader messages) finder = headMay (mapMaybe finder messages)
@@ -348,61 +379,170 @@ readChunkedLayouts handle g = mapM_ (descend Nothing Nothing Nothing) (gsteMessa
       let filtersFinder (GraphDataStorageFilterPipelineMessage d) = Just d
           filtersFinder _ = Nothing
        in searchMessage header filtersFinder
-    descend :: Maybe DataspaceMessageData -> Maybe DatatypeMessageData -> Maybe DataStorageFilterPipelineMessageData -> GraphMessage -> IO ()
-    descend maybeDataspace maybeDatatype maybeFilters (GraphContinuationMessage xs) = mapM_ (descend maybeDataspace maybeDatatype maybeFilters) xs
-    descend _ _ _ (GraphSymbolTableMessage _ (GraphTree entries) _) = mapM_ descendToEntry entries
-    descend maybeDataspace maybeDatatype maybeFilters (GraphDataStorageLayoutMessage (LayoutChunked {layoutChunkedBTreeAddress})) =
-      case layoutChunkedBTreeAddress of
-        Nothing -> pure ()
-        Just addr -> do
-          hSeek handle AbsoluteSeek (fromIntegral addr)
-          data' <- BSL.hGet handle 2048
-          case runGetOrFail (getBLinkTreeNode maybeDataspace maybeDatatype) data' of
-            Left (_, bytesConsumed, e') ->
-              error
-                ( "invalid b tree node (consumed "
-                    <> show bytesConsumed
-                    <> " bytes): "
-                    <> show e'
-                )
-            Right (_, _, node@(BLinkTreeNodeChunkedRawData {bltnChunks})) -> do
-              putStrLn ("tree node: " <> show node)
-              let readSingleChunk :: ChunkInfo Address -> IO ()
-                  readSingleChunk ci = do
-                    putStrLn ("seeking to " <> show (ciChunkPointer ci))
-                    hSeek handle AbsoluteSeek (fromIntegral (ciChunkPointer ci))
-                    chunkData <- BSL.hGet handle (fromIntegral (ciSize ci))
-                    case datatypeClass <$> maybeDatatype of
-                      Just (DatatypeFixedPoint {fixedPointDataElementSize, fixedPointByteOrder}) ->
-                        case dataspaceDimensions <$> maybeDataspace of
-                          Nothing -> error "fixed point data without dataspace?"
-                          Just [DataspaceDimension {ddSize}] ->
-                            if fixedPointDataElementSize == 8 && fixedPointByteOrder == LittleEndian
-                              then case runGetOrFail (replicateM (fromIntegral ddSize) getInt64le) chunkData of
-                                Left (_, bytesConsumed, e') ->
-                                  error
-                                    ( "invalid chunk (consumed "
-                                        <> show bytesConsumed
-                                        <> " bytes): "
-                                        <> show e'
-                                    )
-                                Right (_, _, numbers) -> do
-                                  putStrLn ("read numbers " <> show numbers)
-                              else putStrLn "chunk isn't 8 byte little endian"
-                          Just dimensions -> putStrLn ("unsupported dimensions " <> show dimensions)
-                      _ -> putStrLn "invalid data type (not fixed point or not there)"
-              mapM_ readSingleChunk bltnChunks
-            Right (_, _, _) -> error "got an inner node but expected a chunk"
-    descend _ _ _ _ = pure ()
+    descend :: Maybe ProcessedObjectHeader -> GraphMessage -> IO ()
+    descend _ (GraphSymbolTableMessage _ (GraphTree entries) _) = mapM_ descendToEntry entries
+    descend
+      ( Just
+          ( ProcessedObjectHeader
+              { pohDataspace,
+                pohDatatype,
+                pohLayout = LayoutChunked {layoutChunkedBTreeAddress}
+              }
+            )
+        )
+      _ =
+        case layoutChunkedBTreeAddress of
+          Nothing -> pure ()
+          Just addr -> do
+            hSeek handle AbsoluteSeek (fromIntegral addr)
+            data' <- BSL.hGet handle 2048
+            case runGetOrFail (getBLinkTreeNode (Just pohDataspace) (Just pohDatatype)) data' of
+              Left (_, bytesConsumed, e') ->
+                error
+                  ( "invalid b tree node (consumed "
+                      <> show bytesConsumed
+                      <> " bytes): "
+                      <> show e'
+                  )
+              Right (_, _, node@(BLinkTreeNodeChunkedRawData {bltnChunks})) -> do
+                putStrLn ("tree node: " <> show node)
+                let readSingleChunk :: ChunkInfo Address -> IO ()
+                    readSingleChunk ci = do
+                      putStrLn ("seeking to " <> show (ciChunkPointer ci))
+                      hSeek handle AbsoluteSeek (fromIntegral (ciChunkPointer ci))
+                      chunkData <- BSL.hGet handle (fromIntegral (ciSize ci))
+                      case datatypeClass pohDatatype of
+                        (DatatypeFixedPoint {fixedPointDataElementSize, fixedPointByteOrder}) ->
+                          case dataspaceDimensions pohDataspace of
+                            [DataspaceDimension {ddSize}] ->
+                              if fixedPointDataElementSize == 8 && fixedPointByteOrder == LittleEndian
+                                then case runGetOrFail (replicateM (fromIntegral ddSize) getInt64le) chunkData of
+                                  Left (_, bytesConsumed, e') ->
+                                    error
+                                      ( "invalid chunk (consumed "
+                                          <> show bytesConsumed
+                                          <> " bytes): "
+                                          <> show e'
+                                      )
+                                  Right (_, _, numbers) -> do
+                                    putStrLn ("read numbers " <> show numbers)
+                                else putStrLn "chunk isn't 8 byte little endian"
+                            dimensions -> putStrLn ("unsupported dimensions " <> show dimensions)
+                        dt -> putStrLn ("invalid data type (not fixed point or not there) " <> show dt)
+                mapM_ readSingleChunk bltnChunks
+              Right (_, _, _) -> error "got an inner node but expected a chunk"
+    descend _ _ = pure ()
     descendToEntry :: GraphSymbolTableEntry -> IO ()
-    descendToEntry e = do
-      mapM_ (descend (searchDataspace (gsteObjectHeader e)) (searchDatatype (gsteObjectHeader e)) (searchFilters (gsteObjectHeader e))) (gsteMessages e)
+    descendToEntry e = mapM_ (descend (collectObjectHeaders e)) (gsteMessages e)
+
+newtype Indent = Indent Int
+
+increaseIndent :: Indent -> Indent
+increaseIndent (Indent n) = Indent (n + 3)
+
+paddingToH5Dump :: StringPadding -> String
+paddingToH5Dump PaddingNullTerminate = "H5T_STR_NULLTERM"
+paddingToH5Dump p = error ("invalid padding " <> show p)
+
+charsetToH5Dump :: CharacterSet -> String
+charsetToH5Dump CharacterSetAscii = "H5T_CSET_ASCII"
+charsetToH5Dump CharacterSetUtf8 = "H5T_CSET_UTF8"
+
+dataspaceToH5Dump :: Indent -> DataspaceMessageData -> [(Indent, String)]
+dataspaceToH5Dump m (DataspaceMessageData {dataspaceDimensions}) =
+  case dataspaceDimensions of
+    [] -> [(m, "DATASPACE  SCALAR")]
+    [DataspaceDimension {ddSize}] -> [(m, "DATASPACE  SIMPLE { ( " <> show ddSize <> " ) / ( " <> show ddSize <> " ) }")]
+    xs -> error ("invalid dataspace dimensions " <> show xs)
+
+datatypeToH5Dump :: Indent -> Datatype -> [(Indent, String)]
+datatypeToH5Dump m (DatatypeVariableLengthString padding charset _word) =
+  [ (m, "DATATYPE  H5T_STRING {"),
+    (increaseIndent m, "STRSIZE H5T_VARIABLE;"),
+    (increaseIndent m, "STRPAD " <> paddingToH5Dump padding <> ";"),
+    (increaseIndent m, "CSET " <> charsetToH5Dump charset <> ";"),
+    (increaseIndent m, "CTYPE H5T_C_S1;"),
+    (m, "}")
+  ]
+datatypeToH5Dump n _ = []
+
+graphSymbolTableEntryToH5Dump :: Indent -> GraphSymbolTableEntry -> [(Indent, String)]
+graphSymbolTableEntryToH5Dump n gste@(GraphSymbolTableEntry {gsteObjectHeader = GraphObjectHeader messages, gsteName}) =
+  let attributeDatatypeToH5Dump :: Indent -> Datatype -> DataspaceMessageData -> AttributeData -> [(Indent, String)]
+      attributeDatatypeToH5Dump m (DatatypeVariableLengthString padding charset _word) _ _ =
+        [ (m, "DATATYPE  H5T_STRING {"),
+          (increaseIndent m, "STRSIZE H5T_VARIABLE;"),
+          (increaseIndent m, "STRPAD " <> paddingToH5Dump padding <> ";"),
+          (increaseIndent m, "CSET " <> charsetToH5Dump charset <> ";"),
+          (increaseIndent m, "CTYPE H5T_C_S1;"),
+          (m, "}")
+        ]
+      attributeDatatypeToH5Dump m (DatatypeString padding charset) (DataspaceMessageData {dataspaceDimensions}) (AttributeDataString s) =
+        let strsize = case dataspaceDimensions of
+              [] -> BSL.length (BSL.takeWhile (/= 0) s)
+              [DataspaceDimension {ddSize}] -> BSL.length (BSL.takeWhile (/= 0) s) `div` fromIntegral ddSize
+              _ -> error ("got string with dataspace dimensions " <> show dataspaceDimensions)
+         in [ (m, "DATATYPE  H5T_STRING {"),
+              (increaseIndent m, "STRSIZE " <> show strsize <> ";"),
+              (increaseIndent m, "STRPAD " <> paddingToH5Dump padding <> ";"),
+              (increaseIndent m, "CSET " <> charsetToH5Dump charset <> ";"),
+              (increaseIndent m, "CTYPE H5T_C_S1;"),
+              (m, "}")
+            ]
+      attributeDatatypeToH5Dump _ e _ _ = error ("add this datatype: " <> show e)
+
+      attributeMessageToH5Dump :: GraphMessage -> [(Indent, String)]
+      attributeMessageToH5Dump (GraphAttributeMessage name (DatatypeMessageData _ datatype) dataspace data') =
+        [ (increaseIndent n, "ATTRIBUTE \"" <> BS8.unpack (BS.filter (/= 0) name) <> "\" {")
+        ]
+          <> attributeDatatypeToH5Dump (increaseIndent (increaseIndent n)) datatype dataspace data'
+          <> dataspaceToH5Dump (increaseIndent (increaseIndent n)) dataspace
+          <> [(increaseIndent n, "}")]
+      attributeMessageToH5Dump _ = []
+      attributeMessageName :: GraphMessage -> String
+      attributeMessageName (GraphAttributeMessage name _ _ _) = BS8.unpack name
+      attributeMessageName _ = ""
+      symbolTableMessageToH5Dump :: GraphMessage -> [(Indent, String)]
+      symbolTableMessageToH5Dump (GraphSymbolTableMessage _address (GraphTree es) _heap) = es >>= graphSymbolTableEntryToH5Dump (increaseIndent n)
+      symbolTableMessageToH5Dump _ = []
+      inside :: [(Indent, String)]
+      inside =
+        let attributes = sortOn attributeMessageName messages >>= attributeMessageToH5Dump
+            subgroups = messages >>= symbolTableMessageToH5Dump
+            possiblyDataspace =
+              case collectObjectHeaders gste of
+                Nothing -> []
+                Just (ProcessedObjectHeader {pohDatatype, pohDataspace}) ->
+                  [(increaseIndent n, "DATASET \"" <> BSL8.unpack gsteName <> "\" {")]
+                    <> datatypeToH5Dump (increaseIndent (increaseIndent n)) (datatypeClass pohDatatype)
+                    <> dataspaceToH5Dump (increaseIndent (increaseIndent n)) pohDataspace
+                    <> [ (increaseIndent n, "}")
+                       ]
+         in attributes <> subgroups <> possiblyDataspace
+      groupName = if BSL.null gsteName then "/" else BSL8.unpack (BSL.filter (/= 0) gsteName)
+   in [(n, "GROUP \"" <> groupName <> "\" {")] <> inside <> [(n, "}")]
+
+graphToH5Dump :: GraphSymbolTableEntry -> String
+graphToH5Dump gste =
+  let showDump :: [(Indent, String)] -> String
+      showDump lines' = intercalate "\n" ((\(Indent indent, line) -> replicate indent ' ' <> line) <$> lines')
+   in showDump (graphSymbolTableEntryToH5Dump (Indent 0) gste)
 
 main :: IO ()
 main = do
-  fileNameEncoded <- encodeUtf "/home/pmidden/Downloads/water_224.h5"
+  let inputFile :: String
+      inputFile = "/home/pmidden/Downloads/water_224.h5"
+  fileNameEncoded <- encodeUtf inputFile
   graph <- readH5ToGraph fileNameEncoded
   withBinaryFile fileNameEncoded ReadMode $ \handle -> do
     readChunkedLayouts handle graph
 
--- putStrLn (graphToDot graph)
+  outputFile <- encodeUtf "/tmp/graph.dot"
+  withFile outputFile WriteMode $ \handle -> do
+    hPutStrLn handle (graphToDot graph)
+
+  outputFile <- encodeUtf "/tmp/h5dump.txt"
+  withFile outputFile WriteMode $ \handle -> do
+    hPutStrLn handle $ "HDF5 \"" <> inputFile <> "\" {"
+    hPutStrLn handle (graphToH5Dump graph)
+    hPutStrLn handle "}"

@@ -84,6 +84,8 @@ data Datatype
       }
   deriving (Show)
 
+data AttributeData = AttributeDataString !BSL.ByteString | AttributeDataTodo deriving (Show)
+
 data DataStorageSpaceAllocationTime
   = -- | Early allocation. Storage space for the entire dataset should
     -- be allocated in the file when the dataset is created.
@@ -171,7 +173,12 @@ data Message
     DataStorageLayoutMessage !DataStorageLayout
   | -- | The object modification time is a timestamp which indicates the time of the last modification of an object. The time is updated when any object header message changes according to the system clock where the change was posted.
     ObjectModificationTimeMessage {objectModificationTime :: !Word32}
-  | AttributeMessage {attributeName :: BS.ByteString}
+  | AttributeMessage
+      { attributeName :: !BS.ByteString,
+        attributeDatatypeMessageData :: !DatatypeMessageData,
+        attributeDataspaceMessageData :: !DataspaceMessageData,
+        attributeData :: !AttributeData
+      }
   deriving (Show)
 
 data ObjectHeader = ObjectHeader
@@ -434,16 +441,8 @@ getDataStorageLayoutClass = do
     2 -> pure LayoutClassChunked
     n -> fail ("invalid data storage layout class value " <> show n)
 
-getMessage :: Word16 -> Get Message
-getMessage 0x0000 = do
-  void getRemainingLazyByteString
-  pure NilMessage
--- The dataspace message describes the number of dimensions (in other
--- words, “rank”) and size of each dimension that the data object has.
--- This message is only used for datasets which have a simple,
--- rectilinear, array-like layout; datasets requiring a more complex
--- layout are not yet supported.
-getMessage 0x0001 = do
+getDataspaceMessageData :: Get DataspaceMessageData
+getDataspaceMessageData = do
   -- This value is used to determine the format of the Dataspace
   -- Message. When the format of the information in the message is
   -- changed, the version number is incremented and can be used to
@@ -465,7 +464,7 @@ getMessage 0x0001 = do
   -- Reserved
   skip 5
   if dimensionality == 0
-    then pure (DataspaceMessage (DataspaceMessageData [] []))
+    then pure (DataspaceMessageData [] [])
     else do
       dimensions <- replicateM (fromIntegral dimensionality) getLength
       maxSizes <-
@@ -477,11 +476,10 @@ getMessage 0x0001 = do
           then replicateM (fromIntegral dimensionality) getLength
           else pure []
       -- TODO: This message has _lots_ more information to it
-      pure (DataspaceMessage (DataspaceMessageData (zipWith DataspaceDimension dimensions maxSizes) permutationIndices))
--- Explanation of "datatype" in general
---
--- https://support.hdfgroup.org/documentation/hdf5/latest/_l_b_datatypes.html
-getMessage 0x0003 = do
+      pure (DataspaceMessageData (zipWith DataspaceDimension dimensions maxSizes) permutationIndices)
+
+getDatatypeMessageData :: Get DatatypeMessageData
+getDatatypeMessageData = do
   classAndVersion <- getWord8
   let classNumeric = classAndVersion .&. 0b1111
       version = (classAndVersion .&. 0b11110000) `shiftR` 4
@@ -502,24 +500,22 @@ getMessage 0x0003 = do
       -- not sure why this is necessary
       skip 4
       pure
-        ( DatatypeMessage
-            ( DatatypeMessageData
-                version
-                ( DatatypeFixedPoint
-                    size
-                    byteOrder
-                    loPadBit
-                    hiPadBit
-                    signed
-                    bitOffset
-                    bitPrecision
-                )
+        ( DatatypeMessageData
+            version
+            ( DatatypeFixedPoint
+                size
+                byteOrder
+                loPadBit
+                hiPadBit
+                signed
+                bitOffset
+                bitPrecision
             )
         )
     ClassVariableLength -> do
       let variableType = bits0to7 .&. 0b1111
       case variableType of
-        0 -> pure (DatatypeMessage (DatatypeMessageData version DatatypeVariableLengthSequence))
+        0 -> pure (DatatypeMessageData version DatatypeVariableLengthSequence)
         1 -> do
           let paddingTypeNumeric = (bits0to7 .&. 0b11110000) `shiftR` 4
           paddingType <- if paddingTypeNumeric == 0 then pure PaddingNullTerminate else if paddingTypeNumeric == 1 then pure PaddingNull else if paddingTypeNumeric == 2 then pure PaddingSpace else fail ("invalid variable length string padding type " <> show paddingTypeNumeric)
@@ -527,14 +523,14 @@ getMessage 0x0003 = do
           characterSet <- if characterSetNumeric == 0 then pure CharacterSetAscii else if characterSetNumeric == 1 then pure CharacterSetUtf8 else fail ("invalid variable length string character set " <> show characterSetNumeric)
           -- for now, skip the content (the size)
           skip (fromIntegral size)
-          pure (DatatypeMessage (DatatypeMessageData version (DatatypeVariableLengthString paddingType characterSet size)))
+          pure (DatatypeMessageData version (DatatypeVariableLengthString paddingType characterSet size))
         _ -> fail $ "variable length which is neither sequence nor string, bits are: " <> show variableType
     ClassString -> do
       let paddingTypeNumeric = (bits0to7 .&. 0b11110000) `shiftR` 4
       paddingType <- if paddingTypeNumeric == 0 then pure PaddingNullTerminate else if paddingTypeNumeric == 1 then pure PaddingNull else if paddingTypeNumeric == 2 then pure PaddingSpace else fail ("invalid variable length string padding type " <> show paddingTypeNumeric)
       let characterSetNumeric = bits8to15 .&. 0b1111
       characterSet <- if characterSetNumeric == 0 then pure CharacterSetAscii else if characterSetNumeric == 1 then pure CharacterSetUtf8 else fail ("invalid variable length string character set " <> show characterSetNumeric)
-      pure (DatatypeMessage (DatatypeMessageData version (DatatypeString paddingType characterSet)))
+      pure (DatatypeMessageData version (DatatypeString paddingType characterSet))
     ClassFloatingPoint -> do
       when (bits0to7 .&. 1 == 3) (fail "floating point values with VAX-endianness are not supported")
       let byteOrder = if bits0to7 .&. 1 == 0 then LittleEndian else BigEndian
@@ -557,27 +553,40 @@ getMessage 0x0003 = do
       -- not sure why this is necessary
       skip 4
       pure
-        ( DatatypeMessage
-            ( DatatypeMessageData
-                version
-                ( DatatypeFloatingPoint
-                    byteOrder
-                    (bits0to7 .&. 0b10 > 0)
-                    (bits0to7 .&. 0b100 > 0)
-                    (bits0to7 .&. 0b1000 > 0)
-                    mantissaNormalization
-                    (fromIntegral bits8to15)
-                    bitOffset
-                    bitPrecision
-                    exponentLocation
-                    exponentSize
-                    mantissaLocation
-                    mantissaSize
-                    exponentBias
-                )
+        ( DatatypeMessageData
+            version
+            ( DatatypeFloatingPoint
+                byteOrder
+                (bits0to7 .&. 0b10 > 0)
+                (bits0to7 .&. 0b100 > 0)
+                (bits0to7 .&. 0b1000 > 0)
+                mantissaNormalization
+                (fromIntegral bits8to15)
+                bitOffset
+                bitPrecision
+                exponentLocation
+                exponentSize
+                mantissaLocation
+                mantissaSize
+                exponentBias
             )
         )
     _ -> fail ("class " <> show class' <> " properties not supported yet")
+
+getMessage :: Word16 -> Get Message
+getMessage 0x0000 = do
+  void getRemainingLazyByteString
+  pure NilMessage
+-- The dataspace message describes the number of dimensions (in other
+-- words, “rank”) and size of each dimension that the data object has.
+-- This message is only used for datasets which have a simple,
+-- rectilinear, array-like layout; datasets requiring a more complex
+-- layout are not yet supported.
+getMessage 0x0001 = DataspaceMessage <$> getDataspaceMessageData
+-- Explanation of "datatype" in general
+--
+-- https://support.hdfgroup.org/documentation/hdf5/latest/_l_b_datatypes.html
+getMessage 0x0003 = DatatypeMessage <$> getDatatypeMessageData
 getMessage 0x0005 = do
   version <- getWord8
   case version of
@@ -729,14 +738,17 @@ getMessage 0x000c = do
         let r = s `mod` 8
         when (r > 0) (skip (fromIntegral (8 - r)))
   skipTo8 nameSize
-  datatypeMessage <- getMessage 0x0003
+  datatypeMessage <- getDatatypeMessageData
   -- datatypeRaw <- getByteString (fromIntegral (trace ("name " <> show name) datatypeSize))
   -- skipTo8 (trace ("received data type message " <> show datatypeMessage) datatypeSize)
   -- dataspaceRaw <- getByteString (fromIntegral (trace ("skipping over dataspace " <> show dataspaceSize) dataspaceSize))
-  dataspaceMessage <- getMessage 0x0001
+  dataspaceMessage <- getDataspaceMessageData
   skipTo8 dataspaceSize
-  remainder <- getRemainingLazyByteString
-  pure (AttributeMessage name)
+  attributeData <- case datatypeClass datatypeMessage of
+    DatatypeString padding charset ->
+      AttributeDataString <$> getRemainingLazyByteString
+    _ -> getRemainingLazyByteString *> pure AttributeDataTodo
+  pure (AttributeMessage name datatypeMessage dataspaceMessage attributeData)
 getMessage n = fail ("invalid message type " <> show n)
 
 getObjectHeaderV1 :: Get ObjectHeader
