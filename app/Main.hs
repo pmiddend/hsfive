@@ -15,6 +15,7 @@ import qualified Data.ByteString as BS
 import qualified Data.ByteString.Char8 as BS8
 import qualified Data.ByteString.Lazy as BSL
 import qualified Data.ByteString.Lazy.Char8 as BSL8
+import Data.Int (Int64)
 import Data.List (intercalate, sortOn)
 import Data.Maybe (mapMaybe)
 import Data.Traversable (forM)
@@ -331,10 +332,15 @@ data ProcessedObjectHeader = ProcessedObjectHeader
     pohLayout :: DataStorageLayout,
     pohFilterPipeline :: Maybe DataStorageFilterPipelineMessageData
   }
+  deriving (Show)
 
 collectObjectHeaders :: GraphSymbolTableEntry -> Maybe ProcessedObjectHeader
 collectObjectHeaders (GraphSymbolTableEntry {gsteObjectHeader}) =
-  ProcessedObjectHeader <$> searchDataspace gsteObjectHeader <*> searchDatatype gsteObjectHeader <*> searchLayout gsteObjectHeader <*> pure (searchFilters gsteObjectHeader)
+  ProcessedObjectHeader
+    <$> searchDataspace gsteObjectHeader
+    <*> searchDatatype gsteObjectHeader
+    <*> searchLayout gsteObjectHeader
+    <*> pure (searchFilters gsteObjectHeader)
   where
     searchMessage :: GraphObjectHeader -> (GraphMessage -> Maybe a) -> Maybe a
     searchMessage (GraphObjectHeader messages) finder = headMay (mapMaybe finder messages)
@@ -449,6 +455,12 @@ charsetToH5Dump :: CharacterSet -> String
 charsetToH5Dump CharacterSetAscii = "H5T_CSET_ASCII"
 charsetToH5Dump CharacterSetUtf8 = "H5T_CSET_UTF8"
 
+stringSize :: DataspaceMessageData -> BSL8.ByteString -> Int64
+stringSize (DataspaceMessageData {dataspaceDimensions}) s = case dataspaceDimensions of
+  [] -> BSL.length (BSL.takeWhile (/= 0) s)
+  [DataspaceDimension {ddSize}] -> BSL.length (BSL.takeWhile (/= 0) s) `div` fromIntegral ddSize
+  _ -> error ("got string with dataspace dimensions " <> show dataspaceDimensions)
+
 dataspaceToH5Dump :: Indent -> DataspaceMessageData -> [(Indent, String)]
 dataspaceToH5Dump m (DataspaceMessageData {dataspaceDimensions}) =
   case dataspaceDimensions of
@@ -457,8 +469,8 @@ dataspaceToH5Dump m (DataspaceMessageData {dataspaceDimensions}) =
       let inner = intercalate ", " (show . ddSize <$> dims)
        in [(m, "DATASPACE  SIMPLE { ( " <> inner <> " ) / ( " <> inner <> " ) }")]
 
-datatypeToH5Dump :: Indent -> Datatype -> [(Indent, String)]
-datatypeToH5Dump m (DatatypeVariableLengthString padding charset _word) =
+datatypeToH5Dump :: Indent -> ProcessedObjectHeader -> [(Indent, String)]
+datatypeToH5Dump m (ProcessedObjectHeader {pohDatatype = DatatypeMessageData {datatypeClass = DatatypeVariableLengthString padding charset _word}}) =
   [ (m, "DATATYPE  H5T_STRING {"),
     (increaseIndent m, "STRSIZE H5T_VARIABLE;"),
     (increaseIndent m, "STRPAD " <> paddingToH5Dump padding <> ";"),
@@ -466,12 +478,20 @@ datatypeToH5Dump m (DatatypeVariableLengthString padding charset _word) =
     (increaseIndent m, "CTYPE H5T_C_S1;"),
     (m, "}")
   ]
-datatypeToH5Dump m (DatatypeFloatingPoint {floatingPointByteOrder = LittleEndian, floatingPointBitPrecision = 64}) = [(m, "DATATYPE  H5T_IEEE_F64LE")]
-datatypeToH5Dump m (DatatypeFloatingPoint {floatingPointByteOrder = LittleEndian, floatingPointBitPrecision = 32}) = [(m, "DATATYPE  H5T_IEEE_F32LE")]
-datatypeToH5Dump m (DatatypeFixedPoint {fixedPointByteOrder = LittleEndian, fixedPointBitPrecision = 32, fixedPointSigned = True}) = [(m, "DATATYPE  H5T_STD_I32LE")]
-datatypeToH5Dump m (DatatypeFixedPoint {fixedPointByteOrder = LittleEndian, fixedPointBitPrecision = 64, fixedPointSigned = True}) = [(m, "DATATYPE  H5T_STD_I64LE")]
-datatypeToH5Dump m (DatatypeFixedPoint {fixedPointByteOrder = LittleEndian, fixedPointBitPrecision = 16, fixedPointSigned = False}) = [(m, "DATATYPE  H5T_STD_U16LE")]
-datatypeToH5Dump n _ = []
+datatypeToH5Dump m (ProcessedObjectHeader {pohDatatype = DatatypeMessageData {datatypeClass = DatatypeString padding charset}, pohLayout = LayoutContiguous {layoutContiguousSize}}) =
+  [ (m, "DATATYPE  H5T_STRING {"),
+    (increaseIndent m, "STRSIZE " <> show layoutContiguousSize <> ";"),
+    (increaseIndent m, "STRPAD " <> paddingToH5Dump padding <> ";"),
+    (increaseIndent m, "CSET " <> charsetToH5Dump charset <> ";"),
+    (increaseIndent m, "CTYPE H5T_C_S1;"),
+    (m, "}")
+  ]
+datatypeToH5Dump m (ProcessedObjectHeader {pohDatatype = DatatypeMessageData {datatypeClass = DatatypeFloatingPoint {floatingPointByteOrder = LittleEndian, floatingPointBitPrecision = 64}}}) = [(m, "DATATYPE  H5T_IEEE_F64LE")]
+datatypeToH5Dump m (ProcessedObjectHeader {pohDatatype = DatatypeMessageData {datatypeClass = DatatypeFloatingPoint {floatingPointByteOrder = LittleEndian, floatingPointBitPrecision = 32}}}) = [(m, "DATATYPE  H5T_IEEE_F32LE")]
+datatypeToH5Dump m (ProcessedObjectHeader {pohDatatype = DatatypeMessageData {datatypeClass = DatatypeFixedPoint {fixedPointByteOrder = LittleEndian, fixedPointBitPrecision = 32, fixedPointSigned = True}}}) = [(m, "DATATYPE  H5T_STD_I32LE")]
+datatypeToH5Dump m (ProcessedObjectHeader {pohDatatype = DatatypeMessageData {datatypeClass = DatatypeFixedPoint {fixedPointByteOrder = LittleEndian, fixedPointBitPrecision = 64, fixedPointSigned = True}}}) = [(m, "DATATYPE  H5T_STD_I64LE")]
+datatypeToH5Dump m (ProcessedObjectHeader {pohDatatype = DatatypeMessageData {datatypeClass = DatatypeFixedPoint {fixedPointByteOrder = LittleEndian, fixedPointBitPrecision = 16, fixedPointSigned = False}}}) = [(m, "DATATYPE  H5T_STD_U16LE")]
+datatypeToH5Dump m t = [(m, ("FIXME " <> show t))]
 
 graphSymbolTableEntryToH5Dump :: Indent -> GraphSymbolTableEntry -> [(Indent, String)]
 graphSymbolTableEntryToH5Dump n gste@(GraphSymbolTableEntry {gsteObjectHeader = GraphObjectHeader messages, gsteName}) =
@@ -484,18 +504,14 @@ graphSymbolTableEntryToH5Dump n gste@(GraphSymbolTableEntry {gsteObjectHeader = 
           (increaseIndent m, "CTYPE H5T_C_S1;"),
           (m, "}")
         ]
-      attributeDatatypeToH5Dump m (DatatypeString padding charset) (DataspaceMessageData {dataspaceDimensions}) (AttributeDataString s) =
-        let strsize = case dataspaceDimensions of
-              [] -> BSL.length (BSL.takeWhile (/= 0) s)
-              [DataspaceDimension {ddSize}] -> BSL.length (BSL.takeWhile (/= 0) s) `div` fromIntegral ddSize
-              _ -> error ("got string with dataspace dimensions " <> show dataspaceDimensions)
-         in [ (m, "DATATYPE  H5T_STRING {"),
-              (increaseIndent m, "STRSIZE " <> show strsize <> ";"),
-              (increaseIndent m, "STRPAD " <> paddingToH5Dump padding <> ";"),
-              (increaseIndent m, "CSET " <> charsetToH5Dump charset <> ";"),
-              (increaseIndent m, "CTYPE H5T_C_S1;"),
-              (m, "}")
-            ]
+      attributeDatatypeToH5Dump m (DatatypeString padding charset) dataspaceMessageData (AttributeDataString s) =
+        [ (m, "DATATYPE  H5T_STRING {"),
+          (increaseIndent m, "STRSIZE " <> show (stringSize dataspaceMessageData s) <> ";"),
+          (increaseIndent m, "STRPAD " <> paddingToH5Dump padding <> ";"),
+          (increaseIndent m, "CSET " <> charsetToH5Dump charset <> ";"),
+          (increaseIndent m, "CTYPE H5T_C_S1;"),
+          (m, "}")
+        ]
       attributeDatatypeToH5Dump _ e _ _ = error ("add this datatype: " <> show e)
 
       attributeMessageToH5Dump :: GraphMessage -> [(Indent, String)]
@@ -515,10 +531,10 @@ graphSymbolTableEntryToH5Dump n gste@(GraphSymbolTableEntry {gsteObjectHeader = 
       possiblyDataspace =
         case collectObjectHeaders gste of
           Nothing -> Nothing
-          Just (ProcessedObjectHeader {pohDatatype, pohDataspace}) ->
+          Just poh@(ProcessedObjectHeader {pohDataspace}) ->
             Just $ \insideDataset ->
               [(n, "DATASET \"" <> BSL8.unpack gsteName <> "\" {")]
-                <> datatypeToH5Dump (increaseIndent n) (datatypeClass pohDatatype)
+                <> datatypeToH5Dump (increaseIndent n) poh
                 <> dataspaceToH5Dump (increaseIndent n) pohDataspace
                 <> insideDataset
                 <> [ (n, "}")
