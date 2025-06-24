@@ -452,8 +452,9 @@ dataspaceToH5Dump :: Indent -> DataspaceMessageData -> [(Indent, String)]
 dataspaceToH5Dump m (DataspaceMessageData {dataspaceDimensions}) =
   case dataspaceDimensions of
     [] -> [(m, "DATASPACE  SCALAR")]
-    [DataspaceDimension {ddSize}] -> [(m, "DATASPACE  SIMPLE { ( " <> show ddSize <> " ) / ( " <> show ddSize <> " ) }")]
-    xs -> error ("invalid dataspace dimensions " <> show xs)
+    dims ->
+      let inner = intercalate ", " (show . ddSize <$> dims)
+       in [(m, "DATASPACE  SIMPLE { ( " <> inner <> " ) / ( " <> inner <> " ) }")]
 
 datatypeToH5Dump :: Indent -> Datatype -> [(Indent, String)]
 datatypeToH5Dump m (DatatypeVariableLengthString padding charset _word) =
@@ -464,6 +465,11 @@ datatypeToH5Dump m (DatatypeVariableLengthString padding charset _word) =
     (increaseIndent m, "CTYPE H5T_C_S1;"),
     (m, "}")
   ]
+datatypeToH5Dump m (DatatypeFloatingPoint {floatingPointByteOrder = LittleEndian, floatingPointBitPrecision = 64}) = [(m, "DATATYPE  H5T_IEEE_F64LE")]
+datatypeToH5Dump m (DatatypeFloatingPoint {floatingPointByteOrder = LittleEndian, floatingPointBitPrecision = 32}) = [(m, "DATATYPE  H5T_IEEE_F32LE")]
+datatypeToH5Dump m (DatatypeFixedPoint {fixedPointByteOrder = LittleEndian, fixedPointBitPrecision = 32, fixedPointSigned = True}) = [(m, "DATATYPE  H5T_STD_I32LE")]
+datatypeToH5Dump m (DatatypeFixedPoint {fixedPointByteOrder = LittleEndian, fixedPointBitPrecision = 64, fixedPointSigned = True}) = [(m, "DATATYPE  H5T_STD_I64LE")]
+datatypeToH5Dump m (DatatypeFixedPoint {fixedPointByteOrder = LittleEndian, fixedPointBitPrecision = 16, fixedPointSigned = False}) = [(m, "DATATYPE  H5T_STD_U16LE")]
 datatypeToH5Dump n _ = []
 
 graphSymbolTableEntryToH5Dump :: Indent -> GraphSymbolTableEntry -> [(Indent, String)]
@@ -505,22 +511,23 @@ graphSymbolTableEntryToH5Dump n gste@(GraphSymbolTableEntry {gsteObjectHeader = 
       symbolTableMessageToH5Dump :: GraphMessage -> [(Indent, String)]
       symbolTableMessageToH5Dump (GraphSymbolTableMessage _address (GraphTree es) _heap) = es >>= graphSymbolTableEntryToH5Dump (increaseIndent n)
       symbolTableMessageToH5Dump _ = []
-      inside :: [(Indent, String)]
-      inside =
-        let attributes = sortOn attributeMessageName messages >>= attributeMessageToH5Dump
-            subgroups = messages >>= symbolTableMessageToH5Dump
-            possiblyDataspace =
-              case collectObjectHeaders gste of
-                Nothing -> []
-                Just (ProcessedObjectHeader {pohDatatype, pohDataspace}) ->
-                  [(increaseIndent n, "DATASET \"" <> BSL8.unpack gsteName <> "\" {")]
-                    <> datatypeToH5Dump (increaseIndent (increaseIndent n)) (datatypeClass pohDatatype)
-                    <> dataspaceToH5Dump (increaseIndent (increaseIndent n)) pohDataspace
-                    <> [ (increaseIndent n, "}")
-                       ]
-         in attributes <> subgroups <> possiblyDataspace
+      possiblyDataspace =
+        case collectObjectHeaders gste of
+          Nothing -> Nothing
+          Just (ProcessedObjectHeader {pohDatatype, pohDataspace}) ->
+            Just $ \insideDataset ->
+              [(n, "DATASET \"" <> BSL8.unpack gsteName <> "\" {")]
+                <> datatypeToH5Dump (increaseIndent n) (datatypeClass pohDatatype)
+                <> dataspaceToH5Dump (increaseIndent n) pohDataspace
+                <> insideDataset
+                <> [ (n, "}")
+                   ]
+      attributes = sortOn attributeMessageName messages >>= attributeMessageToH5Dump
+      subgroups = messages >>= symbolTableMessageToH5Dump
       groupName = if BSL.null gsteName then "/" else BSL8.unpack (BSL.filter (/= 0) gsteName)
-   in [(n, "GROUP \"" <> groupName <> "\" {")] <> inside <> [(n, "}")]
+   in case possiblyDataspace of
+        Nothing -> [(n, "GROUP \"" <> groupName <> "\" {")] <> attributes <> subgroups <> [(n, "}")]
+        Just ds -> ds (attributes <> subgroups)
 
 graphToH5Dump :: GraphSymbolTableEntry -> String
 graphToH5Dump gste =
