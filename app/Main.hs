@@ -442,6 +442,7 @@ increaseIndent (Indent n) = Indent (n + 3)
 
 paddingToH5Dump :: StringPadding -> String
 paddingToH5Dump PaddingNullTerminate = "H5T_STR_NULLTERM"
+paddingToH5Dump PaddingNull = "H5T_STR_NULLPAD"
 paddingToH5Dump p = error ("invalid padding " <> show p)
 
 charsetToH5Dump :: CharacterSet -> String

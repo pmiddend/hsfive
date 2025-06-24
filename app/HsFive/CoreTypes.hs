@@ -526,7 +526,7 @@ getDatatypeMessageData = do
           pure (DatatypeMessageData version (DatatypeVariableLengthString paddingType characterSet size))
         _ -> fail $ "variable length which is neither sequence nor string, bits are: " <> show variableType
     ClassString -> do
-      let paddingTypeNumeric = (bits0to7 .&. 0b11110000) `shiftR` 4
+      let paddingTypeNumeric = bits0to7 .&. 0b1111
       paddingType <- if paddingTypeNumeric == 0 then pure PaddingNullTerminate else if paddingTypeNumeric == 1 then pure PaddingNull else if paddingTypeNumeric == 2 then pure PaddingSpace else fail ("invalid variable length string padding type " <> show paddingTypeNumeric)
       let characterSetNumeric = bits8to15 .&. 0b1111
       characterSet <- if characterSetNumeric == 0 then pure CharacterSetAscii else if characterSetNumeric == 1 then pure CharacterSetUtf8 else fail ("invalid variable length string character set " <> show characterSetNumeric)
