@@ -20,6 +20,7 @@ import Data.List (intercalate, sortOn)
 import Data.Maybe (mapMaybe)
 import Data.Traversable (forM)
 import Data.Word (Word32)
+import HsFive.Bitshuffle (DecompressResult (DecompressError, DecompressSuccess), bshufDecompressLz4)
 import HsFive.CoreTypes
 import Safe (headMay)
 import System.File.OsPath (withBinaryFile, withFile)
@@ -76,6 +77,7 @@ data GraphMessage
   | GraphDataStorageFilterPipelineMessage DataStorageFilterPipelineMessageData
   | GraphDataStorageLayoutMessage DataStorageLayout
   | GraphObjectModificationTimeMessage Word32
+  | GraphObjectModificationTimeOldMessage
   | GraphAttributeMessage BS.ByteString DatatypeMessageData DataspaceMessageData AttributeData
   | GraphNilMessage
 
@@ -216,6 +218,7 @@ readGraphMessage depth putStrLnWithPrefix handle prefix message = do
     DataStorageFilterPipelineMessage d -> pure [GraphDataStorageFilterPipelineMessage d]
     DataStorageLayoutMessage d -> pure [GraphDataStorageLayoutMessage d]
     ObjectModificationTimeMessage t -> pure [GraphObjectModificationTimeMessage t]
+    ObjectModificationTimeOldMessage _ _ _ _ _ _ -> pure [GraphObjectModificationTimeOldMessage]
     AttributeMessage n datatype dataspace data' -> pure [GraphAttributeMessage n datatype dataspace data']
 
 readH5ToGraph :: OsPath -> IO GraphSymbolTableEntry
@@ -554,19 +557,27 @@ graphToH5Dump gste =
 
 main :: IO ()
 main = do
-  let inputFile :: String
-      inputFile = "/home/pmidden/Downloads/water_224.h5"
-  fileNameEncoded <- encodeUtf inputFile
-  graph <- readH5ToGraph fileNameEncoded
-  withBinaryFile fileNameEncoded ReadMode $ \handle -> do
-    readChunkedLayouts handle graph
+  let inputBytes = BS.pack [0, 0, 0, 9, 128, 210, 208, 222, 157, 64, 255, 223, 0, 114, 108, 100, 0]
+      decompressed = bshufDecompressLz4 inputBytes 12 1 0
 
-  outputFile <- encodeUtf "/tmp/graph.dot"
-  withFile outputFile WriteMode $ \handle -> do
-    hPutStrLn handle (graphToDot graph)
+  case decompressed of
+    DecompressError _ -> putStrLn "error decompressing"
+    DecompressSuccess bytes numberBytes ->
+      putStrLn ("unpacked " <> show numberBytes <> " bytes: " <> show (BS.unpack bytes))
 
-  outputFile <- encodeUtf "/tmp/h5dump.txt"
-  withFile outputFile WriteMode $ \handle -> do
-    hPutStrLn handle $ "HDF5 \"" <> inputFile <> "\" {"
-    hPutStrLn handle (graphToH5Dump graph)
-    hPutStrLn handle "}"
+-- let inputFile :: String
+--     inputFile = "/home/pmidden/Downloads/water_224.h5"
+-- fileNameEncoded <- encodeUtf inputFile
+-- graph <- readH5ToGraph fileNameEncoded
+-- withBinaryFile fileNameEncoded ReadMode $ \handle -> do
+--   readChunkedLayouts handle graph
+
+-- outputFile <- encodeUtf "samples/graph_water_224.dot"
+-- withFile outputFile WriteMode $ \handle -> do
+--   hPutStrLn handle (graphToDot graph)
+
+-- outputFile <- encodeUtf "samples/h5dump_water_224.txt"
+-- withFile outputFile WriteMode $ \handle -> do
+--   hPutStrLn handle $ "HDF5 \"" <> inputFile <> "\" {"
+--   hPutStrLn handle (graphToH5Dump graph)
+--   hPutStrLn handle "}"

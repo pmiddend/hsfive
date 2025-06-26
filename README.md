@@ -12,3 +12,7 @@ The goal of this project is to implement at least a read-only version of an HDF5
 ## Current state
 
 This is very much a piece of nothing right now, don't take the project too seriously. Once it's got Haddocks and is on hackage, take notice of this.
+
+### C bits
+
+LZ4/Bitshuffle is currently still C code, look at the `cbits` directory. At some point I'd like to change this, but compiling a few C files is a good tradeoff to separately compiling, shipping and linking the bitshuffle plugin DLL.

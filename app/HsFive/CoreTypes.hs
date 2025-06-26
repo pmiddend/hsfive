@@ -121,7 +121,7 @@ data DataStorageLayoutClass
 
 data DataStorageLayout
   = LayoutContiguousOld
-      { layoutContiguousOldRawDataAddress :: !Word32,
+      { layoutContiguousOldRawDataAddress :: !Address,
         layoutContiguousOldSizes :: ![Word32]
       }
   | LayoutContiguous
@@ -173,6 +173,15 @@ data Message
     DataStorageLayoutMessage !DataStorageLayout
   | -- | The object modification time is a timestamp which indicates the time of the last modification of an object. The time is updated when any object header message changes according to the system clock where the change was posted.
     ObjectModificationTimeMessage {objectModificationTime :: !Word32}
+  | -- | The object modification date and time is a timestamp which indicates (using ISO-8601 date and time format) the last modification of an object. The time is updated when any object header message changes according to the system clock where the change was posted. All fields of this message should be interpreted as coordinated universal time (UTC).
+    ObjectModificationTimeOldMessage
+      { objectModificationTimeOldYear :: !Word32,
+        objectModificationTimeOldMonth :: !Word16,
+        objectModificationTimeOldDayOfMonth :: !Word16,
+        objectModificationTimeOldHour :: !Word16,
+        objectModificationTimeOldMinute :: !Word16,
+        objectModificationTimeOldSecond :: !Word16
+      }
   | AttributeMessage
       { attributeName :: !BS.ByteString,
         attributeDatatypeMessageData :: !DatatypeMessageData,
@@ -644,9 +653,10 @@ getMessage 0x000b = do
     when (numberOfValuesForClientData `mod` 2 == 1) (skip 4)
     pure (DataStoragePipelineFilter filterIdentification name (flags .&. 1 == 1) clientData)
   pure (DataStorageFilterPipelineMessage (DataStorageFilterPipelineMessageData filters'))
+getMessage 0x000e = ObjectModificationTimeOldMessage <$> getWord32le <*> getWord16le <*> getWord16le <*> getWord16le <*> getWord16le <*> (getWord16le <* getWord16le)
 getMessage 0x0008 = do
   version <- getWord8
-  case version of
+  case trace ("version: " <> show version) version of
     3 -> do
       layoutClass <- getDataStorageLayoutClass
 
@@ -702,10 +712,12 @@ getMessage 0x0008 = do
       layoutClass <- getDataStorageLayoutClass
       -- Reserved
       skip 5
-      case layoutClass of
+      case (trace ("layout class: " <> show layoutClass) layoutClass) of
         LayoutClassContiguous -> do
-          rawDataAddress <- getWord32le
+          rawDataAddress <- getAddress
           sizes <- replicateM (fromIntegral dimensionality) getWord32le
+          -- For some unknown reason we're getting a few bytes more sometimes
+          void getRemainingLazyByteString
           pure (DataStorageLayoutMessage (LayoutContiguousOld rawDataAddress sizes))
         LayoutClassChunked -> do
           bTreeAddress <- getMaybeAddress
