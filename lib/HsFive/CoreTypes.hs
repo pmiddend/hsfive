@@ -21,6 +21,12 @@ import System.File.OsPath (withBinaryFile)
 import System.IO (Handle, IOMode (ReadMode), SeekMode (AbsoluteSeek, SeekFromEnd), hSeek, hTell)
 import System.OsPath (OsPath, encodeUtf)
 
+-- trace :: String -> a -> a
+-- trace x f = f
+
+-- traceWith :: (a -> String) -> a -> a
+-- traceWith x f = f
+
 data DataspaceDimension = DataspaceDimension
   { ddSize :: !Length,
     ddMaxSize :: !(Maybe Length)
@@ -84,7 +90,7 @@ data Datatype
       }
   deriving (Show)
 
-data AttributeData = AttributeDataString !BSL.ByteString | AttributeDataTodo deriving (Show)
+data AttributeContent = AttributeContentString !BS.ByteString | AttributeContentTodo deriving (Show)
 
 data DataStorageSpaceAllocationTime
   = -- | Early allocation. Storage space for the entire dataset should
@@ -157,13 +163,24 @@ data DataStorageFilterPipelineMessageData
   = DataStorageFilterPipelineMessageData {dataStorageFilterPipelineFilters :: ![DataStoragePipelineFilter]}
   deriving (Show)
 
+data AttributeData = AttributeData
+  { attributeName :: !BS.ByteString,
+    attributeDatatypeMessageData :: !DatatypeMessageData,
+    attributeDataspaceMessageData :: !DataspaceMessageData,
+    attributeContent :: !AttributeContent
+  }
+  deriving (Show)
+
+data SymbolTableMessageData = SymbolTableMessageData
+  { symbolTableMessageV1BTreeAddress :: !Address,
+    symbolTableMessageLocalHeapAddress :: !Address
+  }
+  deriving (Show)
+
 data Message
   = NilMessage
   | DataspaceMessage !DataspaceMessageData
-  | SymbolTableMessage
-      { symbolTableMessageV1BTreeAddress :: !Address,
-        symbolTableMessageLocalHeapAddress :: !Address
-      }
+  | SymbolTableMessage !SymbolTableMessageData
   | ObjectHeaderContinuationMessage {objectHeaderContinuationMessageOffset :: !Address, objectHeaderContinuationMessageLength :: !Length}
   | DatatypeMessage !DatatypeMessageData
   | DataStorageFillValueMessage
@@ -182,12 +199,7 @@ data Message
         objectModificationTimeOldMinute :: !Word16,
         objectModificationTimeOldSecond :: !Word16
       }
-  | AttributeMessage
-      { attributeName :: !BS.ByteString,
-        attributeDatatypeMessageData :: !DatatypeMessageData,
-        attributeDataspaceMessageData :: !DataspaceMessageData,
-        attributeData :: !AttributeData
-      }
+  | AttributeMessage AttributeData
   deriving (Show)
 
 data ObjectHeader = ObjectHeader
@@ -730,7 +742,7 @@ getMessage 0x0008 = do
           -- TODO: We need the datatype size to read the actual compact data
           pure (DataStorageLayoutMessage (LayoutCompactOld sizes compactDataSize))
 getMessage 0x0010 = ObjectHeaderContinuationMessage <$> getAddress <*> getLength
-getMessage 0x0011 = SymbolTableMessage <$> getAddress <*> getAddress
+getMessage 0x0011 = SymbolTableMessage <$> (SymbolTableMessageData <$> getAddress <*> getAddress)
 getMessage 0x0012 = do
   version <- getWord8
   when (version /= 1) (fail ("invalid object modification time version " <> show version))
@@ -756,11 +768,13 @@ getMessage 0x000c = do
   -- dataspaceRaw <- getByteString (fromIntegral (trace ("skipping over dataspace " <> show dataspaceSize) dataspaceSize))
   dataspaceMessage <- getDataspaceMessageData
   skipTo8 dataspaceSize
-  attributeData <- case datatypeClass datatypeMessage of
+  attributeContent <- case datatypeClass datatypeMessage of
     DatatypeString padding charset ->
-      AttributeDataString <$> getRemainingLazyByteString
-    _ -> getRemainingLazyByteString *> pure AttributeDataTodo
-  pure (AttributeMessage name datatypeMessage dataspaceMessage attributeData)
+      AttributeContentString . BSL.toStrict <$> getRemainingLazyByteString
+    DatatypeVariableLengthString PaddingNullTerminate CharacterSetAscii n ->
+      AttributeContentString <$> getByteString (fromIntegral n)
+    _ -> getRemainingLazyByteString *> pure (trace ("attributo type: " <> show (datatypeClass datatypeMessage)) AttributeContentTodo)
+  pure (AttributeMessage (AttributeData name datatypeMessage dataspaceMessage attributeContent))
 getMessage n = fail ("invalid message type " <> show n)
 
 getObjectHeaderV1 :: Get ObjectHeader

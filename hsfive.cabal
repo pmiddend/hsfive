@@ -34,10 +34,21 @@ library
     import:           warnings
     exposed-modules:  HsFive.Util
                     , HsFive.Bitshuffle
+                    , HsFive.UtilityFunctions
+                    , HsFive.Types
+                    , HsFive.H5Dump
+                    -- , HsFive.Graph
+                    , HsFive.CoreTypes
     -- other-modules:
     -- other-extensions:
     build-depends:    base ^>=4.19.2.0
                     , bytestring
+                    , text
+                    , file-io
+                    , filepath
+                    , binary
+                    , safe
+                    , mtl
     hs-source-dirs:   lib
     default-language: Haskell2010
     c-sources: cbits/lz4.c cbits/bitshuffle.c cbits/bitshuffle_core.c cbits/iochain.c
@@ -46,7 +57,6 @@ library
 executable hsfive
     import:           warnings
     main-is:          Main.hs
-    other-modules:    HsFive.CoreTypes, HsFive.UtilityFunctions
     -- other-extensions:
     build-depends:
         base ^>=4.19.2.0,
@@ -54,6 +64,7 @@ executable hsfive
         bytestring,
         file-io,
         filepath,
+        text,
         binary,
         mtl,
         safe
