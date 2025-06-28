@@ -3,9 +3,9 @@
 
 module HsFive.Types where
 
-import Control.Monad (MonadPlus)
+import Control.Monad (MonadPlus, replicateM)
 import Data.Binary (getWord8)
-import Data.Binary.Get (bytesRead, getWord16le, isEmpty, isolate, runGet, runGetOrFail, skip)
+import Data.Binary.Get (bytesRead, getInt32le, getInt64le, getWord16le, isEmpty, isolate, runGet, runGetOrFail, skip)
 import qualified Data.ByteString as BS
 import qualified Data.ByteString.Lazy as BSL
 import Data.Foldable (msum)
@@ -13,17 +13,20 @@ import qualified Data.List.NonEmpty as NE
 import Data.Maybe (mapMaybe)
 import Data.Text (Text, intercalate, null, unpack)
 import Data.Text.Encoding (decodeUtf8Lenient)
-import Debug.Trace (traceShowId)
+import Debug.Trace (trace)
+import HsFive.Bitshuffle (DecompressResult (DecompressError, DecompressSuccess, decompressBytes, decompressBytesConsumed), bshufDecompressLz4)
 import HsFive.CoreTypes
   ( Address,
     AttributeContent (AttributeContentString),
-    BLinkTreeNode (BLinkTreeNodeChunkedRawData, BLinkTreeNodeGroup),
+    BLinkTreeNode (BLinkTreeNodeChunkedRawData, BLinkTreeNodeGroup, bltnChunks),
+    ByteOrder (LittleEndian),
+    ChunkInfo (ciChunkPointer, ciSize),
     DataStorageFilterPipelineMessageData (DataStorageFilterPipelineMessageData, dataStorageFilterPipelineFilters),
     DataStorageLayout,
-    DataStoragePipelineFilter,
-    DataspaceDimension,
+    DataStoragePipelineFilter (DataStoragePipelineFilter),
+    DataspaceDimension (DataspaceDimension, ddSize),
     DataspaceMessageData (DataspaceMessageData, dataspaceDimensions, dataspacePermutationIndices),
-    Datatype,
+    Datatype (DatatypeFixedPoint, fixedPointByteOrder, fixedPointDataElementSize),
     DatatypeMessageData (DatatypeMessageData, datatypeClass),
     GroupSymbolTableNode,
     HeapWithData (HeapWithData),
@@ -34,6 +37,8 @@ import HsFive.CoreTypes
     SymbolTableMessageData (SymbolTableMessageData, symbolTableMessageLocalHeapAddress, symbolTableMessageV1BTreeAddress),
     bltnChildPointers,
     bltnKeyOffsets,
+    dataStoragePipelineFilterClientDataValues,
+    dataStoragePipelineFilterId,
     getBLinkTreeNode,
     getGroupSymbolTableNode,
     getHeapHeader,
@@ -68,9 +73,6 @@ singletonPath t = Path [t]
 unwrapPath :: Path -> a -> (NE.NonEmpty Text -> a) -> a
 unwrapPath (Path []) whenEmpty _whenFull = whenEmpty
 unwrapPath (Path (x : xs)) _whenEmpty whenFull = whenFull (x NE.:| xs)
-
--- lastComponent :: Path -> Text
--- lastComponent (Path components) = last components
 
 pathComponentsList :: Path -> [Text]
 pathComponentsList (Path p) = p
@@ -265,7 +267,7 @@ readNode handle previousPath maybeHeap e = do
         Just (SymbolTableMessageData {symbolTableMessageV1BTreeAddress, symbolTableMessageLocalHeapAddress}) -> do
           hSeek handle AbsoluteSeek (fromIntegral symbolTableMessageV1BTreeAddress)
           blinkTreenode <- BSL.hGet handle 2048
-          case runGetOrFail (getBLinkTreeNode Nothing Nothing) blinkTreenode of
+          case runGetOrFail (getBLinkTreeNode Nothing) blinkTreenode of
             Left _ -> error "error reading b-link node"
             Right (_, _, BLinkTreeNodeChunkedRawData {}) -> fail "got chunked data node inside tree"
             Right (_, _, node@(BLinkTreeNodeGroup {})) -> do
@@ -338,3 +340,59 @@ goToNode gd p = goToNode' (GroupNode gd) (pathComponentsList p)
         (error "a dataset with a root path encountered")
         (\nonEmptyPath -> if NE.last nonEmptyPath == x then Just n else Nothing)
     goToNode' (DatasetNode {}) _ = Nothing
+
+applyFilters :: BSL.ByteString -> [DataStoragePipelineFilter] -> IO BSL.ByteString
+applyFilters data' [DataStoragePipelineFilter {dataStoragePipelineFilterId = 32008, dataStoragePipelineFilterClientDataValues = [_, _, elementSize, _blockSize, 2]}] =
+  let dataStrict = BSL.toStrict data'
+   in case bshufDecompressLz4 dataStrict (fromIntegral elementSize) of
+        DecompressError errorCode -> error ("bitshuffle decompression error: " <> show errorCode)
+        DecompressSuccess {decompressBytes} -> pure (BSL.fromStrict decompressBytes)
+applyFilters _data_ unknownFilter = error ("unknown filter: " <> show unknownFilter)
+
+readSingleChunk :: Handle -> Datatype -> Int -> [DataStoragePipelineFilter] -> ChunkInfo Address -> IO ()
+readSingleChunk handle datatype chunkElementCount filters ci = do
+  hSeek handle AbsoluteSeek (fromIntegral (ciChunkPointer ci))
+  chunkData <- BSL.hGet handle (fromIntegral (ciSize ci))
+  case datatype of
+    (DatatypeFixedPoint {fixedPointDataElementSize, fixedPointByteOrder}) ->
+      case (fixedPointDataElementSize, fixedPointByteOrder) of
+        (8, LittleEndian) ->
+          case runGetOrFail (replicateM (fromIntegral (ciSize ci)) getInt64le) chunkData of
+            Left (_, bytesConsumed, e') ->
+              error
+                ( "invalid chunk (consumed "
+                    <> show bytesConsumed
+                    <> " bytes): "
+                    <> show e'
+                )
+            Right (_, _, numbers) -> do
+              putStrLn ("read numbers " <> show numbers)
+        (4, LittleEndian) -> do
+          chunkDataFiltered <- applyFilters chunkData filters
+          case runGetOrFail (replicateM (fromIntegral chunkElementCount) getInt32le) chunkDataFiltered of
+            Left (_, bytesConsumed, e') ->
+              error
+                ( "invalid chunk word32le chunk (consumed "
+                    <> show bytesConsumed
+                    <> " bytes): "
+                    <> show e'
+                )
+            Right (_, _, numbers) -> do
+              putStrLn ("read numbers " <> show numbers)
+        _ -> putStrLn "chunk isn't 4/8 byte little endian"
+    dt -> putStrLn ("invalid data type (not fixed point or not there) " <> show dt)
+
+readChunkInfos :: (Integral a) => Handle -> a -> [DataspaceDimension] -> IO [ChunkInfo Address]
+readChunkInfos handle btreeAddress dataspaceDimensions = do
+  hSeek handle AbsoluteSeek (fromIntegral btreeAddress)
+  data' <- BSL.hGet handle 2048
+  case runGetOrFail (getBLinkTreeNode (Just dataspaceDimensions)) data' of
+    Left (_, bytesConsumed, e') ->
+      error
+        ( "invalid b tree node (consumed "
+            <> show bytesConsumed
+            <> " bytes): "
+            <> show e'
+        )
+    Right (_, _, BLinkTreeNodeChunkedRawData {bltnChunks}) -> pure bltnChunks
+    Right (_, _, _) -> error "got an inner node but expected a chunk"

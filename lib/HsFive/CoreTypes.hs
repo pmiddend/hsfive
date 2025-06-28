@@ -1,25 +1,20 @@
 {-# LANGUAGE BinaryLiterals #-}
 {-# HLINT ignore "Use newtype instead of data" #-}
-{-# LANGUAGE NamedFieldPuns #-}
 {-# OPTIONS_GHC -Wno-unrecognised-pragmas #-}
 
 module HsFive.CoreTypes where
 
 import Control.Monad (replicateM, void, when)
 import Data.Binary (Get, getWord8)
-import Data.Binary.Get (Get, bytesRead, getByteString, getRemainingLazyByteString, getWord16le, getWord32le, getWord64le, isEmpty, isolate, runGet, runGetOrFail, skip)
+import Data.Binary.Get (bytesRead, getByteString, getRemainingLazyByteString, getWord16le, getWord32le, getWord64le, isEmpty, isolate, skip)
 import Data.Bits (shiftR, (.&.))
 import qualified Data.ByteString as BS
 import qualified Data.ByteString.Lazy as BSL
-import Data.Foldable (forM_)
-import Data.List (singleton)
+import Data.Functor (($>))
 import Data.Word (Word16, Word32, Word64, Word8)
 import Debug.Trace (trace)
 import HsFive.Util
-import HsFive.UtilityFunctions (unfoldWhileM)
-import System.File.OsPath (withBinaryFile)
-import System.IO (Handle, IOMode (ReadMode), SeekMode (AbsoluteSeek, SeekFromEnd), hSeek, hTell)
-import System.OsPath (OsPath, encodeUtf)
+import System.IO (Handle, SeekMode (AbsoluteSeek), hSeek)
 
 -- trace :: String -> a -> a
 -- trace x f = f
@@ -135,7 +130,7 @@ data DataStorageLayout
         layoutContiguousSize :: !Length
       }
   | LayoutChunked
-      { layoutChunkedBTreeAddress :: !(Maybe Address),
+      { layoutChunkedBTreeAddress :: !Address,
         layoutChunkedSizes :: ![Word32],
         layoutChunkedDatasetElementSize :: !Word32
       }
@@ -366,8 +361,8 @@ getLength = getWord64le
 getAddress :: Get Address
 getAddress = getWord64le
 
-getBLinkTreeNode :: Maybe DataspaceMessageData -> Maybe DatatypeMessageData -> Get BLinkTreeNode
-getBLinkTreeNode maybeDataspace maybeDatatype = do
+getBLinkTreeNode :: Maybe [DataspaceDimension] -> Get BLinkTreeNode
+getBLinkTreeNode maybeDataspace = do
   signature' <- getByteString 4
   -- "TREE" in ASCII
   when (signature' /= BS.pack [84, 82, 69, 69]) (fail "invalid B tree node signature")
@@ -380,13 +375,13 @@ getBLinkTreeNode maybeDataspace maybeDatatype = do
     BLinkTreeNodeEnumRawData ->
       case maybeDataspace of
         Nothing -> fail "cannot parse raw data node: got no data space"
-        Just (DataspaceMessageData {dataspaceDimensions}) -> do
+        Just dataspaceDimensions' -> do
           let getChunk :: Get a -> Get (ChunkInfo a)
               getChunk getAddress' =
                 ChunkInfo
                   <$> getWord32le
                   <*> getWord32le
-                  <*> replicateM (length dataspaceDimensions) getLength
+                  <*> replicateM (length dataspaceDimensions') getLength
                   <*> (getLength *> getAddress')
           chunks <- replicateM (fromIntegral entriesUsed) (getChunk getAddress)
           lastChunk <- getChunk (pure Nothing)
@@ -396,7 +391,7 @@ getBLinkTreeNode maybeDataspace maybeDatatype = do
                 entriesUsed
                 leftSiblingAddress
                 rightSiblingAddress
-                (trace ("chunks: " <> show chunks) chunks)
+                chunks
                 lastChunk
             )
     BLinkTreeNodeEnumGroup -> do
@@ -507,7 +502,7 @@ getDatatypeMessageData = do
   class' <- getDatatypeClass classNumeric
   bits0to7 <- getWord8
   bits8to15 <- getWord8
-  bits16to23 <- getWord8
+  _bits16to23 <- getWord8
   -- The size of a datatype element in bytes.
   size <- getWord32le
   case class' of
@@ -612,17 +607,17 @@ getMessage 0x0005 = do
   version <- getWord8
   case version of
     1 -> do
-      spaceAllocationTime <- getDataStorageSpaceAllocationTime
-      fillValueWriteTime <- getDataStorageFillValueWriteTime
-      fillValueDefined <- getWord8
+      _spaceAllocationTime <- getDataStorageSpaceAllocationTime
+      _fillValueWriteTime <- getDataStorageFillValueWriteTime
+      _fillValueDefined <- getWord8
       size <- getWord32le
       -- TODO: the actual fill value depends on the datatype for the
       -- dataset - this must be a parameter to this function then
       _fillValue <- getByteString (fromIntegral size)
       pure DataStorageFillValueMessage
     2 -> do
-      spaceAllocationTime <- getDataStorageSpaceAllocationTime
-      fillValueWriteTime <- getDataStorageFillValueWriteTime
+      _spaceAllocationTime <- getDataStorageSpaceAllocationTime
+      _fillValueWriteTime <- getDataStorageFillValueWriteTime
       fillValueDefined <- getWord8
       case fillValueDefined of
         -- No need to read the fill value and its size, since it's not defined
@@ -668,11 +663,11 @@ getMessage 0x000b = do
 getMessage 0x000e = ObjectModificationTimeOldMessage <$> getWord32le <*> getWord16le <*> getWord16le <*> getWord16le <*> getWord16le <*> (getWord16le <* getWord16le)
 getMessage 0x0008 = do
   version <- getWord8
-  case trace ("version: " <> show version) version of
+  case version of
     3 -> do
       layoutClass <- getDataStorageLayoutClass
 
-      case (trace ("layout class: " <> show layoutClass) layoutClass) of
+      case layoutClass of
         -- Order of appearance in the spec
         LayoutClassCompact -> do
           -- (Note: The dimensionality information is in the Dataspace message)
@@ -703,7 +698,7 @@ getMessage 0x0008 = do
           -- 1A1 - Version 1 B-trees that is used to look up the
           -- addresses of the chunks that actually store portions of
           -- the array data.
-          address <- trace ("chunked dimensionality" <> show dimensionality) getMaybeAddress
+          address <- getAddress
           -- These values define the dimension size of a single chunk,
           -- in units of array elements (not bytes). The first
           -- dimension stored in the list of dimensions is the slowest
@@ -732,7 +727,7 @@ getMessage 0x0008 = do
           void getRemainingLazyByteString
           pure (DataStorageLayoutMessage (LayoutContiguousOld rawDataAddress sizes))
         LayoutClassChunked -> do
-          bTreeAddress <- getMaybeAddress
+          bTreeAddress <- getAddress
           sizes <- replicateM (fromIntegral dimensionality) getWord32le
           datasetElementSize <- getWord32le
           pure (DataStorageLayoutMessage (LayoutChunked bTreeAddress sizes datasetElementSize))
@@ -755,7 +750,7 @@ getMessage 0x000c = do
   -- Reserved
   skip 1
   nameSize <- getWord16le
-  datatypeSize <- getWord16le
+  _datatypeSize <- getWord16le
   dataspaceSize <- getWord16le
   name <- getByteString (fromIntegral nameSize)
   let skipTo8 s = do
@@ -768,13 +763,13 @@ getMessage 0x000c = do
   -- dataspaceRaw <- getByteString (fromIntegral (trace ("skipping over dataspace " <> show dataspaceSize) dataspaceSize))
   dataspaceMessage <- getDataspaceMessageData
   skipTo8 dataspaceSize
-  attributeContent <- case datatypeClass datatypeMessage of
-    DatatypeString padding charset ->
+  attributeContent' <- case datatypeClass datatypeMessage of
+    DatatypeString _padding _charset ->
       AttributeContentString . BSL.toStrict <$> getRemainingLazyByteString
     DatatypeVariableLengthString PaddingNullTerminate CharacterSetAscii n ->
       AttributeContentString <$> getByteString (fromIntegral n)
-    _ -> getRemainingLazyByteString *> pure (trace ("attributo type: " <> show (datatypeClass datatypeMessage)) AttributeContentTodo)
-  pure (AttributeMessage (AttributeData name datatypeMessage dataspaceMessage attributeContent))
+    _ -> getRemainingLazyByteString $> trace ("attributo type: " <> show (datatypeClass datatypeMessage)) AttributeContentTodo
+  pure (AttributeMessage (AttributeData name datatypeMessage dataspaceMessage attributeContent'))
 getMessage n = fail ("invalid message type " <> show n)
 
 getObjectHeaderV1 :: Get ObjectHeader
@@ -806,8 +801,8 @@ getObjectHeaderV1 = do
   -- have any bytes anymore.
   let readMessage = do
         messageType <- getWord16le
-        headerMessageDataSize <- (trace ("reading message type " <> show messageType) getWord16le)
-        flags <- trace ("header size " <> show headerMessageDataSize) getWord8
+        headerMessageDataSize <- getWord16le
+        _flags <- getWord8
         skip 3
         isolate (fromIntegral headerMessageDataSize) (getMessage messageType)
       -- decodeMessages 0 = pure []

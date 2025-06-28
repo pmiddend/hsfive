@@ -22,10 +22,11 @@ import Data.Maybe (mapMaybe)
 import Data.Text (unpack)
 import Data.Traversable (forM)
 import Data.Word (Word32)
+import Debug.Trace (traceShowId)
 import HsFive.Bitshuffle (DecompressResult (DecompressError, DecompressSuccess), bshufDecompressLz4)
 import HsFive.CoreTypes
 import HsFive.H5Dump (h5dump)
-import HsFive.Types (appendPath, goToNode, readH5, readNode, singletonPath, (</))
+import HsFive.Types (DatasetData (DatasetData), Node (DatasetNode), appendPath, datasetDatatype, datasetDimensions, datasetFilters, datasetStorageLayout, goToNode, readChunkInfos, readH5, readNode, readSingleChunk, singletonPath, (</))
 import Safe (headMay)
 import System.File.OsPath (withBinaryFile, withFile)
 import System.IO (Handle, IOMode (ReadMode, WriteMode), SeekMode (AbsoluteSeek, SeekFromEnd), hPutStrLn, hSeek, hTell)
@@ -58,13 +59,14 @@ readSuperblock handle = do
 
 main :: IO ()
 main = do
-  let inputBytes = BS.pack [0, 0, 0, 9, 128, 210, 208, 222, 157, 64, 255, 223, 0, 114, 108, 100, 0]
-      decompressed = bshufDecompressLz4 inputBytes 12 1 0
+  -- Commented out because this is an example where the first 12 bytes aren't layouted as H5 wants it, so it's "useless"
+  -- let inputBytes = BS.pack [0, 0, 0, 9, 128, 210, 208, 222, 157, 64, 255, 223, 0, 114, 108, 100, 0]
+  --     decompressed = bshufDecompressLz4 inputBytes 12 1 0
 
-  case decompressed of
-    DecompressError _ -> putStrLn "error decompressing"
-    DecompressSuccess bytes numberBytes ->
-      putStrLn ("unpacked " <> show numberBytes <> " bytes: " <> show (BS.unpack bytes))
+  -- case decompressed of
+  --   DecompressError _ -> putStrLn "error decompressing"
+  --   DecompressSuccess bytes numberBytes ->
+  --     putStrLn ("unpacked " <> show numberBytes <> " bytes: " <> show (BS.unpack bytes))
 
   let inputFile :: String
       inputFile = "/home/pmidden/Downloads/water_224.h5"
@@ -72,9 +74,26 @@ main = do
   fileNameEncoded <- encodeUtf inputFile
   rootGroup <- readH5 fileNameEncoded
   putStrLn $ "node: " <> show rootGroup
-  putStrLn $ "node: " <> show (goToNode rootGroup (singletonPath "entry_0000" </ "0_measurement" </ "images"))
 
-  putStrLn $ unpack $ h5dump rootGroup
+  let imageNode = goToNode rootGroup (singletonPath "entry_0000" </ "0_measurement" </ "images")
+  putStrLn $ "node: " <> show imageNode
+
+  case imageNode of
+    Nothing -> error "image node not found"
+    Just (DatasetNode (DatasetData {datasetStorageLayout = LayoutChunked {layoutChunkedBTreeAddress, layoutChunkedSizes}, datasetDimensions, datasetDatatype, datasetFilters})) ->
+      withBinaryFile fileNameEncoded ReadMode $ \handle -> do
+        chunks <- readChunkInfos handle layoutChunkedBTreeAddress datasetDimensions
+        putStrLn $ "chunks: " <> show chunks
+        case chunks of
+          (firstChunk : _) ->
+            readSingleChunk
+              handle
+              datasetDatatype
+              (fromIntegral (product layoutChunkedSizes))
+              datasetFilters
+              firstChunk
+
+-- putStrLn $ unpack $ h5dump rootGroup
 
 -- fileNameEncoded <- encodeUtf inputFile
 -- graph <- readH5ToGraph fileNameEncoded
