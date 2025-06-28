@@ -25,7 +25,7 @@ import Data.Word (Word32)
 import HsFive.Bitshuffle (DecompressResult (DecompressError, DecompressSuccess), bshufDecompressLz4)
 import HsFive.CoreTypes
 import HsFive.H5Dump (h5dump)
-import HsFive.Types (appendPath, goToNode, readH5, readNode, singletonPath)
+import HsFive.Types (appendPath, goToNode, readH5, readNode, singletonPath, (</))
 import Safe (headMay)
 import System.File.OsPath (withBinaryFile, withFile)
 import System.IO (Handle, IOMode (ReadMode, WriteMode), SeekMode (AbsoluteSeek, SeekFromEnd), hPutStrLn, hSeek, hTell)
@@ -61,7 +61,7 @@ main = do
   let inputBytes = BS.pack [0, 0, 0, 9, 128, 210, 208, 222, 157, 64, 255, 223, 0, 114, 108, 100, 0]
       decompressed = bshufDecompressLz4 inputBytes 12 1 0
 
-  case decompress of
+  case decompressed of
     DecompressError _ -> putStrLn "error decompressing"
     DecompressSuccess bytes numberBytes ->
       putStrLn ("unpacked " <> show numberBytes <> " bytes: " <> show (BS.unpack bytes))
@@ -72,7 +72,7 @@ main = do
   fileNameEncoded <- encodeUtf inputFile
   rootGroup <- readH5 fileNameEncoded
   putStrLn $ "node: " <> show rootGroup
-  putStrLn $ "node: " <> show (goToNode rootGroup (appendPath (singletonPath "/") "entry_0000"))
+  putStrLn $ "node: " <> show (goToNode rootGroup (singletonPath "entry_0000" </ "0_measurement" </ "images"))
 
   putStrLn $ unpack $ h5dump rootGroup
 

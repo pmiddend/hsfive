@@ -13,6 +13,7 @@ import qualified Data.List.NonEmpty as NE
 import Data.Maybe (mapMaybe)
 import Data.Text (Text, intercalate, null, unpack)
 import Data.Text.Encoding (decodeUtf8Lenient)
+import Debug.Trace (traceShowId)
 import HsFive.CoreTypes
   ( Address,
     AttributeContent (AttributeContentString),
@@ -60,6 +61,9 @@ newtype Path = Path [Text] deriving (Eq)
 instance Show Path where
   show (Path []) = "/"
   show (Path components) = "/" <> unpack (intercalate "/" components)
+
+singletonPath :: Text -> Path
+singletonPath t = Path [t]
 
 unwrapPath :: Path -> a -> (NE.NonEmpty Text -> a) -> a
 unwrapPath (Path []) whenEmpty _whenFull = whenEmpty
@@ -160,6 +164,12 @@ appendPath :: Path -> Text -> Path
 appendPath (Path xs) x
   | null x = error "empty path component not allowed"
   | otherwise = Path (xs <> [x])
+
+(</) :: Path -> Text -> Path
+(</) = appendPath
+
+-- Same as FilePath operator
+infixl 5 </
 
 rootPath :: Path
 rootPath = Path mempty
