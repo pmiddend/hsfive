@@ -3,12 +3,27 @@
 
 module HsFive.H5Dump (h5dump) where
 
-import qualified Data.ByteString.Lazy.Char8 as BSL8
 import Data.Int (Int64)
 import Data.List (sortOn)
+import qualified Data.List.NonEmpty as NE
 import Data.Text (Text, intercalate, length, pack, replicate)
-import HsFive.CoreTypes (AttributeContent (AttributeContentString), ByteOrder (LittleEndian), CharacterSet (CharacterSetAscii, CharacterSetUtf8), DataStorageLayout (LayoutContiguous, layoutContiguousSize), DataspaceDimension (DataspaceDimension, ddSize), DataspaceMessageData (DataspaceMessageData, dataspaceDimensions), Datatype (DatatypeFixedPoint, DatatypeFloatingPoint, DatatypeString, DatatypeVariableLengthString, fixedPointBitPrecision, fixedPointByteOrder, fixedPointSigned, floatingPointBitPrecision, floatingPointByteOrder), DatatypeMessageData (DatatypeMessageData, datatypeClass), StringPadding (PaddingNull, PaddingNullTerminate))
-import HsFive.Types (Attribute (Attribute, attributeDataString, attributeType), DatasetData (DatasetData, datasetAttributes, datasetDatatype, datasetDimensions, datasetFilters, datasetPath, datasetStorageLayout), GroupData (GroupData, groupAttributes, groupChildren, groupPath), Node (DatasetNode, GroupNode), attributeDimensions, attributeName, lastComponent)
+import HsFive.CoreTypes
+  ( ByteOrder (LittleEndian),
+    CharacterSet (CharacterSetAscii, CharacterSetUtf8),
+    DataStorageLayout (LayoutContiguous, layoutContiguousSize),
+    DataspaceDimension (DataspaceDimension, ddSize),
+    Datatype (DatatypeFixedPoint, DatatypeFloatingPoint, DatatypeString, DatatypeVariableLengthString, fixedPointBitPrecision, fixedPointByteOrder, fixedPointSigned, floatingPointBitPrecision, floatingPointByteOrder),
+    StringPadding (PaddingNull, PaddingNullTerminate),
+  )
+import HsFive.Types
+  ( Attribute (Attribute, attributeDataString, attributeType),
+    DatasetData (DatasetData, datasetAttributes, datasetDatatype, datasetDimensions, datasetPath, datasetStorageLayout),
+    GroupData (GroupData, groupAttributes, groupChildren, groupPath),
+    Node (DatasetNode, GroupNode),
+    attributeDimensions,
+    attributeName,
+    unwrapPath,
+  )
 import Prelude hiding (length, replicate)
 
 newtype Indent = Indent Int
@@ -70,10 +85,10 @@ attributeToH5Dump n (Attribute {attributeName, attributeType, attributeDimension
     <> [(increaseIndent n, "}")]
 
 dumpGroup :: Indent -> GroupData -> [(Indent, Text)]
-dumpGroup n group@(GroupData {groupPath, groupAttributes, groupChildren}) =
+dumpGroup n (GroupData {groupPath, groupAttributes, groupChildren}) =
   let attributes = sortOn attributeName groupAttributes >>= attributeToH5Dump n
       subgroups = groupChildren >>= dumpNode (increaseIndent n)
-   in [(n, "GROUP \"" <> lastComponent groupPath <> "\" {")] <> attributes <> subgroups <> [(n, "}")]
+   in [(n, "GROUP \"" <> unwrapPath groupPath "/" NE.last <> "\" {")] <> attributes <> subgroups <> [(n, "}")]
 
 datatypeToH5Dump :: Indent -> Datatype -> DataStorageLayout -> [(Indent, Text)]
 datatypeToH5Dump m (DatatypeVariableLengthString padding charset _word) _layout =
@@ -97,11 +112,11 @@ datatypeToH5Dump m (DatatypeFloatingPoint {floatingPointByteOrder = LittleEndian
 datatypeToH5Dump m (DatatypeFixedPoint {fixedPointByteOrder = LittleEndian, fixedPointBitPrecision = 32, fixedPointSigned = True}) _layout = [(m, "DATATYPE  H5T_STD_I32LE")]
 datatypeToH5Dump m (DatatypeFixedPoint {fixedPointByteOrder = LittleEndian, fixedPointBitPrecision = 64, fixedPointSigned = True}) _layout = [(m, "DATATYPE  H5T_STD_I64LE")]
 datatypeToH5Dump m (DatatypeFixedPoint {fixedPointByteOrder = LittleEndian, fixedPointBitPrecision = 16, fixedPointSigned = False}) _layout = [(m, "DATATYPE  H5T_STD_U16LE")]
-datatypeToH5Dump m type' _layout = [(m, ("FIXME " <> showText type'))]
+datatypeToH5Dump m type' _layout = [(m, "FIXME " <> showText type')]
 
 dumpDataset :: Indent -> DatasetData -> [(Indent, Text)]
-dumpDataset n (DatasetData {datasetPath, datasetDimensions, datasetDatatype, datasetFilters, datasetStorageLayout, datasetAttributes}) =
-  [(n, "DATASET \"" <> lastComponent datasetPath <> "\" {")]
+dumpDataset n (DatasetData {datasetPath, datasetDimensions, datasetDatatype, datasetStorageLayout, datasetAttributes}) =
+  [(n, "DATASET \"" <> unwrapPath datasetPath "/" NE.last <> "\" {")]
     <> datatypeToH5Dump (increaseIndent n) datasetDatatype datasetStorageLayout
     <> dataspaceToH5Dump (increaseIndent n) datasetDimensions
     <> (sortOn attributeName datasetAttributes >>= attributeToH5Dump n)

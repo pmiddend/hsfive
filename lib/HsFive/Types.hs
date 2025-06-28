@@ -11,7 +11,7 @@ import qualified Data.ByteString.Lazy as BSL
 import Data.Foldable (msum)
 import qualified Data.List.NonEmpty as NE
 import Data.Maybe (mapMaybe)
-import Data.Text (Text, intercalate, unpack)
+import Data.Text (Text, intercalate, null, unpack)
 import Data.Text.Encoding (decodeUtf8Lenient)
 import HsFive.CoreTypes
   ( Address,
@@ -53,14 +53,23 @@ import Safe (headMay)
 import System.File.OsPath (withBinaryFile)
 import System.IO (Handle, IOMode (ReadMode), SeekMode (AbsoluteSeek, SeekFromEnd), hSeek, hTell)
 import System.OsPath (OsPath)
+import Prelude hiding (null)
 
-newtype Path = Path (NE.NonEmpty Text)
+newtype Path = Path [Text] deriving (Eq)
 
 instance Show Path where
-  show (Path components) = unpack (intercalate "/" (NE.toList components))
+  show (Path []) = "/"
+  show (Path components) = "/" <> unpack (intercalate "/" components)
 
-lastComponent :: Path -> Text
-lastComponent (Path components) = NE.last components
+unwrapPath :: Path -> a -> (NE.NonEmpty Text -> a) -> a
+unwrapPath (Path []) whenEmpty _whenFull = whenEmpty
+unwrapPath (Path (x : xs)) _whenEmpty whenFull = whenFull (x NE.:| xs)
+
+-- lastComponent :: Path -> Text
+-- lastComponent (Path components) = last components
+
+pathComponentsList :: Path -> [Text]
+pathComponentsList (Path p) = p
 
 data Attribute = Attribute
   { attributeName :: !Text,
@@ -127,7 +136,7 @@ resolveContinuationMessage handle (ObjectHeaderContinuationMessage continuationA
   let readMessage = do
         messageType <- getWord16le
         headerMessageDataSize <- getWord16le
-        flags <- getWord8
+        _flags <- getWord8
         skip 3
         isolate (fromIntegral headerMessageDataSize) (getMessage messageType)
       decodeMessages = do
@@ -148,10 +157,12 @@ resolveContinuationMessage handle (ObjectHeaderContinuationMessage continuationA
 resolveContinuationMessage _handle m = pure [m]
 
 appendPath :: Path -> Text -> Path
-appendPath (Path xs) x = Path (xs <> NE.singleton x)
+appendPath (Path xs) x
+  | null x = error "empty path component not allowed"
+  | otherwise = Path (xs <> [x])
 
-singletonPath :: Text -> Path
-singletonPath = Path . NE.singleton
+rootPath :: Path
+rootPath = Path mempty
 
 readNode :: Handle -> Maybe Path -> Maybe HeapWithData -> SymbolTableEntry -> IO Node
 readNode handle previousPath maybeHeap e = do
@@ -169,10 +180,10 @@ readNode handle previousPath maybeHeap e = do
       let newPath :: Path
           newPath =
             case maybeHeap of
-              Nothing -> singletonPath "/"
+              Nothing -> rootPath
               Just (HeapWithData _heapHeader heapData'') ->
                 case previousPath of
-                  Nothing -> singletonPath "/"
+                  Nothing -> rootPath
                   Just previousPath' ->
                     appendPath
                       previousPath'
@@ -263,7 +274,7 @@ readNode handle previousPath maybeHeap e = do
                         hSeek handle AbsoluteSeek (fromIntegral addr)
                         rawData <- BSL.hGet handle 2048
                         pure (runGet getGroupSymbolTableNode rawData)
-                  keysOnHeap <- mapM (readKey handle) keyAddressesOnHeap
+                  _keysOnHeap <- mapM (readKey handle) keyAddressesOnHeap
                   childrenOnHeap <- mapM readChild childAddressesOnHeap
 
                   childNodes <-
@@ -293,3 +304,27 @@ readH5 fileNameEncoded = do
         case node of
           GroupNode groupData -> pure groupData
           _ -> error "illegal h5: superblock didn't refer to a group but a dataset"
+
+goToNode :: GroupData -> Path -> Maybe Node
+goToNode gd p = goToNode' (GroupNode gd) (pathComponentsList p)
+  where
+    goToNode' :: Node -> [Text] -> Maybe Node
+    goToNode' n [] = Just n
+    goToNode' n@(GroupNode (GroupData {groupPath, groupChildren})) allPath@(x : xs) =
+      unwrapPath
+        groupPath
+        (tryPick (`goToNode'` allPath) groupChildren)
+        ( \nonEmptyPath ->
+            if NE.last nonEmptyPath == x
+              then
+                if xs == mempty
+                  then Just n
+                  else tryPick (`goToNode'` xs) groupChildren
+              else Nothing
+        )
+    goToNode' n@(DatasetNode (DatasetData {datasetPath})) [x] =
+      unwrapPath
+        datasetPath
+        (error "a dataset with a root path encountered")
+        (\nonEmptyPath -> if NE.last nonEmptyPath == x then Just n else Nothing)
+    goToNode' (DatasetNode {}) _ = Nothing
