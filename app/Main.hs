@@ -91,6 +91,7 @@ main = do
               datasetDatatype
               (fromIntegral (product layoutChunkedSizes))
               datasetFilters
+              datasetDimensions
               firstChunk
 
 -- putStrLn $ unpack $ h5dump rootGroup

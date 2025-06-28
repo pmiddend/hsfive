@@ -10,11 +10,11 @@ import qualified Data.ByteString as BS
 import qualified Data.ByteString.Lazy as BSL
 import Data.Foldable (msum)
 import qualified Data.List.NonEmpty as NE
+import Data.List.Split (chunksOf)
 import Data.Maybe (mapMaybe)
-import Data.Text (Text, intercalate, null, unpack)
+import Data.Text (Text, intercalate, null, pack, unpack, unwords)
 import Data.Text.Encoding (decodeUtf8Lenient)
-import Debug.Trace (trace)
-import HsFive.Bitshuffle (DecompressResult (DecompressError, DecompressSuccess, decompressBytes, decompressBytesConsumed), bshufDecompressLz4)
+import HsFive.Bitshuffle (DecompressResult (DecompressError, DecompressSuccess, decompressBytes), bshufDecompressLz4)
 import HsFive.CoreTypes
   ( Address,
     AttributeContent (AttributeContentString),
@@ -24,7 +24,7 @@ import HsFive.CoreTypes
     DataStorageFilterPipelineMessageData (DataStorageFilterPipelineMessageData, dataStorageFilterPipelineFilters),
     DataStorageLayout,
     DataStoragePipelineFilter (DataStoragePipelineFilter),
-    DataspaceDimension (DataspaceDimension, ddSize),
+    DataspaceDimension (ddSize),
     DataspaceMessageData (DataspaceMessageData, dataspaceDimensions, dataspacePermutationIndices),
     Datatype (DatatypeFixedPoint, fixedPointByteOrder, fixedPointDataElementSize),
     DatatypeMessageData (DatatypeMessageData, datatypeClass),
@@ -56,10 +56,10 @@ import HsFive.CoreTypes
   )
 import qualified HsFive.CoreTypes as CoreTypes
 import Safe (headMay)
-import System.File.OsPath (withBinaryFile)
-import System.IO (Handle, IOMode (ReadMode), SeekMode (AbsoluteSeek, SeekFromEnd), hSeek, hTell)
-import System.OsPath (OsPath)
-import Prelude hiding (null)
+import System.File.OsPath (withBinaryFile, withFile)
+import System.IO (Handle, IOMode (ReadMode, WriteMode), SeekMode (AbsoluteSeek, SeekFromEnd), hPutStrLn, hSeek, hTell)
+import System.OsPath (OsPath, encodeUtf)
+import Prelude hiding (null, unwords)
 
 newtype Path = Path [Text] deriving (Eq)
 
@@ -349,8 +349,11 @@ applyFilters data' [DataStoragePipelineFilter {dataStoragePipelineFilterId = 320
         DecompressSuccess {decompressBytes} -> pure (BSL.fromStrict decompressBytes)
 applyFilters _data_ unknownFilter = error ("unknown filter: " <> show unknownFilter)
 
-readSingleChunk :: Handle -> Datatype -> Int -> [DataStoragePipelineFilter] -> ChunkInfo Address -> IO ()
-readSingleChunk handle datatype chunkElementCount filters ci = do
+showText :: (Show a) => a -> Text
+showText = pack . show
+
+readSingleChunk :: Handle -> Datatype -> Int -> [DataStoragePipelineFilter] -> [DataspaceDimension] -> ChunkInfo Address -> IO ()
+readSingleChunk handle datatype chunkElementCount filters dimensions ci = do
   hSeek handle AbsoluteSeek (fromIntegral (ciChunkPointer ci))
   chunkData <- BSL.hGet handle (fromIntegral (ciSize ci))
   case datatype of
@@ -378,7 +381,15 @@ readSingleChunk handle datatype chunkElementCount filters ci = do
                     <> show e'
                 )
             Right (_, _, numbers) -> do
-              putStrLn ("read numbers " <> show numbers)
+              case ddSize <$> dimensions of
+                [_imageCount, width, height] -> do
+                  pgmPath <- encodeUtf "/tmp/test.pgm"
+                  withFile pgmPath WriteMode $ \pgmHandle -> do
+                    hPutStrLn pgmHandle "P2"
+                    hPutStrLn pgmHandle $ show height <> " " <> show width
+                    hPutStrLn pgmHandle "1300"
+                    mapM_ (hPutStrLn pgmHandle . unpack) (intercalate "  " . (showText <$>) <$> chunksOf (fromIntegral width) numbers)
+                _ -> error "invalid dimensions for chunk"
         _ -> putStrLn "chunk isn't 4/8 byte little endian"
     dt -> putStrLn ("invalid data type (not fixed point or not there) " <> show dt)
 
