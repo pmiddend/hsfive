@@ -6,37 +6,19 @@
 
 module Main where
 
--- import Debug.Trace (trace, traceShowId, traceWith)
-
-import Control.Monad (join, replicateM)
-import Control.Monad.State (State, evalState, get, put)
-import Data.Binary (getWord8)
-import Data.Binary.Get (bytesRead, getDoublele, getInt64le, getWord16le, getWord64le, isEmpty, isolate, runGet, runGetOrFail, skip)
-import qualified Data.ByteString as BS
-import qualified Data.ByteString.Char8 as BS8
+import Data.Binary.Get (runGetOrFail)
 import qualified Data.ByteString.Lazy as BSL
-import qualified Data.ByteString.Lazy.Char8 as BSL8
-import Data.Int (Int64)
-import Data.List (intercalate, sortOn)
-import Data.Maybe (mapMaybe)
-import Data.Text (unpack)
-import Data.Traversable (forM)
-import Data.Word (Word32)
-import Debug.Trace (traceShowId)
-import HsFive.Bitshuffle (DecompressResult (DecompressError, DecompressSuccess), bshufDecompressLz4)
 import HsFive.CoreTypes
-import HsFive.H5Dump (h5dump)
-import HsFive.Types (DatasetData (DatasetData), Node (DatasetNode), appendPath, datasetDatatype, datasetDimensions, datasetFilters, datasetStorageLayout, goToNode, readChunkInfos, readH5, readNode, readSingleChunk, singletonPath, (</))
-import Safe (headMay)
-import System.File.OsPath (withBinaryFile, withFile)
-import System.IO (Handle, IOMode (ReadMode, WriteMode), SeekMode (AbsoluteSeek, SeekFromEnd), hPutStrLn, hSeek, hTell)
-import System.OsPath (OsPath, encodeUtf)
+import HsFive.Types (DatasetData (DatasetData), Node (DatasetNode), datasetDatatype, datasetDimensions, datasetFilters, datasetStorageLayout, goToNode, readChunkInfos, readH5, readSingleChunk, singletonPath, (</))
+import System.File.OsPath (withBinaryFile)
+import System.IO (Handle, IOMode (ReadMode), SeekMode (AbsoluteSeek, SeekFromEnd), hSeek, hTell)
+import System.OsPath (encodeUtf)
 
 trace :: String -> a -> a
-trace x f = f
+trace _x f = f
 
 traceWith :: (a -> String) -> a -> a
-traceWith x f = f
+traceWith _x f = f
 
 readSuperblock' :: Handle -> Integer -> Integer -> IO (Maybe Superblock)
 readSuperblock' handle fileSize start = do
@@ -73,7 +55,7 @@ main = do
 
   fileNameEncoded <- encodeUtf inputFile
   rootGroup <- readH5 fileNameEncoded
-  putStrLn $ "node: " <> show rootGroup
+  putStrLn $ "root node: " <> show rootGroup
 
   let imageNode = goToNode rootGroup (singletonPath "entry_0000" </ "0_measurement" </ "images")
   putStrLn $ "node: " <> show imageNode

@@ -4,7 +4,7 @@
 
 module HsFive.CoreTypes where
 
-import Control.Monad (replicateM, void, when)
+import Control.Monad (MonadPlus (mplus, mzero), replicateM, void, when)
 import Data.Binary (Get, getWord8)
 import Data.Binary.Get (bytesRead, getByteString, getRemainingLazyByteString, getWord16le, getWord32le, getWord64le, isEmpty, isolate, skip)
 import Data.Bits (shiftR, (.&.))
@@ -15,6 +15,9 @@ import Data.Word (Word16, Word32, Word64, Word8)
 import Debug.Trace (trace)
 import HsFive.Util
 import System.IO (Handle, SeekMode (AbsoluteSeek), hSeek)
+
+debugLog :: (Show a) => String -> a -> a
+debugLog str x = trace (str <> ": " <> show x) x
 
 -- trace :: String -> a -> a
 -- trace x f = f
@@ -85,7 +88,11 @@ data Datatype
       }
   deriving (Show)
 
-data AttributeContent = AttributeContentString !BS.ByteString | AttributeContentTodo deriving (Show)
+data AttributeContent
+  = AttributeContentFixedString !BS.ByteString
+  | AttributeContentVariableString !Address !Word32 !Word32
+  | AttributeContentTodo
+  deriving (Show)
 
 data DataStorageSpaceAllocationTime
   = -- | Early allocation. Storage space for the entire dataset should
@@ -141,6 +148,19 @@ data DataStorageLayout
 getDataspaceDimension :: Bool -> Get DataspaceDimension
 getDataspaceDimension True = DataspaceDimension <$> getLength <*> getMaybeLength
 getDataspaceDimension False = DataspaceDimension <$> getLength <*> pure Nothing
+
+data GlobalHeapObject = GlobalHeapObject
+  { globalHeapObjectIndex :: !Word16,
+    globalHeapObjectRefCount :: !Word16,
+    globalHeapObjectData :: !BS.ByteString
+  }
+  deriving (Show)
+
+data GlobalHeap = GlobalHeap
+  { globalHeapVersion :: !Word8,
+    globalHeapObjects :: ![GlobalHeapObject]
+  }
+  deriving (Show)
 
 data DataspaceMessageData = DataspaceMessageData
   { dataspaceDimensions :: ![DataspaceDimension],
@@ -589,6 +609,11 @@ getDatatypeMessageData = do
         )
     _ -> fail ("class " <> show class' <> " properties not supported yet")
 
+skipTo8 :: (Integral a) => a -> Get ()
+skipTo8 s = do
+  let r = s `mod` 8
+  when (r > 0) (skip (debugLog "skipping" $ fromIntegral (8 - r)))
+
 getMessage :: Word16 -> Get Message
 getMessage 0x0000 = do
   void getRemainingLazyByteString
@@ -719,7 +744,7 @@ getMessage 0x0008 = do
       layoutClass <- getDataStorageLayoutClass
       -- Reserved
       skip 5
-      case (trace ("layout class: " <> show layoutClass) layoutClass) of
+      case layoutClass of
         LayoutClassContiguous -> do
           rawDataAddress <- getAddress
           sizes <- replicateM (fromIntegral dimensionality) getWord32le
@@ -729,8 +754,7 @@ getMessage 0x0008 = do
         LayoutClassChunked -> do
           bTreeAddress <- getAddress
           sizes <- replicateM (fromIntegral dimensionality) getWord32le
-          datasetElementSize <- getWord32le
-          pure (DataStorageLayoutMessage (LayoutChunked bTreeAddress sizes datasetElementSize))
+          DataStorageLayoutMessage . LayoutChunked bTreeAddress sizes <$> getWord32le
         LayoutClassCompact -> do
           sizes <- replicateM (fromIntegral dimensionality) getWord32le
           compactDataSize <- getWord32le
@@ -753,24 +777,84 @@ getMessage 0x000c = do
   _datatypeSize <- getWord16le
   dataspaceSize <- getWord16le
   name <- getByteString (fromIntegral nameSize)
-  let skipTo8 s = do
-        let r = s `mod` 8
-        when (r > 0) (skip (fromIntegral (8 - r)))
   skipTo8 nameSize
   datatypeMessage <- getDatatypeMessageData
-  -- datatypeRaw <- getByteString (fromIntegral (trace ("name " <> show name) datatypeSize))
-  -- skipTo8 (trace ("received data type message " <> show datatypeMessage) datatypeSize)
-  -- dataspaceRaw <- getByteString (fromIntegral (trace ("skipping over dataspace " <> show dataspaceSize) dataspaceSize))
   dataspaceMessage <- getDataspaceMessageData
   skipTo8 dataspaceSize
   attributeContent' <- case datatypeClass datatypeMessage of
     DatatypeString _padding _charset ->
-      AttributeContentString . BSL.toStrict <$> getRemainingLazyByteString
-    DatatypeVariableLengthString PaddingNullTerminate CharacterSetAscii n ->
-      AttributeContentString <$> getByteString (fromIntegral n)
+      AttributeContentFixedString . BSL.toStrict <$> getRemainingLazyByteString
+    DatatypeVariableLengthString PaddingNullTerminate CharacterSetAscii n -> do
+      size' <- getWord32le
+      globalHeapAddress <- getWord64le
+      objectIndex <- getWord32le
+      pure
+        ( AttributeContentVariableString
+            (debugLog "global heap address" globalHeapAddress)
+            (debugLog "object index" objectIndex)
+            (debugLog "size" size')
+        )
     _ -> getRemainingLazyByteString $> trace ("attributo type: " <> show (datatypeClass datatypeMessage)) AttributeContentTodo
-  pure (AttributeMessage (AttributeData name datatypeMessage dataspaceMessage attributeContent'))
+  pure
+    ( debugLog "attribute message" $
+        AttributeMessage
+          ( AttributeData
+              name
+              datatypeMessage
+              dataspaceMessage
+              attributeContent'
+          )
+    )
 getMessage n = fail ("invalid message type " <> show n)
+
+getGlobalHeapObject :: Get GlobalHeapObject
+getGlobalHeapObject = do
+  objectIndex <- getWord16le
+  objectReferenceCount <- getWord16le
+  -- Reserved
+  skip 4
+  size' <- getLength
+  data' <- getByteString (fromIntegral (debugLog "size of global heap object" size'))
+  pure (GlobalHeapObject (debugLog "object index" objectIndex) objectReferenceCount data')
+
+getGlobalHeap :: Get GlobalHeap
+getGlobalHeap = do
+  signature' <- getByteString 4
+  -- "GCOL" in ASCII
+  when (signature' /= BS.pack [0x47, 0x43, 0x4f, 0x4c]) (fail "invalid global heap signature")
+  version <- getWord8
+  -- Reserved
+  skip 3
+  collectionSize <- getLength
+  startOfBytes <- bytesRead
+  let getNextGlobalHeapObject :: Get [GlobalHeapObject]
+      getNextGlobalHeapObject = do
+        b <- bytesRead
+        skipTo8 (b - startOfBytes)
+        objectIndex <- getWord16le
+        if objectIndex == 0
+          then pure []
+          else do
+            objectReferenceCount <- getWord16le
+            -- Reserved
+            skip 4
+            size' <- getLength
+            data' <- getByteString (fromIntegral (debugLog "size of global heap object" size'))
+            nextObjects <- getNextGlobalHeapObject
+            let thisObject =
+                  GlobalHeapObject
+                    (debugLog "object index" objectIndex)
+                    objectReferenceCount
+                    data'
+            pure (thisObject : nextObjects)
+
+  -- let objectsRemaining = do
+  --       b <- bytesRead
+  --       skipTo8 (b - startOfBytes)
+  --       pure (debugLog "remaining bytes" ((debugLog "collection size" collectionSize) - fromIntegral b) > 12)
+  -- objects <- whileM' objectsRemaining getGlobalHeapObject
+  objects <- getNextGlobalHeapObject
+  pure (GlobalHeap version objects)
 
 getObjectHeaderV1 :: Get ObjectHeader
 getObjectHeaderV1 = do

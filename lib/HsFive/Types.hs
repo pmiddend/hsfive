@@ -8,16 +8,16 @@ import Data.Binary (getWord8)
 import Data.Binary.Get (bytesRead, getInt32le, getInt64le, getWord16le, isEmpty, isolate, runGet, runGetOrFail, skip)
 import qualified Data.ByteString as BS
 import qualified Data.ByteString.Lazy as BSL
-import Data.Foldable (msum)
+import Data.Foldable (find, msum)
 import qualified Data.List.NonEmpty as NE
 import Data.List.Split (chunksOf)
 import Data.Maybe (mapMaybe)
-import Data.Text (Text, intercalate, null, pack, unpack, unwords)
+import Data.Text (Text, intercalate, null, pack, unpack)
 import Data.Text.Encoding (decodeUtf8Lenient)
 import HsFive.Bitshuffle (DecompressResult (DecompressError, DecompressSuccess, decompressBytes), bshufDecompressLz4)
 import HsFive.CoreTypes
   ( Address,
-    AttributeContent (AttributeContentString),
+    AttributeContent (AttributeContentFixedString, AttributeContentVariableString),
     BLinkTreeNode (BLinkTreeNodeChunkedRawData, BLinkTreeNodeGroup, bltnChunks),
     ByteOrder (LittleEndian),
     ChunkInfo (ciChunkPointer, ciSize),
@@ -28,6 +28,8 @@ import HsFive.CoreTypes
     DataspaceMessageData (DataspaceMessageData, dataspaceDimensions, dataspacePermutationIndices),
     Datatype (DatatypeFixedPoint, fixedPointByteOrder, fixedPointDataElementSize),
     DatatypeMessageData (DatatypeMessageData, datatypeClass),
+    GlobalHeap (globalHeapObjects),
+    GlobalHeapObject (GlobalHeapObject, globalHeapObjectData, globalHeapObjectIndex),
     GroupSymbolTableNode,
     HeapWithData (HeapWithData),
     Length,
@@ -39,7 +41,9 @@ import HsFive.CoreTypes
     bltnKeyOffsets,
     dataStoragePipelineFilterClientDataValues,
     dataStoragePipelineFilterId,
+    debugLog,
     getBLinkTreeNode,
+    getGlobalHeap,
     getGroupSymbolTableNode,
     getHeapHeader,
     getMessage,
@@ -207,24 +211,54 @@ readNode handle previousPath maybeHeap e = do
       allMessages <- resolveContinuationMessages handle (ohHeaderMessages header)
       let filterAttribute (AttributeMessage attributeData) = Just attributeData
           filterAttribute _ = Nothing
-          convertAttribute :: CoreTypes.AttributeData -> Attribute
+          convertAttribute :: CoreTypes.AttributeData -> IO Attribute
           convertAttribute
             ( CoreTypes.AttributeData
                 { CoreTypes.attributeName = an,
                   CoreTypes.attributeDatatypeMessageData = DatatypeMessageData {datatypeClass = typeData},
                   CoreTypes.attributeDataspaceMessageData = DataspaceMessageData {dataspaceDimensions, dataspacePermutationIndices},
-                  CoreTypes.attributeContent = AttributeContentString content
+                  CoreTypes.attributeContent = AttributeContentFixedString content
                 }
               ) =
-              Attribute
-                { attributeName = decodeUtf8Lenient $ BS.takeWhile (/= 0) an,
-                  attributeType = typeData,
-                  attributeDimensions = dataspaceDimensions,
-                  attributePermutationIndices = dataspacePermutationIndices,
-                  attributeDataString = decodeUtf8Lenient $ BS.takeWhile (/= 0) content
+              pure
+                Attribute
+                  { attributeName = decodeUtf8Lenient $ BS.takeWhile (/= 0) an,
+                    attributeType = debugLog "type" typeData,
+                    attributeDimensions = debugLog "dataspace dimensions" dataspaceDimensions,
+                    attributePermutationIndices = dataspacePermutationIndices,
+                    attributeDataString = decodeUtf8Lenient $ BS.takeWhile (/= 0) (debugLog "content" content)
+                  }
+          convertAttribute
+            ( CoreTypes.AttributeData
+                { CoreTypes.attributeName = an,
+                  CoreTypes.attributeDatatypeMessageData = DatatypeMessageData {datatypeClass = typeData},
+                  CoreTypes.attributeDataspaceMessageData = DataspaceMessageData {dataspaceDimensions, dataspacePermutationIndices},
+                  CoreTypes.attributeContent = AttributeContentVariableString heapAddress objectIndex size'
                 }
+              ) = do
+              hSeek handle AbsoluteSeek (fromIntegral heapAddress)
+              heapData <- BSL.hGet handle 4096
+              case runGetOrFail getGlobalHeap heapData of
+                Left (_, bytesConsumed, e') ->
+                  error
+                    ( "invalid global heap (consumed "
+                        <> show bytesConsumed
+                        <> " bytes): "
+                        <> show e'
+                    )
+                Right (_, _, globalHeap) -> do
+                  case find (\ho -> globalHeapObjectIndex ho == fromIntegral objectIndex) (globalHeapObjects globalHeap) of
+                    Nothing -> error ("cannot find object " <> show objectIndex <> " in global heap")
+                    Just (GlobalHeapObject {globalHeapObjectData}) ->
+                      pure
+                        Attribute
+                          { attributeName = decodeUtf8Lenient $ BS.takeWhile (/= 0) an,
+                            attributeType = debugLog "type" typeData,
+                            attributeDimensions = debugLog "dataspace dimensions" dataspaceDimensions,
+                            attributePermutationIndices = dataspacePermutationIndices,
+                            attributeDataString = decodeUtf8Lenient $ BS.takeWhile (/= 0) globalHeapObjectData
+                          }
           convertAttribute a = error $ "invalid attribute data, not a string: " <> show a
-          attributes = convertAttribute <$> mapMaybe filterAttribute allMessages
           filterSymbolTable (SymbolTableMessage d) = Just d
           filterSymbolTable _ = Nothing
       case headMay (mapMaybe filterSymbolTable allMessages) of
@@ -250,7 +284,8 @@ readNode handle previousPath maybeHeap e = do
                         Just (DataStorageFilterPipelineMessageData {dataStorageFilterPipelineFilters}) -> dataStorageFilterPipelineFilters
                    in case searchMessage filterLayout of
                         Nothing -> fail "dataset without layout"
-                        Just layout ->
+                        Just layout -> do
+                          attributes <- mapM convertAttribute (mapMaybe filterAttribute allMessages)
                           pure
                             ( DatasetNode
                                 ( DatasetData
@@ -294,6 +329,7 @@ readNode handle previousPath maybeHeap e = do
                       (readNode handle (Just newPath) (Just (HeapWithData heapHeader' heapData')))
                       (concatMap gstnEntries childrenOnHeap)
 
+                  attributes <- mapM convertAttribute (mapMaybe filterAttribute allMessages)
                   pure
                     ( GroupNode
                         ( GroupData
