@@ -1,6 +1,5 @@
 {-# LANGUAGE BinaryLiterals #-}
 {-# HLINT ignore "Use newtype instead of data" #-}
-{-# LANGUAGE NamedFieldPuns #-}
 {-# LANGUAGE OverloadedStrings #-}
 {-# OPTIONS_GHC -Wno-unrecognised-pragmas #-}
 
@@ -9,9 +8,9 @@ module Main where
 import Data.Binary.Get (runGetOrFail)
 import qualified Data.ByteString.Lazy as BSL
 import HsFive.CoreTypes
-import HsFive.Types (DatasetData (DatasetData), Node (DatasetNode), datasetDatatype, datasetDimensions, datasetFilters, datasetStorageLayout, goToNode, readChunkInfos, readH5, readSingleChunk, singletonPath, (</))
-import System.File.OsPath (withBinaryFile)
-import System.IO (Handle, IOMode (ReadMode), SeekMode (AbsoluteSeek, SeekFromEnd), hSeek, hTell)
+import HsFive.Types (readH5)
+import System.Environment (getArgs)
+import System.IO (Handle, SeekMode (AbsoluteSeek, SeekFromEnd), hSeek, hTell)
 import System.OsPath (encodeUtf)
 
 trace :: String -> a -> a
@@ -50,31 +49,33 @@ main = do
   --   DecompressSuccess bytes numberBytes ->
   --     putStrLn ("unpacked " <> show numberBytes <> " bytes: " <> show (BS.unpack bytes))
 
-  let inputFile :: String
-      inputFile = "/home/pmidden/Downloads/water_224.h5"
+  args <- getArgs
 
-  fileNameEncoded <- encodeUtf inputFile
-  rootGroup <- readH5 fileNameEncoded
-  putStrLn $ "root node: " <> show rootGroup
+  case args of
+    [inputFile] -> do
+      fileNameEncoded <- encodeUtf inputFile
+      rootGroup <- readH5 fileNameEncoded
+      putStrLn $ "root node: " <> show rootGroup
 
-  let imageNode = goToNode rootGroup (singletonPath "entry_0000" </ "0_measurement" </ "images")
-  putStrLn $ "node: " <> show imageNode
+    -- let imageNode = goToNode rootGroup (singletonPath "entry_0000" </ "0_measurement" </ "images")
+    -- putStrLn $ "node: " <> show imageNode
 
-  case imageNode of
-    Nothing -> error "image node not found"
-    Just (DatasetNode (DatasetData {datasetStorageLayout = LayoutChunked {layoutChunkedBTreeAddress, layoutChunkedSizes}, datasetDimensions, datasetDatatype, datasetFilters})) ->
-      withBinaryFile fileNameEncoded ReadMode $ \handle -> do
-        chunks <- readChunkInfos handle layoutChunkedBTreeAddress datasetDimensions
-        putStrLn $ "chunks: " <> show chunks
-        case chunks of
-          (firstChunk : _) ->
-            readSingleChunk
-              handle
-              datasetDatatype
-              (fromIntegral (product layoutChunkedSizes))
-              datasetFilters
-              datasetDimensions
-              firstChunk
+    -- case imageNode of
+    --   Nothing -> error "image node not found"
+    --   Just (DatasetNode (DatasetData {datasetStorageLayout = LayoutChunked {layoutChunkedBTreeAddress, layoutChunkedSizes}, datasetDimensions, datasetDatatype, datasetFilters})) ->
+    --     withBinaryFile fileNameEncoded ReadMode $ \handle -> do
+    --       chunks <- readChunkInfos handle layoutChunkedBTreeAddress datasetDimensions
+    --       putStrLn $ "chunks: " <> show chunks
+    --       case chunks of
+    --         (firstChunk : _) ->
+    --           readSingleChunk
+    --             handle
+    --             datasetDatatype
+    --             (fromIntegral (product layoutChunkedSizes))
+    --             datasetFilters
+    --             datasetDimensions
+    --             firstChunk
+    _ -> putStrLn "specify an h5 file as inputC"
 
 -- putStrLn $ unpack $ h5dump rootGroup
 

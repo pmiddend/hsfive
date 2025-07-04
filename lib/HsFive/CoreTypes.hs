@@ -1,4 +1,5 @@
 {-# LANGUAGE BinaryLiterals #-}
+{-# LANGUAGE DeriveFunctor #-}
 {-# HLINT ignore "Use newtype instead of data" #-}
 {-# OPTIONS_GHC -Wno-unrecognised-pragmas #-}
 
@@ -6,11 +7,12 @@ module HsFive.CoreTypes where
 
 import Control.Monad (MonadPlus (mplus, mzero), replicateM, void, when)
 import Data.Binary (Get, getWord8)
-import Data.Binary.Get (bytesRead, getByteString, getRemainingLazyByteString, getWord16le, getWord32le, getWord64le, isEmpty, isolate, skip)
-import Data.Bits (shiftR, (.&.))
+import Data.Binary.Get (bytesRead, getByteString, getLazyByteStringNul, getRemainingLazyByteString, getWord16le, getWord32le, getWord64le, isEmpty, isolate, skip)
+import Data.Bits (Bits (shiftL, (.|.)), shiftR, (.&.))
 import qualified Data.ByteString as BS
 import qualified Data.ByteString.Lazy as BSL
 import Data.Functor (($>))
+import Data.Maybe (fromJust)
 import Data.Word (Word16, Word32, Word64, Word8)
 import Debug.Trace (trace)
 import HsFive.Util
@@ -86,6 +88,7 @@ data Datatype
         floatingPointMantissaSize :: !Word8,
         floatingPointExponentBias :: !Word32
       }
+  | DatatypeCompound ![CompoundDatatypeMember]
   deriving (Show)
 
 data AttributeContent
@@ -232,16 +235,16 @@ data SymbolTableScratchpad
   | ScratchpadSymbolicLinkMetadata {offsetToLinkValue :: !Word32}
   deriving (Show)
 
-data SymbolTableEntry = SymbolTableEntry
+data SymbolTableEntry a = SymbolTableEntry
   { h5steLinkNameOffset :: !Word64,
-    h5steObjectHeaderAddress :: !Word64,
+    h5steObjectHeaderAddress :: !a,
     h5steScratchpad :: !SymbolTableScratchpad
   }
-  deriving (Show)
+  deriving (Show, Functor)
 
-data GroupSymbolTableNode = GroupSymbolTableNode
+data GroupSymbolTableNode a = GroupSymbolTableNode
   { gstnVersion :: !Word8,
-    gstnEntries :: ![SymbolTableEntry]
+    gstnEntries :: ![SymbolTableEntry a]
   }
   deriving (Show)
 
@@ -292,7 +295,7 @@ data Superblock = Superblock
     h5sbFileFreeSpaceInfoAddress :: !(Maybe Address),
     h5sbEndOfFileAddress :: !Address,
     h5sbDriverInformationBlockAddress :: !(Maybe Address),
-    h5sbSymbolTableEntry :: !SymbolTableEntry
+    h5sbSymbolTableEntry :: !(SymbolTableEntry Address)
   }
   deriving (Show)
 
@@ -310,10 +313,10 @@ data HeapWithData = HeapWithData
   }
   deriving (Show)
 
-getSymbolTableEntry :: Get SymbolTableEntry
+getSymbolTableEntry :: Get (SymbolTableEntry (Maybe Address))
 getSymbolTableEntry = do
   linkNameOffset <- getWord64le
-  objectHeaderAddress <- getWord64le
+  objectHeaderAddress <- getMaybeAddress
   cacheType <- getWord32le
   void getWord32le
   case cacheType of
@@ -331,7 +334,7 @@ getSymbolTableEntry = do
       pure (SymbolTableEntry linkNameOffset objectHeaderAddress scratchPad)
     n -> fail ("invalid symbol table cache type: " <> show n)
 
-getGroupSymbolTableNode :: Get GroupSymbolTableNode
+getGroupSymbolTableNode :: Get (GroupSymbolTableNode (Maybe Address))
 getGroupSymbolTableNode = do
   signature' <- getByteString 4
   -- "SNOD" in ASCII
@@ -514,6 +517,23 @@ getDataspaceMessageData = do
       -- TODO: This message has _lots_ more information to it
       pure (DataspaceMessageData (zipWith DataspaceDimension dimensions maxSizes) permutationIndices)
 
+data CompoundDatatypeMember = CompoundDatatypeMember
+  { cdmName :: !BS.ByteString,
+    cdmByteOffset :: !Word32,
+    cdmDatatype :: !DatatypeMessageData
+  }
+  deriving (Show)
+
+getCompoundDatatypeMember :: Get CompoundDatatypeMember
+getCompoundDatatypeMember = do
+  name <- BSL.toStrict <$> getLazyByteStringNul
+  skipTo8 (BS.length (debugLog "compound member name" name) + 1)
+  byteOffset <- getWord32le
+  CompoundDatatypeMember name byteOffset <$> getDatatypeMessageData
+
+skipLabeled :: String -> Int -> Get ()
+skipLabeled _ = skip
+
 getDatatypeMessageData :: Get DatatypeMessageData
 getDatatypeMessageData = do
   classAndVersion <- getWord8
@@ -533,8 +553,6 @@ getDatatypeMessageData = do
           signed = bits0to7 .&. 0b0001000 > 0
       bitOffset <- getWord16le
       bitPrecision <- getWord16le
-      -- not sure why this is necessary
-      skip 4
       pure
         ( DatatypeMessageData
             version
@@ -586,8 +604,6 @@ getDatatypeMessageData = do
       mantissaSize <- getWord8
       exponentBias <- getWord32le
 
-      -- not sure why this is necessary
-      skip 4
       pure
         ( DatatypeMessageData
             version
@@ -607,7 +623,13 @@ getDatatypeMessageData = do
                 exponentBias
             )
         )
-    _ -> fail ("class " <> show class' <> " properties not supported yet")
+    _ -> do
+      let numberOfMembers = bits0to7 .|. (bits8to15 `shiftL` 8)
+      case version of
+        2 ->
+          DatatypeMessageData version . DatatypeCompound
+            <$> replicateM (fromIntegral (debugLog ("compound datatype member count: " <> show bits0to7 <> ", " <> show bits8to15) numberOfMembers)) getCompoundDatatypeMember
+        _ -> fail ("class " <> show class' <> ", version " <> show version <> " properties not supported yet")
 
 skipTo8 :: (Integral a) => a -> Get ()
 skipTo8 s = do
@@ -774,11 +796,12 @@ getMessage 0x000c = do
   -- Reserved
   skip 1
   nameSize <- getWord16le
-  _datatypeSize <- getWord16le
+  datatypeSize <- getWord16le
   dataspaceSize <- getWord16le
   name <- getByteString (fromIntegral nameSize)
   skipTo8 nameSize
   datatypeMessage <- getDatatypeMessageData
+  skipTo8 datatypeSize
   dataspaceMessage <- getDataspaceMessageData
   skipTo8 dataspaceSize
   attributeContent' <- case datatypeClass datatypeMessage of
@@ -860,26 +883,15 @@ getObjectHeaderV1 :: Get ObjectHeader
 getObjectHeaderV1 = do
   version <- getWord8
   when (version /= 1) (fail ("object header version was not 1 but " <> show version))
-  skip 1
-  -- This value determines the total number of messages listed in
-  -- object headers for this object. This value includes the messages
-  -- in continuation messages for this object.
+  skipLabeled "reserved" 1
   messageCount <- getWord16le
-  -- This value specifies the number of “hard links” to this object
-  -- within the current file. References to the object from external
-  -- files, “soft links” in this file and object references in this
-  -- file are not tracked.
   objectReferenceCount <- getWord32le
-  -- This value specifies the number of bytes of header message data
-  -- following this length field that contain object header messages
-  -- for this object header. This value does not include the size of
-  -- object header continuation blocks for this object elsewhere in
-  -- the file.
   objectHeaderSize <- getWord32le
-  skip 4
+  -- Not sure why we skipped this? Padding?
+  skipLabeled "unknown" 4
   -- The following code looks a little weird, but the problem is that
   -- "messageCount" above doesn't give us the number of messages
-  -- \*only* in this object header. It could give us the number "4",
+  -- _only_ in this object header. It could give us the number "4",
   -- but there is just one message here: a continuation message. So we
   -- isolate to the number of bytes we expect and read until we don't
   -- have any bytes anymore.
@@ -887,8 +899,9 @@ getObjectHeaderV1 = do
         messageType <- getWord16le
         headerMessageDataSize <- getWord16le
         _flags <- getWord8
-        skip 3
-        isolate (fromIntegral headerMessageDataSize) (getMessage messageType)
+        skipLabeled "reserved" 3
+        -- The size contains padding, so we compensate by getting the remaining lazy byte string
+        isolate (fromIntegral headerMessageDataSize) (getMessage messageType <* getRemainingLazyByteString)
       -- decodeMessages 0 = pure []
       decodeMessages 0 = getRemainingLazyByteString >> pure []
       decodeMessages maxMessages = do
@@ -943,7 +956,7 @@ getSuperblock = do
               <*> getMaybeAddress
               <*> getAddress
               <*> getMaybeAddress
-              <*> getSymbolTableEntry
+              <*> ((fromJust <$>) <$> getSymbolTableEntry)
           -- Fix this to 0 for now, but just out of extreme caution for our parsing algorithm
           when (h5sbVersionFreeSpaceInfo sb /= 0) $ do
             fail ("superblock free space info isn't 0 but " <> show (h5sbVersionFreeSpaceInfo sb))

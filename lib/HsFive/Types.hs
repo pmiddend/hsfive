@@ -30,7 +30,7 @@ import HsFive.CoreTypes
     DatatypeMessageData (DatatypeMessageData, datatypeClass),
     GlobalHeap (globalHeapObjects),
     GlobalHeapObject (GlobalHeapObject, globalHeapObjectData, globalHeapObjectIndex),
-    GroupSymbolTableNode,
+    GroupSymbolTableNode (GroupSymbolTableNode, gstnVersion),
     HeapWithData (HeapWithData),
     Length,
     Message (AttributeMessage, DataStorageFilterPipelineMessage, DataStorageLayoutMessage, DataspaceMessage, DatatypeMessage, ObjectHeaderContinuationMessage, SymbolTableMessage),
@@ -180,8 +180,9 @@ infixl 5 </
 rootPath :: Path
 rootPath = Path mempty
 
-readNode :: Handle -> Maybe Path -> Maybe HeapWithData -> SymbolTableEntry -> IO Node
+readNode :: Handle -> Maybe Path -> Maybe HeapWithData -> SymbolTableEntry Address -> IO Node
 readNode handle previousPath maybeHeap e = do
+  putStrLn $ "seeking to " <> show (h5steObjectHeaderAddress e)
   hSeek handle AbsoluteSeek (fromIntegral (h5steObjectHeaderAddress e))
   objectHeaderData <- BSL.hGet handle 4096
   case runGetOrFail getObjectHeaderV1 objectHeaderData of
@@ -316,13 +317,28 @@ readNode handle previousPath maybeHeap e = do
                   let keyAddressesOnHeap :: [Address]
                       keyAddressesOnHeap = (\len -> heapDataSegmentAddress heapHeader' + len) <$> bltnKeyOffsets node
                       childAddressesOnHeap = bltnChildPointers node
-                      readChild :: Address -> IO GroupSymbolTableNode
+                      readChild :: Address -> IO (GroupSymbolTableNode Address)
                       readChild addr = do
                         hSeek handle AbsoluteSeek (fromIntegral addr)
                         rawData <- BSL.hGet handle 2048
-                        pure (runGet getGroupSymbolTableNode rawData)
+                        let result = runGet getGroupSymbolTableNode rawData
+                            resultWithoutInvalidAddresses =
+                              GroupSymbolTableNode
+                                { gstnVersion = gstnVersion result,
+                                  gstnEntries =
+                                    mapMaybe
+                                      ( \entry ->
+                                          case h5steObjectHeaderAddress entry of
+                                            Nothing -> Nothing
+                                            Just address' -> Just (entry {h5steObjectHeaderAddress = address'})
+                                      )
+                                      (gstnEntries result)
+                                }
+                        pure resultWithoutInvalidAddresses
                   _keysOnHeap <- mapM (readKey handle) keyAddressesOnHeap
                   childrenOnHeap <- mapM readChild childAddressesOnHeap
+
+                  putStrLn $ "children on heap: " <> show (concatMap gstnEntries childrenOnHeap)
 
                   childNodes <-
                     mapM
