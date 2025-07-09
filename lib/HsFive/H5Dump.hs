@@ -16,7 +16,8 @@ import HsFive.CoreTypes
     StringPadding (PaddingNull, PaddingNullTerminate),
   )
 import HsFive.Types
-  ( Attribute (Attribute, attributeDataString, attributeType),
+  ( Attribute (Attribute, attributeData, attributeType),
+    AttributeData (AttributeDataString),
     DatasetData (DatasetData, datasetAttributes, datasetDatatype, datasetDimensions, datasetPath, datasetStorageLayout),
     GroupData (GroupData, groupAttributes, groupChildren, groupPath),
     Node (DatasetNode, GroupNode),
@@ -77,10 +78,10 @@ attributeDatatypeToH5Dump m (DatatypeString padding charset) dimensions s =
 attributeDatatypeToH5Dump _ e _ _ = error ("add this datatype: " <> show e)
 
 attributeToH5Dump :: Indent -> Attribute -> [(Indent, Text)]
-attributeToH5Dump n (Attribute {attributeName, attributeType, attributeDimensions, attributeDataString}) =
+attributeToH5Dump n (Attribute {attributeName, attributeType, attributeDimensions, attributeData = AttributeDataString s}) =
   [ (increaseIndent n, "ATTRIBUTE \"" <> attributeName <> "\" {")
   ]
-    <> attributeDatatypeToH5Dump (increaseIndent (increaseIndent n)) attributeType attributeDimensions attributeDataString
+    <> attributeDatatypeToH5Dump (increaseIndent (increaseIndent n)) attributeType attributeDimensions s
     <> dataspaceToH5Dump (increaseIndent (increaseIndent n)) attributeDimensions
     <> [(increaseIndent n, "}")]
 

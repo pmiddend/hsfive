@@ -17,7 +17,7 @@ import Data.Text.Encoding (decodeUtf8Lenient)
 import HsFive.Bitshuffle (DecompressResult (DecompressError, DecompressSuccess, decompressBytes), bshufDecompressLz4)
 import HsFive.CoreTypes
   ( Address,
-    AttributeContent (AttributeContentFixedString, AttributeContentVariableString),
+    AttributeContent (AttributeContentFixedString, AttributeContentIntegral, AttributeContentVariableString),
     BLinkTreeNode (BLinkTreeNodeChunkedRawData, BLinkTreeNodeGroup, bltnChunks),
     ByteOrder (LittleEndian),
     ChunkInfo (ciChunkPointer, ciSize),
@@ -81,12 +81,17 @@ unwrapPath (Path (x : xs)) _whenEmpty whenFull = whenFull (x NE.:| xs)
 pathComponentsList :: Path -> [Text]
 pathComponentsList (Path p) = p
 
+data AttributeData
+  = AttributeDataString !Text
+  | AttributeDataIntegral !Integer
+  deriving (Show)
+
 data Attribute = Attribute
   { attributeName :: !Text,
     attributeType :: !Datatype,
     attributeDimensions :: ![DataspaceDimension],
     attributePermutationIndices :: ![Length],
-    attributeDataString :: !Text
+    attributeData :: !AttributeData
   }
   deriving (Show)
 
@@ -111,6 +116,7 @@ data DatasetData = DatasetData
 data Node
   = GroupNode !GroupData
   | DatasetNode !DatasetData
+  | DatatypeNode !Datatype
   deriving (Show)
 
 readSuperblock' :: Handle -> Integer -> Integer -> IO (Maybe Superblock)
@@ -148,7 +154,7 @@ resolveContinuationMessage handle (ObjectHeaderContinuationMessage continuationA
         headerMessageDataSize <- getWord16le
         _flags <- getWord8
         skip 3
-        isolate (fromIntegral headerMessageDataSize) (getMessage messageType)
+        isolate (fromIntegral headerMessageDataSize) (getMessage (debugLog "message type" messageType))
       decodeMessages = do
         bytesRead' <- bytesRead
         let remainder = bytesRead' `mod` 8
@@ -160,7 +166,7 @@ resolveContinuationMessage handle (ObjectHeaderContinuationMessage continuationA
           else do
             m <- readMessage
             ms <- decodeMessages
-            pure (m : ms)
+            pure (debugLog "m" m : ms)
   case runGetOrFail decodeMessages data' of
     Left (_, _, e') -> error ("parsing continuation messages failed: " <> show e')
     Right (_, _, messages) -> pure messages
@@ -227,7 +233,7 @@ readNode handle previousPath maybeHeap e = do
                     attributeType = debugLog "type" typeData,
                     attributeDimensions = debugLog "dataspace dimensions" dataspaceDimensions,
                     attributePermutationIndices = dataspacePermutationIndices,
-                    attributeDataString = decodeUtf8Lenient $ BS.takeWhile (/= 0) (debugLog "content" content)
+                    attributeData = AttributeDataString (decodeUtf8Lenient $ BS.takeWhile (/= 0) (debugLog "content" content))
                   }
           convertAttribute
             ( CoreTypes.AttributeData
@@ -257,8 +263,24 @@ readNode handle previousPath maybeHeap e = do
                             attributeType = debugLog "type" typeData,
                             attributeDimensions = debugLog "dataspace dimensions" dataspaceDimensions,
                             attributePermutationIndices = dataspacePermutationIndices,
-                            attributeDataString = decodeUtf8Lenient $ BS.takeWhile (/= 0) globalHeapObjectData
+                            attributeData = AttributeDataString (decodeUtf8Lenient $ BS.takeWhile (/= 0) globalHeapObjectData)
                           }
+          convertAttribute
+            ( CoreTypes.AttributeData
+                { CoreTypes.attributeName = an,
+                  CoreTypes.attributeDatatypeMessageData = DatatypeMessageData {datatypeClass = typeData},
+                  CoreTypes.attributeDataspaceMessageData = DataspaceMessageData {dataspaceDimensions, dataspacePermutationIndices},
+                  CoreTypes.attributeContent = AttributeContentIntegral number
+                }
+              ) = do
+              pure
+                Attribute
+                  { attributeName = decodeUtf8Lenient $ BS.takeWhile (/= 0) an,
+                    attributeType = typeData,
+                    attributeDimensions = dataspaceDimensions,
+                    attributePermutationIndices = dataspacePermutationIndices,
+                    attributeData = AttributeDataIntegral number
+                  }
           convertAttribute a = error $ "invalid attribute data, not a string: " <> show a
           filterSymbolTable (SymbolTableMessage d) = Just d
           filterSymbolTable _ = Nothing
@@ -274,12 +296,15 @@ readNode handle previousPath maybeHeap e = do
               filterFilters _ = Nothing
               searchMessage :: (Message -> Maybe a) -> Maybe a
               searchMessage finder = headMay (mapMaybe finder allMessages)
-          case searchMessage filterDataspace of
-            Nothing -> fail "dataset without dataspace"
-            Just (DataspaceMessageData {dataspaceDimensions, dataspacePermutationIndices}) ->
-              case searchMessage filterDatatype of
-                Nothing -> fail "dataset without datatype"
-                Just (DatatypeMessageData {datatypeClass}) ->
+          case searchMessage filterDatatype of
+            Nothing -> fail "dataset without datatype"
+            Just (DatatypeMessageData {datatypeClass}) ->
+              case searchMessage filterDataspace of
+                Nothing ->
+                  -- Datasets without a dataspace aren't real datasets.
+                  pure (DatatypeNode datatypeClass)
+                -- fail ("dataset without dataspace: " <> show allMessages)
+                Just (DataspaceMessageData {dataspaceDimensions, dataspacePermutationIndices}) ->
                   let filters = case searchMessage filterFilters of
                         Nothing -> []
                         Just (DataStorageFilterPipelineMessageData {dataStorageFilterPipelineFilters}) -> dataStorageFilterPipelineFilters

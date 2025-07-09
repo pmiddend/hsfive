@@ -5,9 +5,9 @@
 
 module HsFive.CoreTypes where
 
-import Control.Monad (MonadPlus (mplus, mzero), replicateM, void, when)
+import Control.Monad (replicateM, replicateM_, void, when)
 import Data.Binary (Get, getWord8)
-import Data.Binary.Get (bytesRead, getByteString, getLazyByteStringNul, getRemainingLazyByteString, getWord16le, getWord32le, getWord64le, isEmpty, isolate, skip)
+import Data.Binary.Get (bytesRead, getByteString, getLazyByteStringNul, getRemainingLazyByteString, getWord16be, getWord16le, getWord32be, getWord32le, getWord64le, isEmpty, isolate, skip)
 import Data.Bits (Bits (shiftL, (.|.)), shiftR, (.&.))
 import qualified Data.ByteString as BS
 import qualified Data.ByteString.Lazy as BSL
@@ -88,12 +88,15 @@ data Datatype
         floatingPointMantissaSize :: !Word8,
         floatingPointExponentBias :: !Word32
       }
-  | DatatypeCompound ![CompoundDatatypeMember]
+  | DatatypeCompoundV1 ![CompoundDatatypeMemberV1]
+  | DatatypeCompoundV2 ![CompoundDatatypeMemberV2]
+  | DatatypeArray {arraySizes :: ![Word32], arrayBaseType :: !Datatype}
   deriving (Show)
 
 data AttributeContent
   = AttributeContentFixedString !BS.ByteString
   | AttributeContentVariableString !Address !Word32 !Word32
+  | AttributeContentIntegral !Integer
   | AttributeContentTodo
   deriving (Show)
 
@@ -517,19 +520,44 @@ getDataspaceMessageData = do
       -- TODO: This message has _lots_ more information to it
       pure (DataspaceMessageData (zipWith DataspaceDimension dimensions maxSizes) permutationIndices)
 
-data CompoundDatatypeMember = CompoundDatatypeMember
-  { cdmName :: !BS.ByteString,
-    cdmByteOffset :: !Word32,
-    cdmDatatype :: !DatatypeMessageData
+data CompoundDatatypeMemberV1 = CompoundDatatypeMemberV1
+  { cdm1Name :: !BS.ByteString,
+    cdm1ByteOffset :: !Word32,
+    cdm1Dimensions :: ![Word32],
+    cdm1Datatype :: !DatatypeMessageData
   }
   deriving (Show)
 
-getCompoundDatatypeMember :: Get CompoundDatatypeMember
-getCompoundDatatypeMember = do
+data CompoundDatatypeMemberV2 = CompoundDatatypeMemberV2
+  { cdm2Name :: !BS.ByteString,
+    cdm2ByteOffset :: !Word32,
+    cdm2Datatype :: !DatatypeMessageData
+  }
+  deriving (Show)
+
+getCompoundDatatypeMemberV1 :: Get CompoundDatatypeMemberV1
+getCompoundDatatypeMemberV1 = do
+  name <- BSL.toStrict <$> getLazyByteStringNul
+  skipTo8 (BS.length (debugLog "compound member name v1" name) + 1)
+  byteOffset <- getWord32le
+  dimensionality <- getWord8
+  skipLabeled "reserved" 3
+  skipLabeled "dimension permutation" 4
+  skipLabeled "reserved" 4
+  -- dimensionality gives us the acutal count, but we have ot read four dimensions always
+  dimensions <- replicateM 4 getWord32le
+  CompoundDatatypeMemberV1
+    name
+    byteOffset
+    (take (fromIntegral dimensionality) dimensions)
+    <$> getDatatypeMessageData
+
+getCompoundDatatypeMemberV2 :: Get CompoundDatatypeMemberV2
+getCompoundDatatypeMemberV2 = do
   name <- BSL.toStrict <$> getLazyByteStringNul
   skipTo8 (BS.length (debugLog "compound member name" name) + 1)
   byteOffset <- getWord32le
-  CompoundDatatypeMember name byteOffset <$> getDatatypeMessageData
+  CompoundDatatypeMemberV2 name byteOffset <$> getDatatypeMessageData
 
 skipLabeled :: String -> Int -> Get ()
 skipLabeled _ = skip
@@ -623,13 +651,32 @@ getDatatypeMessageData = do
                 exponentBias
             )
         )
-    _ -> do
+    ClassCompound -> do
       let numberOfMembers = bits0to7 .|. (bits8to15 `shiftL` 8)
       case version of
-        2 ->
-          DatatypeMessageData version . DatatypeCompound
-            <$> replicateM (fromIntegral (debugLog ("compound datatype member count: " <> show bits0to7 <> ", " <> show bits8to15) numberOfMembers)) getCompoundDatatypeMember
-        _ -> fail ("class " <> show class' <> ", version " <> show version <> " properties not supported yet")
+        1 -> do
+          members <- replicateM (fromIntegral (debugLog ("compound datatype member count: " <> show bits0to7 <> ", " <> show bits8to15) numberOfMembers)) getCompoundDatatypeMemberV1
+          pure (DatatypeMessageData version (DatatypeCompoundV1 (debugLog "members" members)))
+        2 -> do
+          members <- replicateM (fromIntegral (debugLog ("compound datatype member count: " <> show bits0to7 <> ", " <> show bits8to15) numberOfMembers)) getCompoundDatatypeMemberV2
+          pure (DatatypeMessageData version (DatatypeCompoundV2 (debugLog "members" members)))
+        _ -> fail ("class Compound, version " <> show version <> " properties not supported yet")
+    ClassArray -> do
+      case version of
+        1 -> do
+          dimensionality <- getWord8
+          skipLabeled "reserved" 3
+          sizes <- replicateM (fromIntegral dimensionality) getWord32le
+          replicateM_ (fromIntegral dimensionality) (skipLabeled "permutations not supported" 4)
+          baseType <- getDatatypeMessageData
+          -- fail ("base type: " <> show (BSL.unpack remainder))
+          pure
+            ( DatatypeMessageData
+                version
+                (DatatypeArray {arraySizes = sizes, arrayBaseType = datatypeClass baseType})
+            )
+        _ -> fail ("class Array, version " <> show version <> " properties not supported yet")
+    _ -> fail ("class " <> show class' <> ", version " <> show version <> " properties not supported yet")
 
 skipTo8 :: (Integral a) => a -> Get ()
 skipTo8 s = do
@@ -649,7 +696,10 @@ getMessage 0x0001 = DataspaceMessage <$> getDataspaceMessageData
 -- Explanation of "datatype" in general
 --
 -- https://support.hdfgroup.org/documentation/hdf5/latest/_l_b_datatypes.html
-getMessage 0x0003 = DatatypeMessage <$> getDatatypeMessageData
+getMessage 0x0003 = do
+  m <- DatatypeMessage <$> getDatatypeMessageData
+  void getRemainingLazyByteString
+  pure (debugLog "message" m)
 getMessage 0x0005 = do
   version <- getWord8
   case version of
@@ -804,9 +854,19 @@ getMessage 0x000c = do
   skipTo8 datatypeSize
   dataspaceMessage <- getDataspaceMessageData
   skipTo8 dataspaceSize
-  attributeContent' <- case datatypeClass datatypeMessage of
+  attributeContent' <- case debugLog "attribute class" (datatypeClass datatypeMessage) of
     DatatypeString _padding _charset ->
       AttributeContentFixedString . BSL.toStrict <$> getRemainingLazyByteString
+    DatatypeFixedPoint {fixedPointDataElementSize = 2, fixedPointByteOrder = BigEndian} -> do
+      result <- AttributeContentIntegral <$> (fromIntegral <$> getWord16be)
+      -- not sure why this is needed
+      remainder <- getRemainingLazyByteString
+      pure result
+    DatatypeFixedPoint {fixedPointDataElementSize = 4, fixedPointByteOrder = BigEndian} -> do
+      result <- AttributeContentIntegral <$> (fromIntegral <$> getWord32be)
+      -- not sure why this is needed
+      remainder <- getRemainingLazyByteString
+      pure result
     DatatypeVariableLengthString PaddingNullTerminate CharacterSetAscii n -> do
       size' <- getWord32le
       globalHeapAddress <- getWord64le
