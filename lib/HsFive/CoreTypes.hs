@@ -3,15 +3,17 @@
 {-# HLINT ignore "Use newtype instead of data" #-}
 {-# OPTIONS_GHC -Wno-unrecognised-pragmas #-}
 
+{-# HLINT ignore "Use <$>" #-}
+
 module HsFive.CoreTypes where
 
 import Control.Monad (replicateM, replicateM_, void, when)
 import Data.Binary (Get, getWord8)
 import Data.Binary.Get (bytesRead, getByteString, getLazyByteStringNul, getRemainingLazyByteString, getWord16be, getWord16le, getWord32be, getWord32le, getWord64le, isEmpty, isolate, skip)
+import Data.Binary.IEEE754 (getFloat32be)
 import Data.Bits (Bits (shiftL, (.|.)), shiftR, (.&.))
 import qualified Data.ByteString as BS
 import qualified Data.ByteString.Lazy as BSL
-import Data.Functor (($>))
 import Data.Maybe (fromJust)
 import Data.Word (Word16, Word32, Word64, Word8)
 import Debug.Trace (trace)
@@ -49,6 +51,8 @@ data DatatypeClass
   | ClassArray
   | ClassComplex
   deriving (Show)
+
+data ReferenceType = ObjectReference | DatasetRegionReference deriving (Show)
 
 data StringPadding = PaddingNullTerminate | PaddingNull | PaddingSpace deriving (Show)
 
@@ -91,13 +95,16 @@ data Datatype
   | DatatypeCompoundV1 ![CompoundDatatypeMemberV1]
   | DatatypeCompoundV2 ![CompoundDatatypeMemberV2]
   | DatatypeArray {arraySizes :: ![Word32], arrayBaseType :: !Datatype}
+  | DatatypeReference !ReferenceType
   deriving (Show)
 
 data AttributeContent
   = AttributeContentFixedString !BS.ByteString
   | AttributeContentVariableString !Address !Word32 !Word32
   | AttributeContentIntegral !Integer
-  | AttributeContentTodo
+  | AttributeContentFloating !Double
+  | AttributeContentReference ReferenceType !BSL.ByteString
+  | AttributeContentTodo !Datatype !BSL.ByteString
   deriving (Show)
 
 data DataStorageSpaceAllocationTime
@@ -676,6 +683,17 @@ getDatatypeMessageData = do
                 (DatatypeArray {arraySizes = sizes, arrayBaseType = datatypeClass baseType})
             )
         _ -> fail ("class Array, version " <> show version <> " properties not supported yet")
+    ClassReference -> do
+      referenceType <-
+        case bits0to7 of
+          0 -> pure ObjectReference
+          1 -> pure DatasetRegionReference
+          n -> fail ("reference value " <> show n <> " not supported (can only do 0 or 1)")
+      pure
+        ( DatatypeMessageData
+            version
+            (DatatypeReference referenceType)
+        )
     _ -> fail ("class " <> show class' <> ", version " <> show version <> " properties not supported yet")
 
 skipTo8 :: (Integral a) => a -> Get ()
@@ -848,24 +866,34 @@ getMessage 0x000c = do
   nameSize <- getWord16le
   datatypeSize <- getWord16le
   dataspaceSize <- getWord16le
-  name <- getByteString (fromIntegral nameSize)
-  skipTo8 nameSize
+  name <- getByteString (fromIntegral (debugLog "name size" nameSize))
+  skipTo8 (debugLog ("skipping after name " <> show (BS.unpack name)) nameSize)
   datatypeMessage <- getDatatypeMessageData
   skipTo8 datatypeSize
   dataspaceMessage <- getDataspaceMessageData
-  skipTo8 dataspaceSize
+  skipTo8 (debugLog "dataspace size" dataspaceSize)
   attributeContent' <- case debugLog "attribute class" (datatypeClass datatypeMessage) of
     DatatypeString _padding _charset ->
       AttributeContentFixedString . BSL.toStrict <$> getRemainingLazyByteString
-    DatatypeFixedPoint {fixedPointDataElementSize = 2, fixedPointByteOrder = BigEndian} -> do
-      result <- AttributeContentIntegral <$> (fromIntegral <$> getWord16be)
+    DatatypeFixedPoint {fixedPointDataElementSize = 1} -> do
+      result <- AttributeContentIntegral . fromIntegral <$> getWord8
       -- not sure why this is needed
-      remainder <- getRemainingLazyByteString
+      void getRemainingLazyByteString
+      pure result
+    DatatypeFixedPoint {fixedPointDataElementSize = 2, fixedPointByteOrder = BigEndian} -> do
+      result <- AttributeContentIntegral . fromIntegral <$> getWord16be
+      -- not sure why this is needed
+      void getRemainingLazyByteString
       pure result
     DatatypeFixedPoint {fixedPointDataElementSize = 4, fixedPointByteOrder = BigEndian} -> do
-      result <- AttributeContentIntegral <$> (fromIntegral <$> getWord32be)
+      result <- AttributeContentIntegral . fromIntegral <$> getWord32be
       -- not sure why this is needed
-      remainder <- getRemainingLazyByteString
+      void getRemainingLazyByteString
+      pure result
+    DatatypeFloatingPoint {floatingPointBitPrecision = 32, floatingPointByteOrder = BigEndian} -> do
+      result <- AttributeContentFloating . realToFrac <$> getFloat32be
+      -- not sure why this is needed
+      void getRemainingLazyByteString
       pure result
     DatatypeVariableLengthString PaddingNullTerminate CharacterSetAscii n -> do
       size' <- getWord32le
@@ -877,7 +905,17 @@ getMessage 0x000c = do
             (debugLog "object index" objectIndex)
             (debugLog "size" size')
         )
-    _ -> getRemainingLazyByteString $> trace ("attributo type: " <> show (datatypeClass datatypeMessage)) AttributeContentTodo
+    DatatypeReference referenceType -> do
+      content <- getRemainingLazyByteString
+      pure
+        ( AttributeContentReference referenceType content
+        )
+    _ -> do
+      remainder <- getRemainingLazyByteString
+      pure
+        $ trace
+          ("attributo type: " <> show (datatypeClass datatypeMessage))
+        $ AttributeContentTodo (datatypeClass datatypeMessage) remainder
   pure
     ( debugLog "attribute message" $
         AttributeMessage
@@ -967,7 +1005,7 @@ getObjectHeaderV1 = do
       decodeMessages maxMessages = do
         bytesRead' <- bytesRead
         let remainder = bytesRead' `mod` 8
-        skip (fromIntegral remainder)
+        skip (fromIntegral (debugLog "skipping padding between messages" remainder))
         -- skip (fromIntegral remainder)
         empty <- isEmpty
         if empty

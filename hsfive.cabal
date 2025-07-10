@@ -47,6 +47,7 @@ library
                     , file-io
                     , filepath
                     , binary
+                    , data-binary-ieee754
                     , safe
                     , mtl
                     , split

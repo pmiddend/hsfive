@@ -17,7 +17,7 @@ import Data.Text.Encoding (decodeUtf8Lenient)
 import HsFive.Bitshuffle (DecompressResult (DecompressError, DecompressSuccess, decompressBytes), bshufDecompressLz4)
 import HsFive.CoreTypes
   ( Address,
-    AttributeContent (AttributeContentFixedString, AttributeContentIntegral, AttributeContentVariableString),
+    AttributeContent (AttributeContentFixedString, AttributeContentFloating, AttributeContentIntegral, AttributeContentReference, AttributeContentTodo, AttributeContentVariableString),
     BLinkTreeNode (BLinkTreeNodeChunkedRawData, BLinkTreeNodeGroup, bltnChunks),
     ByteOrder (LittleEndian),
     ChunkInfo (ciChunkPointer, ciSize),
@@ -34,6 +34,7 @@ import HsFive.CoreTypes
     HeapWithData (HeapWithData),
     Length,
     Message (AttributeMessage, DataStorageFilterPipelineMessage, DataStorageLayoutMessage, DataspaceMessage, DatatypeMessage, ObjectHeaderContinuationMessage, SymbolTableMessage),
+    ReferenceType,
     Superblock,
     SymbolTableEntry,
     SymbolTableMessageData (SymbolTableMessageData, symbolTableMessageLocalHeapAddress, symbolTableMessageV1BTreeAddress),
@@ -84,6 +85,8 @@ pathComponentsList (Path p) = p
 data AttributeData
   = AttributeDataString !Text
   | AttributeDataIntegral !Integer
+  | AttributeDataFloating !Double
+  | AttributeDataReference !ReferenceType !BSL.ByteString
   deriving (Show)
 
 data Attribute = Attribute
@@ -142,10 +145,13 @@ tryPick :: (Foldable t, MonadPlus m, Functor t) => (a1 -> m a2) -> t a1 -> m a2
 tryPick f as = msum (f <$> as)
 
 resolveContinuationMessages :: Handle -> [Message] -> IO [Message]
-resolveContinuationMessages handle = foldMap (resolveContinuationMessage handle)
+resolveContinuationMessages handle messages = do
+  putStrLn "resolving continuation"
+  foldMap (resolveContinuationMessage handle) messages
 
 resolveContinuationMessage :: Handle -> Message -> IO [Message]
 resolveContinuationMessage handle (ObjectHeaderContinuationMessage continuationAddress length') = do
+  putStrLn $ "continuation seeking to " <> show continuationAddress
   hSeek handle AbsoluteSeek (fromIntegral continuationAddress)
   data' <- BSL.hGet handle (fromIntegral length')
   -- FIXME: This is a duplicate from CoreTypes (almost), put all Binary stuff in there.
@@ -154,7 +160,7 @@ resolveContinuationMessage handle (ObjectHeaderContinuationMessage continuationA
         headerMessageDataSize <- getWord16le
         _flags <- getWord8
         skip 3
-        isolate (fromIntegral headerMessageDataSize) (getMessage (debugLog "message type" messageType))
+        isolate (fromIntegral (debugLog "header data size" headerMessageDataSize)) (getMessage (debugLog "message type" messageType))
       decodeMessages = do
         bytesRead' <- bytesRead
         let remainder = bytesRead' `mod` 8
@@ -186,9 +192,118 @@ infixl 5 </
 rootPath :: Path
 rootPath = Path mempty
 
+convertAttribute :: Handle -> CoreTypes.AttributeData -> IO Attribute
+convertAttribute
+  _
+  ( CoreTypes.AttributeData
+      { CoreTypes.attributeName = an,
+        CoreTypes.attributeDatatypeMessageData = DatatypeMessageData {datatypeClass = typeData},
+        CoreTypes.attributeDataspaceMessageData = DataspaceMessageData {dataspaceDimensions, dataspacePermutationIndices},
+        CoreTypes.attributeContent = AttributeContentFixedString content
+      }
+    ) =
+    pure
+      Attribute
+        { attributeName = decodeUtf8Lenient $ BS.takeWhile (/= 0) an,
+          attributeType = debugLog "type" typeData,
+          attributeDimensions = debugLog "dataspace dimensions" dataspaceDimensions,
+          attributePermutationIndices = dataspacePermutationIndices,
+          attributeData = AttributeDataString (decodeUtf8Lenient $ BS.takeWhile (/= 0) (debugLog "content" content))
+        }
+convertAttribute
+  handle
+  ( CoreTypes.AttributeData
+      { CoreTypes.attributeName = an,
+        CoreTypes.attributeDatatypeMessageData = DatatypeMessageData {datatypeClass = typeData},
+        CoreTypes.attributeDataspaceMessageData = DataspaceMessageData {dataspaceDimensions, dataspacePermutationIndices},
+        CoreTypes.attributeContent = AttributeContentVariableString heapAddress objectIndex _size
+      }
+    ) = do
+    hSeek handle AbsoluteSeek (fromIntegral heapAddress)
+    heapData <- BSL.hGet handle 4096
+    case runGetOrFail getGlobalHeap heapData of
+      Left (_, bytesConsumed, e') ->
+        error
+          ( "invalid global heap (consumed "
+              <> show bytesConsumed
+              <> " bytes): "
+              <> show e'
+          )
+      Right (_, _, globalHeap) -> do
+        case find (\ho -> globalHeapObjectIndex ho == fromIntegral objectIndex) (globalHeapObjects globalHeap) of
+          Nothing -> error ("cannot find object " <> show objectIndex <> " in global heap")
+          Just (GlobalHeapObject {globalHeapObjectData}) ->
+            pure
+              Attribute
+                { attributeName = decodeUtf8Lenient $ BS.takeWhile (/= 0) an,
+                  attributeType = debugLog "type" typeData,
+                  attributeDimensions = debugLog "dataspace dimensions" dataspaceDimensions,
+                  attributePermutationIndices = dataspacePermutationIndices,
+                  attributeData = AttributeDataString (decodeUtf8Lenient $ BS.takeWhile (/= 0) globalHeapObjectData)
+                }
+convertAttribute
+  _
+  ( CoreTypes.AttributeData
+      { CoreTypes.attributeName = an,
+        CoreTypes.attributeDatatypeMessageData = DatatypeMessageData {datatypeClass = typeData},
+        CoreTypes.attributeDataspaceMessageData = DataspaceMessageData {dataspaceDimensions, dataspacePermutationIndices},
+        CoreTypes.attributeContent = AttributeContentIntegral number
+      }
+    ) = do
+    pure
+      Attribute
+        { attributeName = decodeUtf8Lenient $ BS.takeWhile (/= 0) an,
+          attributeType = typeData,
+          attributeDimensions = dataspaceDimensions,
+          attributePermutationIndices = dataspacePermutationIndices,
+          attributeData = AttributeDataIntegral number
+        }
+convertAttribute
+  _
+  ( CoreTypes.AttributeData
+      { CoreTypes.attributeName = an,
+        CoreTypes.attributeDatatypeMessageData = DatatypeMessageData {datatypeClass = typeData},
+        CoreTypes.attributeDataspaceMessageData = DataspaceMessageData {dataspaceDimensions, dataspacePermutationIndices},
+        CoreTypes.attributeContent = AttributeContentReference referenceType content
+      }
+    ) = do
+    pure
+      Attribute
+        { attributeName = decodeUtf8Lenient $ BS.takeWhile (/= 0) an,
+          attributeType = typeData,
+          attributeDimensions = dataspaceDimensions,
+          attributePermutationIndices = dataspacePermutationIndices,
+          attributeData = AttributeDataReference referenceType content
+        }
+convertAttribute
+  _
+  ( CoreTypes.AttributeData
+      { CoreTypes.attributeName = an,
+        CoreTypes.attributeDatatypeMessageData = DatatypeMessageData {datatypeClass = typeData},
+        CoreTypes.attributeDataspaceMessageData = DataspaceMessageData {dataspaceDimensions, dataspacePermutationIndices},
+        CoreTypes.attributeContent = AttributeContentFloating number
+      }
+    ) = do
+    pure
+      Attribute
+        { attributeName = decodeUtf8Lenient $ BS.takeWhile (/= 0) an,
+          attributeType = typeData,
+          attributeDimensions = dataspaceDimensions,
+          attributePermutationIndices = dataspacePermutationIndices,
+          attributeData = AttributeDataFloating number
+        }
+convertAttribute
+  _
+  ( CoreTypes.AttributeData
+      { CoreTypes.attributeName = an,
+        CoreTypes.attributeContent = AttributeContentTodo realType content
+      }
+    ) = do
+    error $ "invalid attribute data for " <> show an <> ", not a known attribute type: " <> show realType <> ", bytes: " <> show (BSL.unpack content)
+
 readNode :: Handle -> Maybe Path -> Maybe HeapWithData -> SymbolTableEntry Address -> IO Node
 readNode handle previousPath maybeHeap e = do
-  putStrLn $ "seeking to " <> show (h5steObjectHeaderAddress e)
+  putStrLn $ "node seeking to " <> show (h5steObjectHeaderAddress e)
   hSeek handle AbsoluteSeek (fromIntegral (h5steObjectHeaderAddress e))
   objectHeaderData <- BSL.hGet handle 4096
   case runGetOrFail getObjectHeaderV1 objectHeaderData of
@@ -215,73 +330,10 @@ readNode handle previousPath maybeHeap e = do
                             BSL.takeWhile (/= 0) $
                               BSL.drop (fromIntegral (h5steLinkNameOffset e)) heapData''
                       )
+      putStrLn $ "object header for " <> show newPath <> ": " <> show header
       allMessages <- resolveContinuationMessages handle (ohHeaderMessages header)
       let filterAttribute (AttributeMessage attributeData) = Just attributeData
           filterAttribute _ = Nothing
-          convertAttribute :: CoreTypes.AttributeData -> IO Attribute
-          convertAttribute
-            ( CoreTypes.AttributeData
-                { CoreTypes.attributeName = an,
-                  CoreTypes.attributeDatatypeMessageData = DatatypeMessageData {datatypeClass = typeData},
-                  CoreTypes.attributeDataspaceMessageData = DataspaceMessageData {dataspaceDimensions, dataspacePermutationIndices},
-                  CoreTypes.attributeContent = AttributeContentFixedString content
-                }
-              ) =
-              pure
-                Attribute
-                  { attributeName = decodeUtf8Lenient $ BS.takeWhile (/= 0) an,
-                    attributeType = debugLog "type" typeData,
-                    attributeDimensions = debugLog "dataspace dimensions" dataspaceDimensions,
-                    attributePermutationIndices = dataspacePermutationIndices,
-                    attributeData = AttributeDataString (decodeUtf8Lenient $ BS.takeWhile (/= 0) (debugLog "content" content))
-                  }
-          convertAttribute
-            ( CoreTypes.AttributeData
-                { CoreTypes.attributeName = an,
-                  CoreTypes.attributeDatatypeMessageData = DatatypeMessageData {datatypeClass = typeData},
-                  CoreTypes.attributeDataspaceMessageData = DataspaceMessageData {dataspaceDimensions, dataspacePermutationIndices},
-                  CoreTypes.attributeContent = AttributeContentVariableString heapAddress objectIndex size'
-                }
-              ) = do
-              hSeek handle AbsoluteSeek (fromIntegral heapAddress)
-              heapData <- BSL.hGet handle 4096
-              case runGetOrFail getGlobalHeap heapData of
-                Left (_, bytesConsumed, e') ->
-                  error
-                    ( "invalid global heap (consumed "
-                        <> show bytesConsumed
-                        <> " bytes): "
-                        <> show e'
-                    )
-                Right (_, _, globalHeap) -> do
-                  case find (\ho -> globalHeapObjectIndex ho == fromIntegral objectIndex) (globalHeapObjects globalHeap) of
-                    Nothing -> error ("cannot find object " <> show objectIndex <> " in global heap")
-                    Just (GlobalHeapObject {globalHeapObjectData}) ->
-                      pure
-                        Attribute
-                          { attributeName = decodeUtf8Lenient $ BS.takeWhile (/= 0) an,
-                            attributeType = debugLog "type" typeData,
-                            attributeDimensions = debugLog "dataspace dimensions" dataspaceDimensions,
-                            attributePermutationIndices = dataspacePermutationIndices,
-                            attributeData = AttributeDataString (decodeUtf8Lenient $ BS.takeWhile (/= 0) globalHeapObjectData)
-                          }
-          convertAttribute
-            ( CoreTypes.AttributeData
-                { CoreTypes.attributeName = an,
-                  CoreTypes.attributeDatatypeMessageData = DatatypeMessageData {datatypeClass = typeData},
-                  CoreTypes.attributeDataspaceMessageData = DataspaceMessageData {dataspaceDimensions, dataspacePermutationIndices},
-                  CoreTypes.attributeContent = AttributeContentIntegral number
-                }
-              ) = do
-              pure
-                Attribute
-                  { attributeName = decodeUtf8Lenient $ BS.takeWhile (/= 0) an,
-                    attributeType = typeData,
-                    attributeDimensions = dataspaceDimensions,
-                    attributePermutationIndices = dataspacePermutationIndices,
-                    attributeData = AttributeDataIntegral number
-                  }
-          convertAttribute a = error $ "invalid attribute data, not a string: " <> show a
           filterSymbolTable (SymbolTableMessage d) = Just d
           filterSymbolTable _ = Nothing
       case headMay (mapMaybe filterSymbolTable allMessages) of
@@ -311,7 +363,7 @@ readNode handle previousPath maybeHeap e = do
                    in case searchMessage filterLayout of
                         Nothing -> fail "dataset without layout"
                         Just layout -> do
-                          attributes <- mapM convertAttribute (mapMaybe filterAttribute allMessages)
+                          attributes <- mapM (convertAttribute handle) (mapMaybe filterAttribute allMessages)
                           pure
                             ( DatasetNode
                                 ( DatasetData
@@ -370,7 +422,7 @@ readNode handle previousPath maybeHeap e = do
                       (readNode handle (Just newPath) (Just (HeapWithData heapHeader' heapData')))
                       (concatMap gstnEntries childrenOnHeap)
 
-                  attributes <- mapM convertAttribute (mapMaybe filterAttribute allMessages)
+                  attributes <- mapM (convertAttribute handle) (mapMaybe filterAttribute allMessages)
                   pure
                     ( GroupNode
                         ( GroupData
