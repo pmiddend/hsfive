@@ -15,6 +15,8 @@ import Data.Bits (Bits (shiftL, (.|.)), shiftR, (.&.))
 import qualified Data.ByteString as BS
 import qualified Data.ByteString.Lazy as BSL
 import Data.Maybe (fromJust)
+import Data.Text.Encoding (decodeLatin1)
+import Data.Text.Read (decimal)
 import Data.Word (Word16, Word32, Word64, Word8)
 import Debug.Trace (trace)
 import HsFive.Util
@@ -220,12 +222,12 @@ data Message
     ObjectModificationTimeMessage {objectModificationTime :: !Word32}
   | -- | The object modification date and time is a timestamp which indicates (using ISO-8601 date and time format) the last modification of an object. The time is updated when any object header message changes according to the system clock where the change was posted. All fields of this message should be interpreted as coordinated universal time (UTC).
     ObjectModificationTimeOldMessage
-      { objectModificationTimeOldYear :: !Word32,
-        objectModificationTimeOldMonth :: !Word16,
-        objectModificationTimeOldDayOfMonth :: !Word16,
-        objectModificationTimeOldHour :: !Word16,
-        objectModificationTimeOldMinute :: !Word16,
-        objectModificationTimeOldSecond :: !Word16
+      { objectModificationTimeOldYear :: !Int,
+        objectModificationTimeOldMonth :: !Int,
+        objectModificationTimeOldDayOfMonth :: !Int,
+        objectModificationTimeOldHour :: !Int,
+        objectModificationTimeOldMinute :: !Int,
+        objectModificationTimeOldSecond :: !Int
       }
   | AttributeMessage AttributeData
   deriving (Show)
@@ -775,7 +777,19 @@ getMessage 0x000b = do
     when (numberOfValuesForClientData `mod` 2 == 1) (skip 4)
     pure (DataStoragePipelineFilter filterIdentification name (flags .&. 1 == 1) clientData)
   pure (DataStorageFilterPipelineMessage (DataStorageFilterPipelineMessageData filters'))
-getMessage 0x000e = ObjectModificationTimeOldMessage <$> getWord32le <*> getWord16le <*> getWord16le <*> getWord16le <*> getWord16le <*> (getWord16le <* getWord16le)
+getMessage 0x000e = do
+  let readNumber noBytes = do
+        n <- getByteString noBytes
+        case decimal (decodeLatin1 n) of
+          Left _ -> fail ("expected a number in ASCII, got these bytes: " <> show (BS.unpack n))
+          Right (v, _) -> pure v
+  ObjectModificationTimeOldMessage
+    <$> readNumber 4
+    <*> readNumber 2
+    <*> readNumber 2
+    <*> readNumber 2
+    <*> readNumber 2
+    <*> (readNumber 2 <* skipLabeled "reserved" 2)
 getMessage 0x0008 = do
   version <- getWord8
   case version of
