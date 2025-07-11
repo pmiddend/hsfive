@@ -48,6 +48,7 @@ library
                     , filepath
                     , binary
                     , data-binary-ieee754
+                    , containers
                     , safe
                     , mtl
                     , split

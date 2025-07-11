@@ -9,9 +9,12 @@ import Data.Binary.Get (bytesRead, getInt32le, getInt64le, getWord16le, isEmpty,
 import qualified Data.ByteString as BS
 import qualified Data.ByteString.Lazy as BSL
 import Data.Foldable (find, msum)
+import Data.IORef (IORef, modifyIORef, newIORef, readIORef)
 import qualified Data.List.NonEmpty as NE
 import Data.List.Split (chunksOf)
+import qualified Data.Map.Strict as Map
 import Data.Maybe (mapMaybe)
+import qualified Data.Set as Set
 import Data.Text (Text, intercalate, null, pack, unpack)
 import Data.Text.Encoding (decodeUtf8Lenient)
 import HsFive.Bitshuffle (DecompressResult (DecompressError, DecompressSuccess, decompressBytes), bshufDecompressLz4)
@@ -175,7 +178,9 @@ resolveContinuationMessage handle (ObjectHeaderContinuationMessage continuationA
             pure (debugLog "m" m : ms)
   case runGetOrFail decodeMessages data' of
     Left (_, _, e') -> error ("parsing continuation messages failed: " <> show e')
-    Right (_, _, messages) -> pure messages
+    Right (_, _, messages) -> do
+      putStrLn $ "continuation messages: " <> show messages
+      pure messages
 resolveContinuationMessage _handle m = pure [m]
 
 appendPath :: Path -> Text -> Path
@@ -301,8 +306,17 @@ convertAttribute
     ) = do
     error $ "invalid attribute data for " <> show an <> ", not a known attribute type: " <> show realType <> ", bytes: " <> show (BSL.unpack content)
 
-readNode :: Handle -> Maybe Path -> Maybe HeapWithData -> SymbolTableEntry Address -> IO Node
-readNode handle previousPath maybeHeap e = do
+readNode :: Handle -> IORef NodeReaderState -> Maybe Path -> Maybe HeapWithData -> SymbolTableEntry Address -> IO Node
+readNode handle readerStateRef previousPath maybeHeap e = do
+  let updateVisiting a = do
+        putStrLn $ "adding " <> show (h5steObjectHeaderAddress e) <> " to visiting nodes"
+        modifyIORef
+          readerStateRef
+          ( \s -> s {nodeReaderStateVisiting = Set.insert a (nodeReaderStateVisiting s)}
+          )
+
+  readerState <- readIORef readerStateRef
+  updateVisiting (h5steObjectHeaderAddress e)
   putStrLn $ "node seeking to " <> show (h5steObjectHeaderAddress e)
   hSeek handle AbsoluteSeek (fromIntegral (h5steObjectHeaderAddress e))
   objectHeaderData <- BSL.hGet handle 4096
@@ -352,9 +366,7 @@ readNode handle previousPath maybeHeap e = do
             Nothing -> fail "dataset without datatype"
             Just (DatatypeMessageData {datatypeClass}) ->
               case searchMessage filterDataspace of
-                Nothing ->
-                  -- Datasets without a dataspace aren't real datasets.
-                  pure (DatatypeNode datatypeClass)
+                Nothing -> pure (DatatypeNode datatypeClass)
                 -- fail ("dataset without dataspace: " <> show allMessages)
                 Just (DataspaceMessageData {dataspaceDimensions, dataspacePermutationIndices}) ->
                   let filters = case searchMessage filterFilters of
@@ -364,26 +376,26 @@ readNode handle previousPath maybeHeap e = do
                         Nothing -> fail "dataset without layout"
                         Just layout -> do
                           attributes <- mapM (convertAttribute handle) (mapMaybe filterAttribute allMessages)
-                          pure
-                            ( DatasetNode
-                                ( DatasetData
-                                    { datasetDimensions = dataspaceDimensions,
-                                      datasetPermutationIndices = dataspacePermutationIndices,
-                                      datasetDatatype = datatypeClass,
-                                      datasetFilters = filters,
-                                      datasetStorageLayout = layout,
-                                      datasetPath = newPath,
-                                      datasetAttributes = attributes
-                                    }
-                                )
-                            )
+                          pure $
+                            DatasetNode $
+                              DatasetData
+                                { datasetDimensions = dataspaceDimensions,
+                                  datasetPermutationIndices = dataspacePermutationIndices,
+                                  datasetDatatype = datatypeClass,
+                                  datasetFilters = filters,
+                                  datasetStorageLayout = layout,
+                                  datasetPath = newPath,
+                                  datasetAttributes = attributes
+                                }
         Just (SymbolTableMessageData {symbolTableMessageV1BTreeAddress, symbolTableMessageLocalHeapAddress}) -> do
+          putStrLn $ "seeking to btree " <> show symbolTableMessageV1BTreeAddress
           hSeek handle AbsoluteSeek (fromIntegral symbolTableMessageV1BTreeAddress)
           blinkTreenode <- BSL.hGet handle 2048
           case runGetOrFail (getBLinkTreeNode Nothing) blinkTreenode of
             Left _ -> error "error reading b-link node"
             Right (_, _, BLinkTreeNodeChunkedRawData {}) -> fail "got chunked data node inside tree"
             Right (_, _, node@(BLinkTreeNodeGroup {})) -> do
+              putStrLn $ "seeking to local heap " <> show symbolTableMessageLocalHeapAddress
               hSeek handle AbsoluteSeek (fromIntegral symbolTableMessageLocalHeapAddress)
               heapHeaderData <- BSL.hGet handle 2048
               case runGetOrFail getHeapHeader heapHeaderData of
@@ -407,7 +419,10 @@ readNode handle previousPath maybeHeap e = do
                                       ( \entry ->
                                           case h5steObjectHeaderAddress entry of
                                             Nothing -> Nothing
-                                            Just address' -> Just (entry {h5steObjectHeaderAddress = address'})
+                                            Just address' ->
+                                              if Set.member address' (nodeReaderStateVisiting readerState)
+                                                then Nothing
+                                                else Just (entry {h5steObjectHeaderAddress = address'})
                                       )
                                       (gstnEntries result)
                                 }
@@ -419,19 +434,23 @@ readNode handle previousPath maybeHeap e = do
 
                   childNodes <-
                     mapM
-                      (readNode handle (Just newPath) (Just (HeapWithData heapHeader' heapData')))
+                      (readNode handle readerStateRef (Just newPath) (Just (HeapWithData heapHeader' heapData')))
                       (concatMap gstnEntries childrenOnHeap)
 
                   attributes <- mapM (convertAttribute handle) (mapMaybe filterAttribute allMessages)
-                  pure
-                    ( GroupNode
-                        ( GroupData
-                            { groupPath = newPath,
-                              groupAttributes = attributes,
-                              groupChildren = childNodes
-                            }
-                        )
-                    )
+
+                  pure $
+                    GroupNode $
+                      GroupData
+                        { groupPath = newPath,
+                          groupAttributes = attributes,
+                          groupChildren = childNodes
+                        }
+
+data NodeReaderState = NodeReaderState
+  { nodeReaderStateNodeCache :: Map.Map Address Node,
+    nodeReaderStateVisiting :: Set.Set Address
+  }
 
 readH5 :: OsPath -> IO GroupData
 readH5 fileNameEncoded = do
@@ -441,7 +460,8 @@ readH5 fileNameEncoded = do
     case superblock of
       Nothing -> error "couldn't read superblock"
       Just superblock' -> do
-        node <- readNode handle Nothing Nothing (h5sbSymbolTableEntry superblock')
+        readerState <- newIORef (NodeReaderState mempty mempty)
+        node <- readNode handle readerState Nothing Nothing (h5sbSymbolTableEntry superblock')
         case node of
           GroupNode groupData -> pure groupData
           _ -> error "illegal h5: superblock didn't refer to a group but a dataset"
@@ -469,6 +489,7 @@ goToNode gd p = goToNode' (GroupNode gd) (pathComponentsList p)
         (error "a dataset with a root path encountered")
         (\nonEmptyPath -> if NE.last nonEmptyPath == x then Just n else Nothing)
     goToNode' (DatasetNode {}) _ = Nothing
+    goToNode' (DatatypeNode {}) _ = Nothing
 
 applyFilters :: BSL.ByteString -> [DataStoragePipelineFilter] -> IO BSL.ByteString
 applyFilters data' [DataStoragePipelineFilter {dataStoragePipelineFilterId = 32008, dataStoragePipelineFilterClientDataValues = [_, _, elementSize, _blockSize, 2]}] =
