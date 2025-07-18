@@ -9,7 +9,7 @@ module HsFive.CoreTypes where
 
 import Control.Monad (replicateM, replicateM_, void, when)
 import Data.Binary (Get, getWord8)
-import Data.Binary.Get (bytesRead, getByteString, getLazyByteStringNul, getRemainingLazyByteString, getWord16be, getWord16le, getWord32be, getWord32le, getWord64le, isEmpty, isolate, skip)
+import Data.Binary.Get (bytesRead, getByteString, getLazyByteStringNul, getRemainingLazyByteString, getWord16be, getWord16le, getWord32be, getWord32le, getWord64le, isEmpty, isolate, label, skip)
 import Data.Binary.IEEE754 (getFloat32be)
 import Data.Bits (Bits (shiftL, (.|.)), shiftR, (.&.))
 import qualified Data.ByteString as BS
@@ -24,6 +24,8 @@ import System.IO (Handle, SeekMode (AbsoluteSeek), hSeek)
 
 debugLog :: (Show a) => String -> a -> a
 debugLog str x = trace (str <> ": " <> show x) x
+
+replicateM' n = replicateM (fromIntegral n)
 
 -- trace :: String -> a -> a
 -- trace x f = f
@@ -98,11 +100,12 @@ data Datatype
   | DatatypeCompoundV2 ![CompoundDatatypeMemberV2]
   | DatatypeArray {arraySizes :: ![Word32], arrayBaseType :: !Datatype}
   | DatatypeReference !ReferenceType
+  | DatatypeEnumeration [(BSL.ByteString, Int)]
   deriving (Show)
 
 data AttributeContent
   = AttributeContentFixedString !BS.ByteString
-  | AttributeContentVariableString !Address !Word32 !Word32
+  | AttributeContentVariableString !Address !Word32 !Word32 !CharacterSet
   | AttributeContentIntegral !Integer
   | AttributeContentFloating !Double
   | AttributeContentReference ReferenceType !BSL.ByteString
@@ -571,18 +574,35 @@ getCompoundDatatypeMemberV2 = do
 skipLabeled :: String -> Int -> Get ()
 skipLabeled _ = skip
 
+convertDatatypeIntoIntReader :: Datatype -> Get Int
+convertDatatypeIntoIntReader (DatatypeFixedPoint {fixedPointDataElementSize = 1}) = label "datatype as int, 1 byte" (fromIntegral <$> getWord8)
+convertDatatypeIntoIntReader (DatatypeFixedPoint {fixedPointDataElementSize = 2, fixedPointByteOrder = BigEndian}) = label "datatype as int, 2 byte BE" (fromIntegral <$> getWord16be)
+convertDatatypeIntoIntReader (DatatypeFixedPoint {fixedPointDataElementSize = 4, fixedPointByteOrder = BigEndian}) = label "datatype as int, 4 byte BE" (fromIntegral <$> getWord32be)
+convertDatatypeIntoIntReader dt = fail $ "expected an integral datatype, but got the following: " <> show dt
+
 getDatatypeMessageData :: Get DatatypeMessageData
 getDatatypeMessageData = do
   classAndVersion <- getWord8
   let classNumeric = classAndVersion .&. 0b1111
       version = (classAndVersion .&. 0b11110000) `shiftR` 4
-  class' <- getDatatypeClass classNumeric
+  class' <- label "datatype message, class" (getDatatypeClass classNumeric)
   bits0to7 <- getWord8
   bits8to15 <- getWord8
   _bits16to23 <- getWord8
   -- The size of a datatype element in bytes.
   size <- getWord32le
   case class' of
+    ClassEnumerated -> do
+      -- We read two bytes, but enumeration wants one 2-byte little-endian value again, so we reconstitute
+      let numberOfMembers = (bits8to15 `shiftL` 8) .|. bits0to7
+      baseType <- label "enumeration, label type" getDatatypeMessageData
+      let getAndPadEnumLabel = do
+            bs <- label "enumeration label string" getLazyByteStringNul
+            skipTo8 (BSL.length bs + 1)
+            pure bs
+      names <- replicateM' numberOfMembers (label "enumeration label string, padded" getAndPadEnumLabel)
+      values <- replicateM' numberOfMembers (convertDatatypeIntoIntReader (datatypeClass baseType))
+      pure (DatatypeMessageData version $ DatatypeEnumeration $ zip names values)
     ClassFixedPoint -> do
       let byteOrder = if bits0to7 .&. 1 == 0 then LittleEndian else BigEndian
           loPadBit = bits0to7 .&. 0b0000010 > 0
@@ -613,7 +633,8 @@ getDatatypeMessageData = do
           let characterSetNumeric = bits8to15 .&. 0b1111
           characterSet <- if characterSetNumeric == 0 then pure CharacterSetAscii else if characterSetNumeric == 1 then pure CharacterSetUtf8 else fail ("invalid variable length string character set " <> show characterSetNumeric)
           -- for now, skip the content (the size)
-          skip (fromIntegral size)
+          -- commented in for now: we use getRemainingLazyByteString to ignore everything we don't read here
+          -- skip (fromIntegral size)
           pure (DatatypeMessageData version (DatatypeVariableLengthString paddingType characterSet size))
         _ -> fail $ "variable length which is neither sequence nor string, bits are: " <> show variableType
     ClassString -> do
@@ -882,8 +903,8 @@ getMessage 0x000c = do
   dataspaceSize <- getWord16le
   name <- getByteString (fromIntegral (debugLog "name size" nameSize))
   skipTo8 (debugLog ("skipping after name " <> show (BS.unpack name)) nameSize)
-  datatypeMessage <- getDatatypeMessageData
-  skipTo8 datatypeSize
+  datatypeMessage <- isolate (fromIntegral datatypeSize) (getDatatypeMessageData <* getRemainingLazyByteString)
+  skipTo8 (trace ("datatype: " <> show datatypeMessage) datatypeSize)
   dataspaceMessage <- getDataspaceMessageData
   skipTo8 (debugLog "dataspace size" dataspaceSize)
   attributeContent' <- case debugLog "attribute class" (datatypeClass datatypeMessage) of
@@ -909,15 +930,18 @@ getMessage 0x000c = do
       -- not sure why this is needed
       void getRemainingLazyByteString
       pure result
-    DatatypeVariableLengthString PaddingNullTerminate CharacterSetAscii n -> do
+    DatatypeVariableLengthString PaddingNullTerminate charset n -> do
       size' <- getWord32le
       globalHeapAddress <- getWord64le
       objectIndex <- getWord32le
+      -- I have no idea what the remainder of this message consists of
+      void getRemainingLazyByteString
       pure
         ( AttributeContentVariableString
-            (debugLog "global heap address" globalHeapAddress)
-            (debugLog "object index" objectIndex)
-            (debugLog "size" size')
+            globalHeapAddress
+            objectIndex
+            size'
+            charset
         )
     DatatypeReference referenceType -> do
       content <- getRemainingLazyByteString

@@ -221,7 +221,7 @@ convertAttribute
       { CoreTypes.attributeName = an,
         CoreTypes.attributeDatatypeMessageData = DatatypeMessageData {datatypeClass = typeData},
         CoreTypes.attributeDataspaceMessageData = DataspaceMessageData {dataspaceDimensions, dataspacePermutationIndices},
-        CoreTypes.attributeContent = AttributeContentVariableString heapAddress objectIndex _size
+        CoreTypes.attributeContent = AttributeContentVariableString heapAddress objectIndex _size _charset
       }
     ) = do
     hSeek handle AbsoluteSeek (fromIntegral heapAddress)
