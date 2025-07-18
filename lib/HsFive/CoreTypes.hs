@@ -25,7 +25,11 @@ import System.IO (Handle, SeekMode (AbsoluteSeek), hSeek)
 debugLog :: (Show a) => String -> a -> a
 debugLog str x = trace (str <> ": " <> show x) x
 
+replicateM' :: (Applicative m, Integral a1) => a1 -> m a2 -> m [a2]
 replicateM' n = replicateM (fromIntegral n)
+
+getByteString' :: (Integral a) => a -> Get BS.ByteString
+getByteString' = getByteString . fromIntegral
 
 -- trace :: String -> a -> a
 -- trace x f = f
@@ -216,7 +220,10 @@ data Message
   | SymbolTableMessage !SymbolTableMessageData
   | ObjectHeaderContinuationMessage {objectHeaderContinuationMessageOffset :: !Address, objectHeaderContinuationMessageLength :: !Length}
   | DatatypeMessage !DatatypeMessageData
-  | DataStorageFillValueMessage
+  | -- Deliberately left blank for now
+    DataStorageFillValueMessage
+  | -- Deliberately left blank for now
+    DataStorageFillValueOldMessage
   | -- | This message describes the filter pipeline which should be applied to the data stream by providing filter identification numbers, flags, a name, and client data. This message may be present in the object headers of both dataset and group objects. For datasets, it specifies the filters to apply to raw data. For groups, it specifies the filters to apply to the group’s fractal heap. Currently, only datasets using chunked data storage use the filter pipeline on their raw data.
     DataStorageFilterPipelineMessage !DataStorageFilterPipelineMessageData
   | -- | The Data Layout message describes how the elements of a multi-dimensional array are stored in the HDF5 file.
@@ -964,6 +971,11 @@ getMessage 0x000c = do
               attributeContent'
           )
     )
+-- IV.A.2.e. The Data Storage - Fill Value (Old) Message
+getMessage 0x0004 = do
+  size <- label "data storage fill value old, size" getWord32le
+  _fillValue <- label "data storage fill value old, fill value" (getByteString' size)
+  pure DataStorageFillValueOldMessage
 getMessage n = fail ("invalid message type " <> show n)
 
 getGlobalHeapObject :: Get GlobalHeapObject
@@ -1037,7 +1049,7 @@ getObjectHeaderV1 = do
         _flags <- getWord8
         skipLabeled "reserved" 3
         -- The size contains padding, so we compensate by getting the remaining lazy byte string
-        isolate (fromIntegral headerMessageDataSize) (getMessage messageType <* getRemainingLazyByteString)
+        isolate (fromIntegral headerMessageDataSize) (label "message inside object header" (getMessage messageType) <* getRemainingLazyByteString)
       -- decodeMessages 0 = pure []
       decodeMessages 0 = getRemainingLazyByteString >> pure []
       decodeMessages maxMessages = do
