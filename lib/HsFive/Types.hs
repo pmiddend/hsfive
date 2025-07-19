@@ -224,8 +224,9 @@ convertAttribute
         CoreTypes.attributeContent = AttributeContentVariableString heapAddress objectIndex _size _charset
       }
     ) = do
+    putStrLn $ "seeking to heap at " <> show heapAddress
     hSeek handle AbsoluteSeek (fromIntegral heapAddress)
-    heapData <- BSL.hGet handle 4096
+    heapData <- BSL.hGet handle 8192
     case runGetOrFail getGlobalHeap heapData of
       Left (_, bytesConsumed, e') ->
         error
@@ -344,7 +345,7 @@ readNode handle readerStateRef previousPath maybeHeap e = do
                             BSL.takeWhile (/= 0) $
                               BSL.drop (fromIntegral (h5steLinkNameOffset e)) heapData''
                       )
-      putStrLn $ "object header for " <> show newPath <> ": " <> show header
+      -- putStrLn $ "object header for " <> show newPath <> ": " <> show header
       allMessages <- resolveContinuationMessages handle (ohHeaderMessages header)
       let filterAttribute (AttributeMessage attributeData) = Just attributeData
           filterAttribute _ = Nothing

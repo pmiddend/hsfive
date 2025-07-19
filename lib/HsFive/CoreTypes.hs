@@ -1,9 +1,9 @@
 {-# LANGUAGE BinaryLiterals #-}
 {-# LANGUAGE DeriveFunctor #-}
+{-# HLINT ignore "Use <$>" #-}
+{-# OPTIONS_GHC -Wno-type-defaults #-}
 {-# HLINT ignore "Use newtype instead of data" #-}
 {-# OPTIONS_GHC -Wno-unrecognised-pragmas #-}
-
-{-# HLINT ignore "Use <$>" #-}
 
 module HsFive.CoreTypes where
 
@@ -147,6 +147,30 @@ data DataStorageLayoutClass
   = LayoutClassCompact
   | LayoutClassContiguous
   | LayoutClassChunked
+  | LayoutClassVirtual
+  deriving (Show)
+
+data LayoutChunkedV4Flag = DoNotApplyFilterToPartialEdgeChunk | SingleIndexWithFilter deriving (Show)
+
+data LayoutChunkedV4IndexingInformation
+  = LayoutChunkedV4IndexingSingleChunk
+      { layoutV4SingleChunkSize :: !Word32,
+        layoutV4SingleChunkFilters :: !Word32
+      }
+  | LayoutChunkedV4IndexingImplicit
+  | LayoutChunkedV4IndexingFixedArray {layoutV4FixedArrayPageBits :: !Word8}
+  | LayoutChunkedV4IndexingExtensibleArray
+      { layoutV4ExtensibleArrayMaxBits :: !Word8,
+        layoutV4ExtensibleArrayIndexElements :: !Word8,
+        layoutV4ExtensibleArrayMinPointers :: !Word8,
+        layoutV4ExtensibleArrayMinElements :: !Word8,
+        layoutV4ExtensibleArrayPageBits :: !Word8
+      }
+  | LayoutChunkedV4IndexingV2BTree
+      { layoutV4B2TreeNodeSize :: !Word32,
+        layoutV4B2TreeSplitPercent :: !Word8,
+        layoutV4B2TreeMergePercent :: !Word8
+      }
   deriving (Show)
 
 data DataStorageLayout
@@ -163,6 +187,12 @@ data DataStorageLayout
         layoutChunkedSizes :: ![Word32],
         layoutChunkedDatasetElementSize :: !Word32
       }
+  | LayoutChunkedV4
+      { layoutChunkedV4Sizes :: ![Word32],
+        layoutChunkedV4Flags :: ![LayoutChunkedV4Flag],
+        layoutChunkedIndexingInformation :: !LayoutChunkedV4IndexingInformation
+      }
+  | LayoutVirtualStorage {layoutVirtualStorageAddress :: !Address, layoutVirtualStorageIndex :: !Word32}
   | LayoutCompactOld {layoutCompactOldSizes :: ![Word32], layoutCompactOldDataSize :: !Word32}
   | LayoutCompact {layoutCompactSize :: !Word16}
   deriving (Show)
@@ -500,6 +530,7 @@ getDataStorageLayoutClass = do
     0 -> pure LayoutClassCompact
     1 -> pure LayoutClassContiguous
     2 -> pure LayoutClassChunked
+    3 -> pure LayoutClassVirtual
     n -> fail ("invalid data storage layout class value " <> show n)
 
 getDataspaceMessageData :: Get DataspaceMessageData
@@ -578,8 +609,8 @@ getCompoundDatatypeMemberV2 = do
   byteOffset <- getWord32le
   CompoundDatatypeMemberV2 name byteOffset <$> getDatatypeMessageData
 
-skipLabeled :: String -> Int -> Get ()
-skipLabeled _ = skip
+skipLabeled :: (Integral a) => String -> a -> Get ()
+skipLabeled _ = skip . fromIntegral
 
 convertDatatypeIntoIntReader :: Datatype -> Get Int
 convertDatatypeIntoIntReader (DatatypeFixedPoint {fixedPointDataElementSize = 1}) = label "datatype as int, 1 byte" (fromIntegral <$> getWord8)
@@ -729,7 +760,7 @@ getDatatypeMessageData = do
 skipTo8 :: (Integral a) => a -> Get ()
 skipTo8 s = do
   let r = s `mod` 8
-  when (r > 0) (skip (debugLog "skipping" $ fromIntegral (8 - r)))
+  when (r > 0) (skip (fromIntegral (8 - r)))
 
 getMessage :: Word16 -> Get Message
 getMessage 0x0000 = do
@@ -747,7 +778,7 @@ getMessage 0x0001 = DataspaceMessage <$> getDataspaceMessageData
 getMessage 0x0003 = do
   m <- DatatypeMessage <$> getDatatypeMessageData
   void getRemainingLazyByteString
-  pure (debugLog "message" m)
+  pure m
 getMessage 0x0005 = do
   version <- getWord8
   case version of
@@ -820,32 +851,69 @@ getMessage 0x000e = do
     <*> (readNumber 2 <* skipLabeled "reserved" 2)
 getMessage 0x0008 = do
   version <- getWord8
+  let getCompactLayout = do
+        -- (Note: The dimensionality information is in the Dataspace message)
+        -- This field contains the size of the raw data for the
+        -- dataset array, in bytes.
+        size <- getWord16le
+
+        -- This field contains the raw data for the dataset array.
+        -- TODO: interpretation of this data needs type information
+        void $ getByteString (fromIntegral size)
+
+        pure (LayoutCompact size)
+      getContiguousLayout = do
+        -- This is the address of the raw data in the file. The
+        -- address may have the undefined address value, to indicate
+        -- that storage has not yet been allocated for this array.
+        rawDataAddress <- getMaybeAddress
+        size <- getLength
+        -- Apparently theres "crap" at the end of this message?
+        void getRemainingLazyByteString
+        pure (LayoutContiguous rawDataAddress size)
   case version of
+    4 -> do
+      layoutClass <- label "data layout, version 4 layout class" getDataStorageLayoutClass
+      case layoutClass of
+        -- Order of appearance in the spec
+        LayoutClassCompact -> DataStorageLayoutMessage <$> getCompactLayout
+        LayoutClassContiguous -> DataStorageLayoutMessage <$> getContiguousLayout
+        LayoutClassVirtual -> DataStorageLayoutMessage <$> (LayoutVirtualStorage <$> getAddress <*> getWord32le)
+        -- Chunked version 3 is different from chunked version 4
+        LayoutClassChunked -> do
+          flagsRaw <- getWord8
+          dimensionality <- getWord8
+          dimensionSize <- getWord8
+          let flags =
+                ([DoNotApplyFilterToPartialEdgeChunk | flagsRaw .&. 1 > 0])
+                  <> ([SingleIndexWithFilter | flagsRaw .&. 2 > 0])
+              readDimension :: Get Word32
+              readDimension = case dimensionSize of
+                1 -> fromIntegral <$> getWord8
+                2 -> fromIntegral <$> getWord16le
+                4 -> getWord32le
+                n -> fail ("invalid v4 chunk dimension size " <> show n)
+          dimensionSizes <- replicateM' dimensionality readDimension
+
+          indexingType <- getWord8
+
+          indexingInformation <- case indexingType of
+            1 -> LayoutChunkedV4IndexingSingleChunk <$> getWord32le <*> getWord32le
+            2 -> pure LayoutChunkedV4IndexingImplicit
+            3 -> LayoutChunkedV4IndexingFixedArray <$> getWord8
+            4 -> LayoutChunkedV4IndexingExtensibleArray <$> getWord8 <*> getWord8 <*> getWord8 <*> getWord8 <*> getWord8
+            5 -> LayoutChunkedV4IndexingV2BTree <$> getWord32le <*> getWord8 <*> getWord8
+            n -> fail ("invalid chunk v4 indexing information type " <> show n)
+
+          pure (DataStorageLayoutMessage (LayoutChunkedV4 dimensionSizes flags indexingInformation))
     3 -> do
       layoutClass <- getDataStorageLayoutClass
 
       case layoutClass of
         -- Order of appearance in the spec
-        LayoutClassCompact -> do
-          -- (Note: The dimensionality information is in the Dataspace message)
-          -- This field contains the size of the raw data for the
-          -- dataset array, in bytes.
-          size <- getWord16le
-
-          -- This field contains the raw data for the dataset array.
-          -- TODO: interpretation of this data needs type information
-          void $ getByteString (fromIntegral size)
-
-          pure (DataStorageLayoutMessage (LayoutCompact size))
-        LayoutClassContiguous -> do
-          -- This is the address of the raw data in the file. The
-          -- address may have the undefined address value, to indicate
-          -- that storage has not yet been allocated for this array.
-          rawDataAddress <- getMaybeAddress
-          size <- getLength
-          -- Apparently theres "crap" at the end of this message?
-          void getRemainingLazyByteString
-          pure (DataStorageLayoutMessage (LayoutContiguous rawDataAddress size))
+        LayoutClassCompact -> DataStorageLayoutMessage <$> getCompactLayout
+        LayoutClassContiguous -> DataStorageLayoutMessage <$> getContiguousLayout
+        -- Chunked version 3 is different from chunked version 4
         LayoutClassChunked -> do
           -- A chunk has a fixed dimensionality. This field specifies
           -- the number of dimension size fields later in the message.
@@ -870,6 +938,7 @@ getMessage 0x0008 = do
           void getRemainingLazyByteString
 
           pure (DataStorageLayoutMessage (LayoutChunked address sizes datasetElementSize))
+        n -> fail ("invalid v3 storage class layout " <> show n)
     _ -> do
       when (version /= 1 && version /= 2) (fail ("version of the data layout message is not supported yet: " <> show version))
       dimensionality <- getWord8
@@ -985,8 +1054,8 @@ getGlobalHeapObject = do
   -- Reserved
   skip 4
   size' <- getLength
-  data' <- getByteString (fromIntegral (debugLog "size of global heap object" size'))
-  pure (GlobalHeapObject (debugLog "object index" objectIndex) objectReferenceCount data')
+  data' <- getByteString (fromIntegral size')
+  pure (GlobalHeapObject objectIndex objectReferenceCount data')
 
 getGlobalHeap :: Get GlobalHeap
 getGlobalHeap = do
@@ -995,35 +1064,36 @@ getGlobalHeap = do
   when (signature' /= BS.pack [0x47, 0x43, 0x4f, 0x4c]) (fail "invalid global heap signature")
   version <- getWord8
   -- Reserved
-  skip 3
+  skipLabeled "reserved" 3
   collectionSize <- getLength
-  startOfBytes <- bytesRead
   let getNextGlobalHeapObject :: Get [GlobalHeapObject]
       getNextGlobalHeapObject = do
-        b <- bytesRead
-        skipTo8 (b - startOfBytes)
-        objectIndex <- getWord16le
-        if objectIndex == 0
+        bytesSoFar <- bytesRead
+        -- No bytes left
+        if bytesSoFar >= fromIntegral collectionSize - 16
           then pure []
           else do
-            objectReferenceCount <- getWord16le
-            -- Reserved
-            skip 4
-            size' <- getLength
-            data' <- getByteString (fromIntegral (debugLog "size of global heap object" size'))
-            nextObjects <- getNextGlobalHeapObject
-            let thisObject =
-                  GlobalHeapObject
-                    (debugLog "object index" objectIndex)
-                    objectReferenceCount
-                    data'
-            pure (thisObject : nextObjects)
+            objectIndex <- label "heap object index" getWord16le
+            if objectIndex == 0
+              then pure []
+              else do
+                objectReferenceCount <- label "heap object reference count" getWord16le
+                -- Reserved
+                skipLabeled "reserved" 4
+                size' <- label "heap object length" getLength
+                data' <- label "heap object content" (getByteString (fromIntegral size'))
 
-  -- let objectsRemaining = do
-  --       b <- bytesRead
-  --       skipTo8 (b - startOfBytes)
-  --       pure (debugLog "remaining bytes" ((debugLog "collection size" collectionSize) - fromIntegral b) > 12)
-  -- objects <- whileM' objectsRemaining getGlobalHeapObject
+                let toSkip = 8 - (size' `mod` 8)
+                when (toSkip /= 8) (skipLabeled "padding after heap content" toSkip)
+
+                nextObjects <- getNextGlobalHeapObject
+                let thisObject =
+                      GlobalHeapObject
+                        objectIndex
+                        objectReferenceCount
+                        data'
+                pure (thisObject : nextObjects)
+
   objects <- getNextGlobalHeapObject
   pure (GlobalHeap version objects)
 
@@ -1055,8 +1125,7 @@ getObjectHeaderV1 = do
       decodeMessages maxMessages = do
         bytesRead' <- bytesRead
         let remainder = bytesRead' `mod` 8
-        skip (fromIntegral (debugLog "skipping padding between messages" remainder))
-        -- skip (fromIntegral remainder)
+        skip (fromIntegral remainder)
         empty <- isEmpty
         if empty
           then pure []
