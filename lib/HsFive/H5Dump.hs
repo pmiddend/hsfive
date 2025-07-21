@@ -3,16 +3,18 @@
 
 module HsFive.H5Dump (h5dump) where
 
+import qualified Data.ByteString.Lazy as BSL
 import Data.Int (Int64)
 import Data.List (sortOn)
 import qualified Data.List.NonEmpty as NE
-import Data.Text (Text, intercalate, length, pack, replicate)
+import Data.Text (Text, intercalate, length, pack)
+import Data.Text.Encoding (decodeUtf8Lenient)
 import HsFive.CoreTypes
   ( ByteOrder (LittleEndian),
     CharacterSet (CharacterSetAscii, CharacterSetUtf8),
     DataStorageLayout (LayoutContiguous, layoutContiguousSize),
     DataspaceDimension (DataspaceDimension, ddSize),
-    Datatype (DatatypeFixedPoint, DatatypeFloatingPoint, DatatypeString, DatatypeVariableLengthString, fixedPointBitPrecision, fixedPointByteOrder, fixedPointSigned, floatingPointBitPrecision, floatingPointByteOrder),
+    Datatype (DatatypeEnumeration, DatatypeFixedPoint, DatatypeFloatingPoint, DatatypeString, DatatypeVariableLengthString, fixedPointBitPrecision, fixedPointByteOrder, fixedPointSigned, floatingPointBitPrecision, floatingPointByteOrder),
     StringPadding (PaddingNull, PaddingNullTerminate, PaddingSpace),
   )
 import HsFive.Types
@@ -25,21 +27,9 @@ import HsFive.Types
     attributeName,
     unwrapPath,
   )
+import Prettyprinter (Doc, Pretty (pretty), defaultLayoutOptions, layoutPretty, line, nest, vsep)
+import Prettyprinter.Render.Text (renderStrict)
 import Prelude hiding (length, replicate)
-
-newtype Indent = Indent Int
-
-increaseIndent :: Indent -> Indent
-increaseIndent (Indent n) = Indent (n + 3)
-
-paddingToH5Dump :: StringPadding -> Text
-paddingToH5Dump PaddingNullTerminate = "H5T_STR_NULLTERM"
-paddingToH5Dump PaddingNull = "H5T_STR_NULLPAD"
-paddingToH5Dump PaddingSpace = "H5T_STR_SPACEPAD"
-
-charsetToH5Dump :: CharacterSet -> Text
-charsetToH5Dump CharacterSetAscii = "H5T_CSET_ASCII"
-charsetToH5Dump CharacterSetUtf8 = "H5T_CSET_UTF8"
 
 stringSize :: [DataspaceDimension] -> Text -> Int64
 stringSize dataspaceDimensions s = case dataspaceDimensions of
@@ -50,97 +40,122 @@ stringSize dataspaceDimensions s = case dataspaceDimensions of
 showText :: (Show a) => a -> Text
 showText = pack . show
 
-dataspaceToH5Dump :: Indent -> [DataspaceDimension] -> [(Indent, Text)]
-dataspaceToH5Dump m dataspaceDimensions =
+nodeToDoc :: Node -> Doc ()
+nodeToDoc (GroupNode g) = groupToDoc g
+nodeToDoc (DatasetNode g) = datasetToDoc g
+
+datatypeToDoc :: Datatype -> DataStorageLayout -> Doc ann
+datatypeToDoc (DatatypeVariableLengthString padding charset _word) _layout =
+  prefixAndBodyToDoc
+    "DATATYPE  H5T_STRING"
+    [ "STRSIZE H5T_VARIABLE;",
+      "STRPAD " <> paddingToDoc padding <> ";",
+      "CSET " <> charsetToDoc charset <> ";",
+      "CTYPE H5T_C_S1;"
+    ]
+datatypeToDoc (DatatypeString padding charset) (LayoutContiguous {layoutContiguousSize}) =
+  prefixAndBodyToDoc
+    "DATATYPE  H5T_STRING"
+    [ "STRSIZE " <> pretty (showText layoutContiguousSize) <> ";",
+      "STRPAD " <> paddingToDoc padding <> ";",
+      "CSET " <> charsetToDoc charset <> ";",
+      "CTYPE H5T_C_S1;"
+    ]
+datatypeToDoc (DatatypeFloatingPoint {floatingPointByteOrder = LittleEndian, floatingPointBitPrecision = 64}) _layout = "DATATYPE  H5T_IEEE_F64LE"
+datatypeToDoc (DatatypeFloatingPoint {floatingPointByteOrder = LittleEndian, floatingPointBitPrecision = 32}) _layout = "DATATYPE  H5T_IEEE_F32LE"
+datatypeToDoc (DatatypeFixedPoint {fixedPointByteOrder = LittleEndian, fixedPointBitPrecision = 32, fixedPointSigned = True}) _layout = "DATATYPE  H5T_STD_I32LE"
+datatypeToDoc (DatatypeFixedPoint {fixedPointByteOrder = LittleEndian, fixedPointBitPrecision = 64, fixedPointSigned = True}) _layout = "DATATYPE  H5T_STD_I64LE"
+datatypeToDoc (DatatypeFixedPoint {fixedPointByteOrder = LittleEndian, fixedPointBitPrecision = 16, fixedPointSigned = False}) _layout = "DATATYPE  H5T_STD_U16LE"
+datatypeToDoc (DatatypeEnumeration enumValues) _layout =
+  prefixAndBodyToDoc
+    "DATATYPE  H5T_ENUM {"
+    ( [ "H5T_STD_I8LE;"
+      ]
+        <> ( ( \(enumName, enumValue) ->
+                 "\""
+                   <> pretty (decodeUtf8Lenient (BSL.toStrict enumName))
+                   <> "\"            "
+                   <> pretty enumValue
+             )
+               <$> enumValues
+           )
+    )
+datatypeToDoc dt _ = error ("invalid datatype: " <> show dt)
+
+datasetToDoc :: DatasetData -> Doc ()
+datasetToDoc (DatasetData {datasetPath, datasetDimensions, datasetDatatype, datasetStorageLayout, datasetAttributes}) =
+  prefixAndBodyToDoc
+    (namedPrefix "DATASET" (pretty (unwrapPath datasetPath "/" NE.last)))
+    ( [ datatypeToDoc datasetDatatype datasetStorageLayout,
+        dataspaceToDoc datasetDimensions
+      ]
+        <> (attributeToDoc <$> sortOn attributeName datasetAttributes)
+    )
+
+prefixAndBodyToDoc :: Doc ann -> [Doc ann] -> Doc ann
+prefixAndBodyToDoc prefix bodyValues = prefix <> " {" <> nest 2 (line <> vsep bodyValues) <> line <> "}"
+
+paddingToDoc :: StringPadding -> Doc ann
+paddingToDoc PaddingNullTerminate = "H5T_STR_NULLTERM"
+paddingToDoc PaddingNull = "H5T_STR_NULLPAD"
+paddingToDoc PaddingSpace = "H5T_STR_SPACEPAD"
+
+charsetToDoc :: CharacterSet -> Doc ann
+charsetToDoc CharacterSetAscii = "H5T_CSET_ASCII"
+charsetToDoc CharacterSetUtf8 = "H5T_CSET_UTF8"
+
+attributeDatatypeToDoc :: Datatype -> [DataspaceDimension] -> Maybe Text -> Doc ()
+attributeDatatypeToDoc (DatatypeFixedPoint {}) _ _ = "DATATYPE  H5T_STD_U16BE"
+attributeDatatypeToDoc (DatatypeVariableLengthString padding charset _word) _ _ =
+  prefixAndBodyToDoc
+    "DATATYPE  H5T_STRING"
+    [ "STRSIZE H5T_VARIABLE;",
+      "STRPAD " <> paddingToDoc padding <> ";",
+      "CSET " <> charsetToDoc charset <> ";",
+      "CTYPE H5T_C_S1;"
+    ]
+attributeDatatypeToDoc (DatatypeString padding charset) dimensions (Just s) =
+  prefixAndBodyToDoc
+    "DATATYPE  H5T_STRING"
+    [ "STRSIZE " <> pretty (stringSize dimensions s) <> ";",
+      "STRPAD " <> paddingToDoc padding <> ";",
+      "CSET " <> charsetToDoc charset <> ";",
+      "CTYPE H5T_C_S1;"
+    ]
+attributeDatatypeToDoc e _ _ = error ("add this datatype: " <> show e)
+
+dataspaceToDoc :: [DataspaceDimension] -> Doc ann
+dataspaceToDoc dataspaceDimensions =
   case dataspaceDimensions of
-    [] -> [(m, "DATASPACE  SCALAR")]
+    [] -> "DATASPACE  SCALAR"
     dims ->
-      let inner = intercalate ", " (showText . ddSize <$> dims)
-       in [(m, "DATASPACE  SIMPLE { ( " <> inner <> " ) / ( " <> inner <> " ) }")]
+      let inner = pretty (intercalate ", " (showText . ddSize <$> dims))
+       in "DATASPACE  SIMPLE { ( " <> inner <> " ) / ( " <> inner <> " ) }"
 
-attributeDatatypeToH5Dump :: Indent -> Datatype -> [DataspaceDimension] -> Maybe Text -> [(Indent, Text)]
-attributeDatatypeToH5Dump m (DatatypeFixedPoint {}) _ _ =
-  [(m, "DATATYPE  H5T_STD_U16BE")]
-attributeDatatypeToH5Dump m (DatatypeVariableLengthString padding charset _word) _ _ =
-  [ (m, "DATATYPE  H5T_STRING {"),
-    (increaseIndent m, "STRSIZE H5T_VARIABLE;"),
-    (increaseIndent m, "STRPAD " <> paddingToH5Dump padding <> ";"),
-    (increaseIndent m, "CSET " <> charsetToH5Dump charset <> ";"),
-    (increaseIndent m, "CTYPE H5T_C_S1;"),
-    (m, "}")
-  ]
-attributeDatatypeToH5Dump m (DatatypeString padding charset) dimensions (Just s) =
-  [ (m, "DATATYPE  H5T_STRING {"),
-    (increaseIndent m, "STRSIZE " <> showText (stringSize dimensions s) <> ";"),
-    (increaseIndent m, "STRPAD " <> paddingToH5Dump padding <> ";"),
-    (increaseIndent m, "CSET " <> charsetToH5Dump charset <> ";"),
-    (increaseIndent m, "CTYPE H5T_C_S1;"),
-    (m, "}")
-  ]
-attributeDatatypeToH5Dump _ e _ _ = error ("add this datatype: " <> show e)
+namedPrefix :: Doc ann -> Doc ann -> Doc ann
+namedPrefix name value = name <> " \"" <> value <> "\""
 
-attributeToH5Dump :: Indent -> Attribute -> [(Indent, Text)]
-attributeToH5Dump n (Attribute {attributeName, attributeType, attributeDimensions, attributeData = AttributeDataString s}) =
-  [ (increaseIndent n, "ATTRIBUTE \"" <> attributeName <> "\" {")
-  ]
-    <> attributeDatatypeToH5Dump (increaseIndent (increaseIndent n)) attributeType attributeDimensions (Just s)
-    <> dataspaceToH5Dump (increaseIndent (increaseIndent n)) attributeDimensions
-    <> [(increaseIndent n, "}")]
-attributeToH5Dump n (Attribute {attributeName, attributeType, attributeDimensions, attributeData = AttributeDataIntegral integralValue}) =
-  [ (increaseIndent n, "ATTRIBUTE \"" <> attributeName <> "\" {")
-  ]
-    <> attributeDatatypeToH5Dump (increaseIndent (increaseIndent n)) attributeType attributeDimensions Nothing
-    <> dataspaceToH5Dump (increaseIndent (increaseIndent n)) attributeDimensions
-    <> [(increaseIndent n, "DATA {")]
-    <> [(increaseIndent n, ("(0):" <> pack (show integralValue)))]
-    <> [(increaseIndent n, "}")]
-    <> [(n, "}")]
-attributeToH5Dump n (Attribute {attributeName, attributeType, attributeDimensions, attributeData = otherdata}) = error ("unnknown attribute type " <> show otherdata)
+attributeToDoc :: Attribute -> Doc ()
+attributeToDoc (Attribute {attributeName, attributeType, attributeDimensions, attributeData = AttributeDataString s}) =
+  prefixAndBodyToDoc
+    (namedPrefix "ATTRIBUTE" (pretty attributeName))
+    [ attributeDatatypeToDoc attributeType attributeDimensions (Just s),
+      dataspaceToDoc attributeDimensions
+    ]
+attributeToDoc (Attribute {attributeName, attributeType, attributeDimensions, attributeData = AttributeDataIntegral integralValue}) =
+  prefixAndBodyToDoc
+    (namedPrefix "ATTRIBUTE" (pretty attributeName))
+    [ attributeDatatypeToDoc attributeType attributeDimensions Nothing,
+      dataspaceToDoc attributeDimensions,
+      prefixAndBodyToDoc "DATA" ["(0): " <> pretty integralValue]
+    ]
+attributeToDoc (Attribute {attributeName, attributeType, attributeDimensions, attributeData}) = error ("invalid attribute type: " <> show attributeData)
 
-dumpGroup :: Indent -> GroupData -> [(Indent, Text)]
-dumpGroup n (GroupData {groupPath, groupAttributes, groupChildren}) =
-  let attributes = sortOn attributeName groupAttributes >>= attributeToH5Dump n
-      subgroups = groupChildren >>= dumpNode (increaseIndent n)
-   in [(n, "GROUP \"" <> unwrapPath groupPath "/" NE.last <> "\" {")] <> attributes <> subgroups <> [(n, "}")]
-
-datatypeToH5Dump :: Indent -> Datatype -> DataStorageLayout -> [(Indent, Text)]
-datatypeToH5Dump m (DatatypeVariableLengthString padding charset _word) _layout =
-  [ (m, "DATATYPE  H5T_STRING {"),
-    (increaseIndent m, "STRSIZE H5T_VARIABLE;"),
-    (increaseIndent m, "STRPAD " <> paddingToH5Dump padding <> ";"),
-    (increaseIndent m, "CSET " <> charsetToH5Dump charset <> ";"),
-    (increaseIndent m, "CTYPE H5T_C_S1;"),
-    (m, "}")
-  ]
-datatypeToH5Dump m (DatatypeString padding charset) (LayoutContiguous {layoutContiguousSize}) =
-  [ (m, "DATATYPE  H5T_STRING {"),
-    (increaseIndent m, "STRSIZE " <> showText layoutContiguousSize <> ";"),
-    (increaseIndent m, "STRPAD " <> paddingToH5Dump padding <> ";"),
-    (increaseIndent m, "CSET " <> charsetToH5Dump charset <> ";"),
-    (increaseIndent m, "CTYPE H5T_C_S1;"),
-    (m, "}")
-  ]
-datatypeToH5Dump m (DatatypeFloatingPoint {floatingPointByteOrder = LittleEndian, floatingPointBitPrecision = 64}) _layout = [(m, "DATATYPE  H5T_IEEE_F64LE")]
-datatypeToH5Dump m (DatatypeFloatingPoint {floatingPointByteOrder = LittleEndian, floatingPointBitPrecision = 32}) _layout = [(m, "DATATYPE  H5T_IEEE_F32LE")]
-datatypeToH5Dump m (DatatypeFixedPoint {fixedPointByteOrder = LittleEndian, fixedPointBitPrecision = 32, fixedPointSigned = True}) _layout = [(m, "DATATYPE  H5T_STD_I32LE")]
-datatypeToH5Dump m (DatatypeFixedPoint {fixedPointByteOrder = LittleEndian, fixedPointBitPrecision = 64, fixedPointSigned = True}) _layout = [(m, "DATATYPE  H5T_STD_I64LE")]
-datatypeToH5Dump m (DatatypeFixedPoint {fixedPointByteOrder = LittleEndian, fixedPointBitPrecision = 16, fixedPointSigned = False}) _layout = [(m, "DATATYPE  H5T_STD_U16LE")]
-datatypeToH5Dump m type' _layout = [(m, "FIXME " <> showText type')]
-
-dumpDataset :: Indent -> DatasetData -> [(Indent, Text)]
-dumpDataset n (DatasetData {datasetPath, datasetDimensions, datasetDatatype, datasetStorageLayout, datasetAttributes}) =
-  [(n, "DATASET \"" <> unwrapPath datasetPath "/" NE.last <> "\" {")]
-    <> datatypeToH5Dump (increaseIndent n) datasetDatatype datasetStorageLayout
-    <> dataspaceToH5Dump (increaseIndent n) datasetDimensions
-    <> (sortOn attributeName datasetAttributes >>= attributeToH5Dump n)
-    <> [(n, "}")]
-
-dumpNode :: Indent -> Node -> [(Indent, Text)]
-dumpNode n (GroupNode g) = dumpGroup n g
-dumpNode n (DatasetNode g) = dumpDataset n g
+groupToDoc :: GroupData -> Doc ()
+groupToDoc (GroupData {groupPath, groupAttributes, groupChildren}) =
+  prefixAndBodyToDoc
+    (namedPrefix "GROUP" (pretty (unwrapPath groupPath "/" NE.last)))
+    ((attributeToDoc <$> sortOn attributeName groupAttributes) <> (nodeToDoc <$> groupChildren))
 
 h5dump :: GroupData -> Text
-h5dump group =
-  let showDump :: [(Indent, Text)] -> Text
-      showDump lines' = intercalate "\n" ((\(Indent indent, line) -> replicate indent " " <> line) <$> lines')
-   in showDump (dumpGroup (Indent 0) group)
+h5dump g = renderStrict $ layoutPretty defaultLayoutOptions $ groupToDoc g

@@ -52,6 +52,7 @@ library
                     , safe
                     , mtl
                     , split
+                    , prettyprinter
     hs-source-dirs:   lib
     default-language: Haskell2010
     c-sources: cbits/lz4.c cbits/bitshuffle.c cbits/bitshuffle_core.c cbits/iochain.c
