@@ -13,11 +13,11 @@ import HsFive.CoreTypes
     DataStorageLayout (LayoutContiguous, layoutContiguousSize),
     DataspaceDimension (DataspaceDimension, ddSize),
     Datatype (DatatypeFixedPoint, DatatypeFloatingPoint, DatatypeString, DatatypeVariableLengthString, fixedPointBitPrecision, fixedPointByteOrder, fixedPointSigned, floatingPointBitPrecision, floatingPointByteOrder),
-    StringPadding (PaddingNull, PaddingNullTerminate),
+    StringPadding (PaddingNull, PaddingNullTerminate, PaddingSpace),
   )
 import HsFive.Types
   ( Attribute (Attribute, attributeData, attributeType),
-    AttributeData (AttributeDataString),
+    AttributeData (AttributeDataIntegral, AttributeDataString),
     DatasetData (DatasetData, datasetAttributes, datasetDatatype, datasetDimensions, datasetPath, datasetStorageLayout),
     GroupData (GroupData, groupAttributes, groupChildren, groupPath),
     Node (DatasetNode, GroupNode),
@@ -35,7 +35,7 @@ increaseIndent (Indent n) = Indent (n + 3)
 paddingToH5Dump :: StringPadding -> Text
 paddingToH5Dump PaddingNullTerminate = "H5T_STR_NULLTERM"
 paddingToH5Dump PaddingNull = "H5T_STR_NULLPAD"
-paddingToH5Dump p = error ("invalid padding " <> show p)
+paddingToH5Dump PaddingSpace = "H5T_STR_SPACEPAD"
 
 charsetToH5Dump :: CharacterSet -> Text
 charsetToH5Dump CharacterSetAscii = "H5T_CSET_ASCII"
@@ -58,7 +58,9 @@ dataspaceToH5Dump m dataspaceDimensions =
       let inner = intercalate ", " (showText . ddSize <$> dims)
        in [(m, "DATASPACE  SIMPLE { ( " <> inner <> " ) / ( " <> inner <> " ) }")]
 
-attributeDatatypeToH5Dump :: Indent -> Datatype -> [DataspaceDimension] -> Text -> [(Indent, Text)]
+attributeDatatypeToH5Dump :: Indent -> Datatype -> [DataspaceDimension] -> Maybe Text -> [(Indent, Text)]
+attributeDatatypeToH5Dump m (DatatypeFixedPoint {}) _ _ =
+  [(m, "DATATYPE  H5T_STD_U16BE")]
 attributeDatatypeToH5Dump m (DatatypeVariableLengthString padding charset _word) _ _ =
   [ (m, "DATATYPE  H5T_STRING {"),
     (increaseIndent m, "STRSIZE H5T_VARIABLE;"),
@@ -67,7 +69,7 @@ attributeDatatypeToH5Dump m (DatatypeVariableLengthString padding charset _word)
     (increaseIndent m, "CTYPE H5T_C_S1;"),
     (m, "}")
   ]
-attributeDatatypeToH5Dump m (DatatypeString padding charset) dimensions s =
+attributeDatatypeToH5Dump m (DatatypeString padding charset) dimensions (Just s) =
   [ (m, "DATATYPE  H5T_STRING {"),
     (increaseIndent m, "STRSIZE " <> showText (stringSize dimensions s) <> ";"),
     (increaseIndent m, "STRPAD " <> paddingToH5Dump padding <> ";"),
@@ -81,9 +83,19 @@ attributeToH5Dump :: Indent -> Attribute -> [(Indent, Text)]
 attributeToH5Dump n (Attribute {attributeName, attributeType, attributeDimensions, attributeData = AttributeDataString s}) =
   [ (increaseIndent n, "ATTRIBUTE \"" <> attributeName <> "\" {")
   ]
-    <> attributeDatatypeToH5Dump (increaseIndent (increaseIndent n)) attributeType attributeDimensions s
+    <> attributeDatatypeToH5Dump (increaseIndent (increaseIndent n)) attributeType attributeDimensions (Just s)
     <> dataspaceToH5Dump (increaseIndent (increaseIndent n)) attributeDimensions
     <> [(increaseIndent n, "}")]
+attributeToH5Dump n (Attribute {attributeName, attributeType, attributeDimensions, attributeData = AttributeDataIntegral integralValue}) =
+  [ (increaseIndent n, "ATTRIBUTE \"" <> attributeName <> "\" {")
+  ]
+    <> attributeDatatypeToH5Dump (increaseIndent (increaseIndent n)) attributeType attributeDimensions Nothing
+    <> dataspaceToH5Dump (increaseIndent (increaseIndent n)) attributeDimensions
+    <> [(increaseIndent n, "DATA {")]
+    <> [(increaseIndent n, ("(0):" <> pack (show integralValue)))]
+    <> [(increaseIndent n, "}")]
+    <> [(n, "}")]
+attributeToH5Dump n (Attribute {attributeName, attributeType, attributeDimensions, attributeData = otherdata}) = error ("unnknown attribute type " <> show otherdata)
 
 dumpGroup :: Indent -> GroupData -> [(Indent, Text)]
 dumpGroup n (GroupData {groupPath, groupAttributes, groupChildren}) =

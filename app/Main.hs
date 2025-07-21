@@ -7,7 +7,9 @@ module Main where
 
 import Data.Binary.Get (runGetOrFail)
 import qualified Data.ByteString.Lazy as BSL
+import qualified Data.Text.IO as TIO
 import HsFive.CoreTypes
+import HsFive.H5Dump (h5dump)
 import HsFive.Types (readH5)
 import System.Environment (getArgs)
 import System.IO (Handle, SeekMode (AbsoluteSeek, SeekFromEnd), hSeek, hTell)
@@ -52,10 +54,12 @@ main = do
   args <- getArgs
 
   case args of
-    [inputFile] -> do
+    [inputFile, dumpFile] -> do
       fileNameEncoded <- encodeUtf inputFile
       rootGroup <- readH5 fileNameEncoded
       putStrLn $ "root node: " <> show rootGroup
+
+      TIO.writeFile dumpFile (h5dump rootGroup)
 
     -- let imageNode = goToNode rootGroup (singletonPath "entry_0000" </ "0_measurement" </ "images")
     -- putStrLn $ "node: " <> show imageNode
@@ -75,7 +79,7 @@ main = do
     --             datasetFilters
     --             datasetDimensions
     --             firstChunk
-    _ -> putStrLn "specify an h5 file as inputC"
+    _ -> putStrLn "usage: Main <h5-file> <hdf5dump-file>"
 
 -- putStrLn $ unpack $ h5dump rootGroup
 
