@@ -1,0 +1,775 @@
+GROUP "/" {
+  ATTRIBUTE "HDF5_Version" {
+    DATATYPE  H5T_STRING {
+      STRSIZE H5T_VARIABLE;
+      STRPAD H5T_STR_NULLTERM;
+      CSET H5T_CSET_ASCII;
+      CTYPE H5T_C_S1;
+    }
+    DATASPACE  SCALAR
+  }
+  ATTRIBUTE "NX_class" {
+    DATATYPE  H5T_STRING {
+      STRSIZE H5T_VARIABLE;
+      STRPAD H5T_STR_NULLTERM;
+      CSET H5T_CSET_ASCII;
+      CTYPE H5T_C_S1;
+    }
+    DATASPACE  SCALAR
+  }
+  ATTRIBUTE "creator" {
+    DATATYPE  H5T_STRING {
+      STRSIZE H5T_VARIABLE;
+      STRPAD H5T_STR_NULLTERM;
+      CSET H5T_CSET_ASCII;
+      CTYPE H5T_C_S1;
+    }
+    DATASPACE  SCALAR
+  }
+  ATTRIBUTE "file_name" {
+    DATATYPE  H5T_STRING {
+      STRSIZE H5T_VARIABLE;
+      STRPAD H5T_STR_NULLTERM;
+      CSET H5T_CSET_ASCII;
+      CTYPE H5T_C_S1;
+    }
+    DATASPACE  SCALAR
+  }
+  ATTRIBUTE "file_time" {
+    DATATYPE  H5T_STRING {
+      STRSIZE H5T_VARIABLE;
+      STRPAD H5T_STR_NULLTERM;
+      CSET H5T_CSET_ASCII;
+      CTYPE H5T_C_S1;
+    }
+    DATASPACE  SCALAR
+  }
+  GROUP "entry_0000" {
+    ATTRIBUTE "NX_class" {
+      DATATYPE  H5T_STRING {
+        STRSIZE 7;
+        STRPAD H5T_STR_NULLPAD;
+        CSET H5T_CSET_ASCII;
+        CTYPE H5T_C_S1;
+      }
+      DATASPACE  SCALAR
+    }
+    GROUP "0_measurement" {
+      ATTRIBUTE "NX_class" {
+        DATATYPE  H5T_STRING {
+          STRSIZE 6;
+          STRPAD H5T_STR_NULLPAD;
+          CSET H5T_CSET_ASCII;
+          CTYPE H5T_C_S1;
+        }
+        DATASPACE  SCALAR
+      }
+      ATTRIBUTE "signal" {
+        DATATYPE  H5T_STRING {
+          STRSIZE H5T_VARIABLE;
+          STRPAD H5T_STR_NULLTERM;
+          CSET H5T_CSET_ASCII;
+          CTYPE H5T_C_S1;
+        }
+        DATASPACE  SCALAR
+      }
+      DATASET "diode" {
+        DATATYPE  H5T_IEEE_F64LE
+        DATASPACE  SIMPLE { ( 10 ) / ( 10 ) }
+      }
+      DATASET "images" {
+        DATATYPE  H5T_STD_I32LE
+        DATASPACE  SIMPLE { ( 10, 1043, 981 ) / ( 10, 1043, 981 ) }
+        ATTRIBUTE "interpretation" {
+          DATATYPE  H5T_STRING {
+            STRSIZE H5T_VARIABLE;
+            STRPAD H5T_STR_NULLTERM;
+            CSET H5T_CSET_ASCII;
+            CTYPE H5T_C_S1;
+          }
+          DATASPACE  SCALAR
+        }
+      }
+      DATASET "ring_curent" {
+        DATATYPE  H5T_IEEE_F64LE
+        DATASPACE  SIMPLE { ( 10 ) / ( 10 ) }
+        ATTRIBUTE "unit" {
+          DATATYPE  H5T_STRING {
+            STRSIZE H5T_VARIABLE;
+            STRPAD H5T_STR_NULLTERM;
+            CSET H5T_CSET_ASCII;
+            CTYPE H5T_C_S1;
+          }
+          DATASPACE  SCALAR
+        }
+      }
+      DATASET "timestamps" {
+        DATATYPE  H5T_IEEE_F64LE
+        DATASPACE  SIMPLE { ( 10 ) / ( 10 ) }
+      }
+    }
+    GROUP "1_integration" {
+      ATTRIBUTE "NX_class" {
+        DATATYPE  H5T_STRING {
+          STRSIZE 9;
+          STRPAD H5T_STR_NULLPAD;
+          CSET H5T_CSET_ASCII;
+          CTYPE H5T_C_S1;
+        }
+        DATASPACE  SCALAR
+      }
+      DATASET "configuration" {
+        DATATYPE  H5T_STRING {
+          STRSIZE H5T_VARIABLE;
+          STRPAD H5T_STR_NULLTERM;
+          CSET H5T_CSET_ASCII;
+          CTYPE H5T_C_S1;
+        }
+        DATASPACE  SCALAR
+        ATTRIBUTE "format" {
+          DATATYPE  H5T_STRING {
+            STRSIZE H5T_VARIABLE;
+            STRPAD H5T_STR_NULLTERM;
+            CSET H5T_CSET_ASCII;
+            CTYPE H5T_C_S1;
+          }
+          DATASPACE  SCALAR
+        }
+      }
+      DATASET "date" {
+        DATATYPE  H5T_STRING {
+          STRSIZE H5T_VARIABLE;
+          STRPAD H5T_STR_NULLTERM;
+          CSET H5T_CSET_ASCII;
+          CTYPE H5T_C_S1;
+        }
+        DATASPACE  SCALAR
+      }
+      DATASET "program" {
+        DATATYPE  H5T_STRING {
+          STRSIZE H5T_VARIABLE;
+          STRPAD H5T_STR_NULLTERM;
+          CSET H5T_CSET_ASCII;
+          CTYPE H5T_C_S1;
+        }
+        DATASPACE  SCALAR
+      }
+      GROUP "results" {
+        ATTRIBUTE "NX_class" {
+          DATATYPE  H5T_STRING {
+            STRSIZE 6;
+            STRPAD H5T_STR_NULLPAD;
+            CSET H5T_CSET_ASCII;
+            CTYPE H5T_C_S1;
+          }
+          DATASPACE  SCALAR
+        }
+        ATTRIBUTE "signal" {
+          DATATYPE  H5T_STRING {
+            STRSIZE H5T_VARIABLE;
+            STRPAD H5T_STR_NULLTERM;
+            CSET H5T_CSET_ASCII;
+            CTYPE H5T_C_S1;
+          }
+          DATASPACE  SCALAR
+        }
+        DATASET "I" {
+          DATATYPE  H5T_IEEE_F32LE
+          DATASPACE  SIMPLE { ( 10, 1000 ) / ( 10, 1000 ) }
+          ATTRIBUTE "interpretation" {
+            DATATYPE  H5T_STRING {
+              STRSIZE H5T_VARIABLE;
+              STRPAD H5T_STR_NULLTERM;
+              CSET H5T_CSET_ASCII;
+              CTYPE H5T_C_S1;
+            }
+            DATASPACE  SCALAR
+          }
+        }
+        DATASET "errors" {
+          DATATYPE  H5T_IEEE_F32LE
+          DATASPACE  SIMPLE { ( 10, 1000 ) / ( 10, 1000 ) }
+          ATTRIBUTE "interpretation" {
+            DATATYPE  H5T_STRING {
+              STRSIZE H5T_VARIABLE;
+              STRPAD H5T_STR_NULLTERM;
+              CSET H5T_CSET_ASCII;
+              CTYPE H5T_C_S1;
+            }
+            DATASPACE  SCALAR
+          }
+        }
+        DATASET "q" {
+          DATATYPE  H5T_IEEE_F32LE
+          DATASPACE  SIMPLE { ( 1000 ) / ( 1000 ) }
+          ATTRIBUTE "unit" {
+            DATATYPE  H5T_STRING {
+              STRSIZE H5T_VARIABLE;
+              STRPAD H5T_STR_NULLTERM;
+              CSET H5T_CSET_ASCII;
+              CTYPE H5T_C_S1;
+            }
+            DATASPACE  SCALAR
+          }
+        }
+      }
+      DATASET "sequence_index" {
+        DATATYPE  H5T_STD_I64LE
+        DATASPACE  SCALAR
+      }
+      DATASET "version" {
+        DATATYPE  H5T_STRING {
+          STRSIZE H5T_VARIABLE;
+          STRPAD H5T_STR_NULLTERM;
+          CSET H5T_CSET_ASCII;
+          CTYPE H5T_C_S1;
+        }
+        DATASPACE  SCALAR
+      }
+    }
+    GROUP "2_cormap" {
+      ATTRIBUTE "NX_class" {
+        DATATYPE  H5T_STRING {
+          STRSIZE 9;
+          STRPAD H5T_STR_NULLPAD;
+          CSET H5T_CSET_ASCII;
+          CTYPE H5T_C_S1;
+        }
+        DATASPACE  SCALAR
+      }
+      DATASET "date" {
+        DATATYPE  H5T_STRING {
+          STRSIZE H5T_VARIABLE;
+          STRPAD H5T_STR_NULLTERM;
+          CSET H5T_CSET_ASCII;
+          CTYPE H5T_C_S1;
+        }
+        DATASPACE  SCALAR
+      }
+      DATASET "program" {
+        DATATYPE  H5T_STRING {
+          STRSIZE H5T_VARIABLE;
+          STRPAD H5T_STR_NULLTERM;
+          CSET H5T_CSET_ASCII;
+          CTYPE H5T_C_S1;
+        }
+        DATASPACE  SCALAR
+      }
+      GROUP "results" {
+        ATTRIBUTE "NX_class" {
+          DATATYPE  H5T_STRING {
+            STRSIZE 6;
+            STRPAD H5T_STR_NULLPAD;
+            CSET H5T_CSET_ASCII;
+            CTYPE H5T_C_S1;
+          }
+          DATASPACE  SCALAR
+        }
+        ATTRIBUTE "signal" {
+          DATATYPE  H5T_STRING {
+            STRSIZE H5T_VARIABLE;
+            STRPAD H5T_STR_NULLTERM;
+            CSET H5T_CSET_ASCII;
+            CTYPE H5T_C_S1;
+          }
+          DATASPACE  SCALAR
+        }
+        DATASET "C" {
+          DATATYPE  H5T_STD_U16LE
+          DATASPACE  SIMPLE { ( 10, 10 ) / ( 10, 10 ) }
+          ATTRIBUTE "interpretation" {
+            DATATYPE  H5T_STRING {
+              STRSIZE H5T_VARIABLE;
+              STRPAD H5T_STR_NULLTERM;
+              CSET H5T_CSET_ASCII;
+              CTYPE H5T_C_S1;
+            }
+            DATASPACE  SCALAR
+          }
+          ATTRIBUTE "unit" {
+            DATATYPE  H5T_STRING {
+              STRSIZE H5T_VARIABLE;
+              STRPAD H5T_STR_NULLTERM;
+              CSET H5T_CSET_ASCII;
+              CTYPE H5T_C_S1;
+            }
+            DATASPACE  SCALAR
+          }
+        }
+        DATASET "P" {
+          DATATYPE  H5T_IEEE_F32LE
+          DATASPACE  SIMPLE { ( 10, 10 ) / ( 10, 10 ) }
+          ATTRIBUTE "interpretation" {
+            DATATYPE  H5T_STRING {
+              STRSIZE H5T_VARIABLE;
+              STRPAD H5T_STR_NULLTERM;
+              CSET H5T_CSET_ASCII;
+              CTYPE H5T_C_S1;
+            }
+            DATASPACE  SCALAR
+          }
+          ATTRIBUTE "unit" {
+            DATATYPE  H5T_STRING {
+              STRSIZE H5T_VARIABLE;
+              STRPAD H5T_STR_NULLTERM;
+              CSET H5T_CSET_ASCII;
+              CTYPE H5T_C_S1;
+            }
+            DATASPACE  SCALAR
+          }
+        }
+      }
+      DATASET "sequence_index" {
+        DATATYPE  H5T_STD_I64LE
+        DATASPACE  SCALAR
+      }
+      DATASET "version" {
+        DATATYPE  H5T_STRING {
+          STRSIZE H5T_VARIABLE;
+          STRPAD H5T_STR_NULLTERM;
+          CSET H5T_CSET_ASCII;
+          CTYPE H5T_C_S1;
+        }
+        DATASPACE  SCALAR
+      }
+    }
+    GROUP "3_time_average" {
+      ATTRIBUTE "NX_class" {
+        DATATYPE  H5T_STRING {
+          STRSIZE 9;
+          STRPAD H5T_STR_NULLPAD;
+          CSET H5T_CSET_ASCII;
+          CTYPE H5T_C_S1;
+        }
+        DATASPACE  SCALAR
+      }
+      DATASET "program" {
+        DATATYPE  H5T_STRING {
+          STRSIZE H5T_VARIABLE;
+          STRPAD H5T_STR_NULLTERM;
+          CSET H5T_CSET_ASCII;
+          CTYPE H5T_C_S1;
+        }
+        DATASPACE  SCALAR
+      }
+      GROUP "results" {
+        ATTRIBUTE "NX_class" {
+          DATATYPE  H5T_STRING {
+            STRSIZE 6;
+            STRPAD H5T_STR_NULLPAD;
+            CSET H5T_CSET_ASCII;
+            CTYPE H5T_C_S1;
+          }
+          DATASPACE  SCALAR
+        }
+        ATTRIBUTE "signal" {
+          DATATYPE  H5T_STRING {
+            STRSIZE H5T_VARIABLE;
+            STRPAD H5T_STR_NULLTERM;
+            CSET H5T_CSET_ASCII;
+            CTYPE H5T_C_S1;
+          }
+          DATASPACE  SCALAR
+        }
+        DATASET "intensity_error" {
+          DATATYPE  H5T_IEEE_F32LE
+          DATASPACE  SIMPLE { ( 1043, 981 ) / ( 1043, 981 ) }
+          ATTRIBUTE "interpretation" {
+            DATATYPE  H5T_STRING {
+              STRSIZE H5T_VARIABLE;
+              STRPAD H5T_STR_NULLTERM;
+              CSET H5T_CSET_ASCII;
+              CTYPE H5T_C_S1;
+            }
+            DATASPACE  SCALAR
+          }
+          ATTRIBUTE "method" {
+            DATATYPE  H5T_STRING {
+              STRSIZE H5T_VARIABLE;
+              STRPAD H5T_STR_NULLTERM;
+              CSET H5T_CSET_ASCII;
+              CTYPE H5T_C_S1;
+            }
+            DATASPACE  SCALAR
+          }
+        }
+        DATASET "intensity_normed" {
+          DATATYPE  H5T_IEEE_F32LE
+          DATASPACE  SIMPLE { ( 1043, 981 ) / ( 1043, 981 ) }
+          ATTRIBUTE "interpretation" {
+            DATATYPE  H5T_STRING {
+              STRSIZE H5T_VARIABLE;
+              STRPAD H5T_STR_NULLTERM;
+              CSET H5T_CSET_ASCII;
+              CTYPE H5T_C_S1;
+            }
+            DATASPACE  SCALAR
+          }
+        }
+      }
+      DATASET "sequence_index" {
+        DATATYPE  H5T_STD_I64LE
+        DATASPACE  SCALAR
+      }
+      DATASET "version" {
+        DATATYPE  H5T_STRING {
+          STRSIZE H5T_VARIABLE;
+          STRPAD H5T_STR_NULLTERM;
+          CSET H5T_CSET_ASCII;
+          CTYPE H5T_C_S1;
+        }
+        DATASPACE  SCALAR
+      }
+    }
+    GROUP "4_azimuthal_integration" {
+      DATASET "program" {
+        DATATYPE  H5T_STRING {
+          STRSIZE H5T_VARIABLE;
+          STRPAD H5T_STR_NULLTERM;
+          CSET H5T_CSET_ASCII;
+          CTYPE H5T_C_S1;
+        }
+        DATASPACE  SCALAR
+      }
+      GROUP "results" {
+        ATTRIBUTE "NX_class" {
+          DATATYPE  H5T_STRING {
+            STRSIZE 6;
+            STRPAD H5T_STR_NULLPAD;
+            CSET H5T_CSET_ASCII;
+            CTYPE H5T_C_S1;
+          }
+          DATASPACE  SCALAR
+        }
+        ATTRIBUTE "axes" {
+          DATATYPE  H5T_STRING {
+            STRSIZE 1;
+            STRPAD H5T_STR_NULLPAD;
+            CSET H5T_CSET_ASCII;
+            CTYPE H5T_C_S1;
+          }
+          DATASPACE  SIMPLE { ( 1 ) / ( 1 ) }
+        }
+        ATTRIBUTE "signal" {
+          DATATYPE  H5T_STRING {
+            STRSIZE H5T_VARIABLE;
+            STRPAD H5T_STR_NULLTERM;
+            CSET H5T_CSET_ASCII;
+            CTYPE H5T_C_S1;
+          }
+          DATASPACE  SCALAR
+        }
+        DATASET "I" {
+          DATATYPE  H5T_IEEE_F32LE
+          DATASPACE  SIMPLE { ( 1000 ) / ( 1000 ) }
+        }
+        DATASET "errors" {
+          DATATYPE  H5T_IEEE_F32LE
+          DATASPACE  SIMPLE { ( 1000 ) / ( 1000 ) }
+        }
+        DATASET "q" {
+          DATATYPE  H5T_IEEE_F32LE
+          DATASPACE  SIMPLE { ( 1000 ) / ( 1000 ) }
+          ATTRIBUTE "unit" {
+            DATATYPE  H5T_STRING {
+              STRSIZE H5T_VARIABLE;
+              STRPAD H5T_STR_NULLTERM;
+              CSET H5T_CSET_ASCII;
+              CTYPE H5T_C_S1;
+            }
+            DATASPACE  SCALAR
+          }
+        }
+      }
+      DATASET "sequence_index" {
+        DATATYPE  H5T_STD_I64LE
+        DATASPACE  SCALAR
+      }
+      DATASET "version" {
+        DATATYPE  H5T_STRING {
+          STRSIZE H5T_VARIABLE;
+          STRPAD H5T_STR_NULLTERM;
+          CSET H5T_CSET_ASCII;
+          CTYPE H5T_C_S1;
+        }
+        DATASPACE  SCALAR
+      }
+    }
+    GROUP "BM29" {
+      ATTRIBUTE "NX_class" {
+        DATATYPE  H5T_STRING {
+          STRSIZE 12;
+          STRPAD H5T_STR_NULLPAD;
+          CSET H5T_CSET_ASCII;
+          CTYPE H5T_C_S1;
+        }
+        DATASPACE  SCALAR
+      }
+      GROUP "ESRF" {
+        ATTRIBUTE "NX_class" {
+          DATATYPE  H5T_STRING {
+            STRSIZE 8;
+            STRPAD H5T_STR_NULLPAD;
+            CSET H5T_CSET_ASCII;
+            CTYPE H5T_C_S1;
+          }
+          DATASPACE  SCALAR
+        }
+        DATASET "name" {
+          DATATYPE  H5T_STRING {
+            STRSIZE H5T_VARIABLE;
+            STRPAD H5T_STR_NULLTERM;
+            CSET H5T_CSET_ASCII;
+            CTYPE H5T_C_S1;
+          }
+          DATASPACE  SCALAR
+        }
+        DATASET "probe" {
+          DATATYPE  H5T_STRING {
+            STRSIZE H5T_VARIABLE;
+            STRPAD H5T_STR_NULLTERM;
+            CSET H5T_CSET_ASCII;
+            CTYPE H5T_C_S1;
+          }
+          DATASPACE  SCALAR
+        }
+        DATASET "type" {
+          DATATYPE  H5T_STRING {
+            STRSIZE H5T_VARIABLE;
+            STRPAD H5T_STR_NULLTERM;
+            CSET H5T_CSET_ASCII;
+            CTYPE H5T_C_S1;
+          }
+          DATASPACE  SCALAR
+        }
+      }
+      GROUP "Pilatus" {
+        ATTRIBUTE "NX_class" {
+          DATATYPE  H5T_STRING {
+            STRSIZE 10;
+            STRPAD H5T_STR_NULLPAD;
+            CSET H5T_CSET_ASCII;
+            CTYPE H5T_C_S1;
+          }
+          DATASPACE  SCALAR
+        }
+        DATASET "beam_center_x" {
+          DATATYPE  H5T_IEEE_F64LE
+          DATASPACE  SCALAR
+          ATTRIBUTE "unit" {
+            DATATYPE  H5T_STRING {
+              STRSIZE H5T_VARIABLE;
+              STRPAD H5T_STR_NULLTERM;
+              CSET H5T_CSET_ASCII;
+              CTYPE H5T_C_S1;
+            }
+            DATASPACE  SCALAR
+          }
+        }
+        DATASET "beam_center_y" {
+          DATATYPE  H5T_IEEE_F64LE
+          DATASPACE  SCALAR
+          ATTRIBUTE "units" {
+            DATATYPE  H5T_STRING {
+              STRSIZE H5T_VARIABLE;
+              STRPAD H5T_STR_NULLTERM;
+              CSET H5T_CSET_ASCII;
+              CTYPE H5T_C_S1;
+            }
+            DATASPACE  SCALAR
+          }
+        }
+        DATASET "count_time" {
+          DATATYPE  H5T_IEEE_F64LE
+          DATASPACE  SCALAR
+          ATTRIBUTE "unit" {
+            DATATYPE  H5T_STRING {
+              STRSIZE H5T_VARIABLE;
+              STRPAD H5T_STR_NULLTERM;
+              CSET H5T_CSET_ASCII;
+              CTYPE H5T_C_S1;
+            }
+            DATASPACE  SCALAR
+          }
+        }
+        DATASET "distance" {
+          DATATYPE  H5T_IEEE_F64LE
+          DATASPACE  SCALAR
+          ATTRIBUTE "unit" {
+            DATATYPE  H5T_STRING {
+              STRSIZE H5T_VARIABLE;
+              STRPAD H5T_STR_NULLTERM;
+              CSET H5T_CSET_ASCII;
+              CTYPE H5T_C_S1;
+            }
+            DATASPACE  SCALAR
+          }
+        }
+        DATASET "pixel_mask" {
+          DATATYPE  H5T_IEEE_F64LE
+          DATASPACE  SIMPLE { ( 1043, 981 ) / ( 1043, 981 ) }
+          ATTRIBUTE "filename" {
+            DATATYPE  H5T_STRING {
+              STRSIZE H5T_VARIABLE;
+              STRPAD H5T_STR_NULLTERM;
+              CSET H5T_CSET_ASCII;
+              CTYPE H5T_C_S1;
+            }
+            DATASPACE  SCALAR
+          }
+        }
+        DATASET "x_pixel_size" {
+          DATATYPE  H5T_IEEE_F64LE
+          DATASPACE  SCALAR
+          ATTRIBUTE "unit" {
+            DATATYPE  H5T_STRING {
+              STRSIZE H5T_VARIABLE;
+              STRPAD H5T_STR_NULLTERM;
+              CSET H5T_CSET_ASCII;
+              CTYPE H5T_C_S1;
+            }
+            DATASPACE  SCALAR
+          }
+        }
+        DATASET "y_pixel_size" {
+          DATATYPE  H5T_IEEE_F64LE
+          DATASPACE  SCALAR
+          ATTRIBUTE "unit" {
+            DATATYPE  H5T_STRING {
+              STRSIZE H5T_VARIABLE;
+              STRPAD H5T_STR_NULLTERM;
+              CSET H5T_CSET_ASCII;
+              CTYPE H5T_C_S1;
+            }
+            DATASPACE  SCALAR
+          }
+        }
+      }
+      GROUP "beamstop_diode" {
+        ATTRIBUTE "NX_class" {
+          DATATYPE  H5T_STRING {
+            STRSIZE 10;
+            STRPAD H5T_STR_NULLPAD;
+            CSET H5T_CSET_ASCII;
+            CTYPE H5T_C_S1;
+          }
+          DATASPACE  SCALAR
+        }
+        DATASET "normalization_factor" {
+          DATATYPE  H5T_IEEE_F64LE
+          DATASPACE  SCALAR
+        }
+      }
+      GROUP "monochromator" {
+        ATTRIBUTE "NX_class" {
+          DATATYPE  H5T_STRING {
+            STRSIZE 15;
+            STRPAD H5T_STR_NULLPAD;
+            CSET H5T_CSET_ASCII;
+            CTYPE H5T_C_S1;
+          }
+          DATASPACE  SCALAR
+        }
+        DATASET "wavelength" {
+          DATATYPE  H5T_IEEE_F64LE
+          DATASPACE  SCALAR
+          ATTRIBUTE "unit" {
+            DATATYPE  H5T_STRING {
+              STRSIZE H5T_VARIABLE;
+              STRPAD H5T_STR_NULLTERM;
+              CSET H5T_CSET_ASCII;
+              CTYPE H5T_C_S1;
+            }
+            DATASPACE  SCALAR
+          }
+        }
+      }
+      DATASET "name" {
+        DATATYPE  H5T_STRING {
+          STRSIZE H5T_VARIABLE;
+          STRPAD H5T_STR_NULLTERM;
+          CSET H5T_CSET_ASCII;
+          CTYPE H5T_C_S1;
+        }
+        DATASPACE  SCALAR
+      }
+    }
+    DATASET "program_name" {
+      DATATYPE  H5T_STRING {
+        STRSIZE 4;
+        STRPAD H5T_STR_NULLPAD;
+        CSET H5T_CSET_ASCII;
+        CTYPE H5T_C_S1;
+      }
+      DATASPACE  SCALAR
+    }
+    DATASET "start_time" {
+      DATATYPE  H5T_STRING {
+        STRSIZE 25;
+        STRPAD H5T_STR_NULLPAD;
+        CSET H5T_CSET_ASCII;
+        CTYPE H5T_C_S1;
+      }
+      DATASPACE  SCALAR
+    }
+    DATASET "title" {
+      DATATYPE  H5T_STRING {
+        STRSIZE 33;
+        STRPAD H5T_STR_NULLPAD;
+        CSET H5T_CSET_ASCII;
+        CTYPE H5T_C_S1;
+      }
+      DATASPACE  SCALAR
+    }
+    GROUP "water" {
+      ATTRIBUTE "NX_class" {
+        DATATYPE  H5T_STRING {
+          STRSIZE 8;
+          STRPAD H5T_STR_NULLPAD;
+          CSET H5T_CSET_ASCII;
+          CTYPE H5T_C_S1;
+        }
+        DATASPACE  SCALAR
+      }
+      DATASET "concentration" {
+        DATATYPE  H5T_IEEE_F64LE
+        DATASPACE  SCALAR
+      }
+      DATASET "description" {
+        DATATYPE  H5T_STRING {
+          STRSIZE H5T_VARIABLE;
+          STRPAD H5T_STR_NULLTERM;
+          CSET H5T_CSET_ASCII;
+          CTYPE H5T_C_S1;
+        }
+        DATASPACE  SCALAR
+      }
+      DATASET "exposure_temp" {
+        DATATYPE  H5T_IEEE_F64LE
+        DATASPACE  SCALAR
+        ATTRIBUTE "unit" {
+          DATATYPE  H5T_STRING {
+            STRSIZE H5T_VARIABLE;
+            STRPAD H5T_STR_NULLTERM;
+            CSET H5T_CSET_ASCII;
+            CTYPE H5T_C_S1;
+          }
+          DATASPACE  SCALAR
+        }
+      }
+      DATASET "storage_temp" {
+        DATATYPE  H5T_IEEE_F64LE
+        DATASPACE  SCALAR
+        ATTRIBUTE "unit" {
+          DATATYPE  H5T_STRING {
+            STRSIZE H5T_VARIABLE;
+            STRPAD H5T_STR_NULLTERM;
+            CSET H5T_CSET_ASCII;
+            CTYPE H5T_C_S1;
+          }
+          DATASPACE  SCALAR
+        }
+      }
+    }
+  }
+}

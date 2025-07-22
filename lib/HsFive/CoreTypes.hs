@@ -84,7 +84,7 @@ data Datatype
       }
   | DatatypeVariableLengthSequence
   | DatatypeVariableLengthString !StringPadding !CharacterSet !Word32
-  | DatatypeString !StringPadding !CharacterSet
+  | DatatypeString !StringPadding !CharacterSet !Word32
   | DatatypeFloatingPoint
       { floatingPointByteOrder :: !ByteOrder,
         floatingPointLowBitPad :: !Bool,
@@ -680,7 +680,7 @@ getDatatypeMessageData = do
       paddingType <- if paddingTypeNumeric == 0 then pure PaddingNullTerminate else if paddingTypeNumeric == 1 then pure PaddingNull else if paddingTypeNumeric == 2 then pure PaddingSpace else fail ("invalid variable length string padding type " <> show paddingTypeNumeric)
       let characterSetNumeric = bits8to15 .&. 0b1111
       characterSet <- if characterSetNumeric == 0 then pure CharacterSetAscii else if characterSetNumeric == 1 then pure CharacterSetUtf8 else fail ("invalid variable length string character set " <> show characterSetNumeric)
-      pure (DatatypeMessageData version (DatatypeString paddingType characterSet))
+      pure (DatatypeMessageData version (DatatypeString paddingType characterSet size))
     ClassFloatingPoint -> do
       when (bits0to7 .&. 1 == 3) (fail "floating point values with VAX-endianness are not supported")
       let byteOrder = if bits0to7 .&. 1 == 0 then LittleEndian else BigEndian
@@ -984,7 +984,7 @@ getMessage 0x000c = do
   dataspaceMessage <- getDataspaceMessageData
   skipTo8 (debugLog "dataspace size" dataspaceSize)
   attributeContent' <- case debugLog "attribute class" (datatypeClass datatypeMessage) of
-    DatatypeString _padding _charset ->
+    DatatypeString _padding _charset _size ->
       AttributeContentFixedString . BSL.toStrict <$> getRemainingLazyByteString
     DatatypeFixedPoint {fixedPointDataElementSize = 1} -> do
       result <- AttributeContentIntegral . fromIntegral <$> getWord8
@@ -1006,7 +1006,7 @@ getMessage 0x000c = do
       -- not sure why this is needed
       void getRemainingLazyByteString
       pure result
-    DatatypeVariableLengthString PaddingNullTerminate charset n -> do
+    DatatypeVariableLengthString PaddingNullTerminate charset _size -> do
       size' <- getWord32le
       globalHeapAddress <- getWord64le
       objectIndex <- getWord32le
