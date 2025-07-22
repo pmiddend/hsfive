@@ -1001,6 +1001,11 @@ getMessage 0x000c = do
       -- not sure why this is needed
       void getRemainingLazyByteString
       pure result
+    DatatypeFixedPoint {fixedPointDataElementSize = 4, fixedPointByteOrder = LittleEndian} -> do
+      result <- AttributeContentIntegral . fromIntegral <$> getWord32le
+      -- not sure why this is needed
+      void getRemainingLazyByteString
+      pure result
     DatatypeFloatingPoint {floatingPointBitPrecision = 32, floatingPointByteOrder = BigEndian} -> do
       result <- AttributeContentFloating . realToFrac <$> getFloat32be
       -- not sure why this is needed

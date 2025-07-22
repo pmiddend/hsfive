@@ -180,7 +180,8 @@ resolveContinuationMessage handle (ObjectHeaderContinuationMessage continuationA
     Left (_, _, e') -> error ("parsing continuation messages failed: " <> show e')
     Right (_, _, messages) -> do
       putStrLn $ "continuation messages: " <> show messages
-      pure messages
+      -- Important: We could have more continuations, recursively!
+      foldMap (resolveContinuationMessage handle) messages
 resolveContinuationMessage _handle m = pure [m]
 
 appendPath :: Path -> Text -> Path
@@ -364,7 +365,7 @@ readNode handle readerStateRef previousPath maybeHeap e = do
               searchMessage :: (Message -> Maybe a) -> Maybe a
               searchMessage finder = headMay (mapMaybe finder allMessages)
           case searchMessage filterDatatype of
-            Nothing -> fail "dataset without datatype"
+            Nothing -> fail ("dataset without datatype; all messages: " <> show allMessages)
             Just (DatatypeMessageData {datatypeClass}) ->
               case searchMessage filterDataspace of
                 Nothing -> pure (DatatypeNode datatypeClass)
