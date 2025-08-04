@@ -244,10 +244,51 @@ data SymbolTableMessageData = SymbolTableMessageData
   }
   deriving (Show)
 
+data LinkInfoMessageData = LinkInfoMessageData
+  { linkInfoMaximumCreationIndex :: !(Maybe Word64),
+    linkInfoFractalHeapAddress :: !(Maybe Address),
+    linkInfoBtreeAddress :: !(Maybe Address),
+    linkInfoBtreeCreationOrderIndex :: !(Maybe Word64)
+  }
+  deriving (Show)
+
+data LinkMessageData = LinkMessageData
+  { linkInfoCreationOrder :: !(Maybe Word64),
+    linkInfoLinkNameCharacterSet :: !(Maybe Word8),
+    linkInfoLinkName :: !BS.ByteString,
+    linkInfoLinkType :: !LinkType
+  }
+  deriving (Show)
+
+data GroupInfoMessageData = GroupInfoMessageData
+  { groupInfoMaxCompactValueLinkPhaseChange :: !(Maybe Word16),
+    groupInfoMaxDenseValueLinkPhaseChange :: !(Maybe Word16),
+    groupInfoEstimatedNumberOfEntries :: !(Maybe Word16),
+    groupInfoEstimatedLinkNameLengthOfEntries :: !(Maybe Word16)
+  }
+  deriving (Show)
+
+type FractalHeapId = Word64
+
+data SharedMessageType
+  = SharedMessageTypeShared !FractalHeapId
+  | SharedMessageTypeCommitted !Address
+  | SharedMessageShareable
+  deriving (Show)
+
+data SharedMessageData = SharedMessageData
+  { sharedMessageOriginalType :: !Word16,
+    sharedMessageType :: !SharedMessageType
+  }
+  deriving (Show)
+
 data Message
   = NilMessage
   | DataspaceMessage !DataspaceMessageData
+  | LinkInfoMessage !LinkInfoMessageData
+  | LinkMessage !LinkMessageData
   | SymbolTableMessage !SymbolTableMessageData
+  | SharedMessage !SharedMessageData
   | ObjectHeaderContinuationMessage {objectHeaderContinuationMessageOffset :: !Address, objectHeaderContinuationMessageLength :: !Length}
   | DatatypeMessage !DatatypeMessageData
   | -- Deliberately left blank for now
@@ -269,7 +310,8 @@ data Message
         objectModificationTimeOldMinute :: !Int,
         objectModificationTimeOldSecond :: !Int
       }
-  | AttributeMessage AttributeData
+  | AttributeMessage !AttributeData
+  | GroupInfoMessage !GroupInfoMessageData
   deriving (Show)
 
 data ObjectHeader = ObjectHeader
@@ -623,13 +665,14 @@ getDatatypeMessageData = do
   classAndVersion <- getWord8
   let classNumeric = classAndVersion .&. 0b1111
       version = (classAndVersion .&. 0b11110000) `shiftR` 4
+  when (version == 0) (fail "datatype message with version 0 invalid")
   class' <- label "datatype message, class" (getDatatypeClass classNumeric)
   bits0to7 <- getWord8
   bits8to15 <- getWord8
   _bits16to23 <- getWord8
   -- The size of a datatype element in bytes.
   size <- getWord32le
-  case class' of
+  case debugLog "class" class' of
     ClassEnumerated -> do
       -- We read two bytes, but enumeration wants one 2-byte little-endian value again, so we reconstitute
       let numberOfMembers = (bits8to15 `shiftL` 8) .|. bits0to7
@@ -762,6 +805,49 @@ skipTo8 s = do
   let r = s `mod` 8
   when (r > 0) (skip (fromIntegral (8 - r)))
 
+data LinkTypeEnum
+  = HardLinkEnum
+  | SoftLinkEnum
+  | ExternalLinkEnum
+  | UserDefinedLinkEnum !Word8
+  | ReservedLinkEnum
+  deriving (Show)
+
+getLinkTypeEnum :: Get LinkTypeEnum
+getLinkTypeEnum = do
+  v <- getWord8
+  case v of
+    0 -> pure HardLinkEnum
+    1 -> pure SoftLinkEnum
+    64 -> pure ExternalLinkEnum
+    reserved ->
+      if reserved > 64
+        then pure (UserDefinedLinkEnum reserved)
+        else pure ReservedLinkEnum
+
+data LinkType
+  = HardLink !Address
+  | SoftLink !BS.ByteString
+  | ExternalLink {externalLinkFileName :: !BS.ByteString, externalLinkPath :: !BS.ByteString}
+  | UserDefinedLink {userDefinedLinkCode :: !Word8, userDefinedLinkData :: !BS.ByteString}
+  | ReservedLink
+  deriving (Show)
+
+getLinkType :: LinkTypeEnum -> Get LinkType
+getLinkType HardLinkEnum = HardLink <$> getAddress
+getLinkType SoftLinkEnum = do
+  lengthOfLink <- getWord16le
+  SoftLink <$> getByteString' lengthOfLink
+getLinkType ExternalLinkEnum = do
+  _lengthOfLink <- getWord16le
+  versionNumberAndFlags <- getWord8
+  when (versionNumberAndFlags /= 0) (fail "invalid external link: the first byte should be the version number and flags, which are supposed to be zero, but they are not")
+  (ExternalLink . BSL.toStrict <$> getLazyByteStringNul) <*> (BSL.toStrict <$> getLazyByteStringNul)
+getLinkType (UserDefinedLinkEnum linkCode) = do
+  lengthOfData <- getWord16le
+  UserDefinedLink linkCode <$> getByteString' lengthOfData
+getLinkType ReservedLinkEnum = pure ReservedLink
+
 getMessage :: Word16 -> Get Message
 getMessage 0x0000 = do
   void getRemainingLazyByteString
@@ -772,6 +858,31 @@ getMessage 0x0000 = do
 -- rectilinear, array-like layout; datasets requiring a more complex
 -- layout are not yet supported.
 getMessage 0x0001 = DataspaceMessage <$> getDataspaceMessageData
+getMessage 0x0002 = do
+  version <- getWord8
+  when (version /= 0) (fail ("invalid link info message version (is not 0) " <> show version))
+  flags <- getWord8
+  maximumCreationIndex <-
+    if flags .&. 1 > 0
+      then Just <$> getWord64le
+      else pure Nothing
+  fractalHeapAddress <- getMaybeAddress
+  btreeAddress <- getMaybeAddress
+  btreeCreationOrderIndex <-
+    if flags .&. 2 > 0
+      then Just <$> getWord64le
+      else pure Nothing
+  void getRemainingLazyByteString
+  pure
+    ( LinkInfoMessage
+        ( LinkInfoMessageData
+            { linkInfoMaximumCreationIndex = maximumCreationIndex,
+              linkInfoFractalHeapAddress = fractalHeapAddress,
+              linkInfoBtreeAddress = btreeAddress,
+              linkInfoBtreeCreationOrderIndex = btreeCreationOrderIndex
+            }
+        )
+    )
 -- Explanation of "datatype" in general
 --
 -- https://support.hdfgroup.org/documentation/hdf5/latest/_l_b_datatypes.html
@@ -806,6 +917,65 @@ getMessage 0x0005 = do
           pure DataStorageFillValueMessage
     3 -> fail "version 3 of data storage fill value not supported yet (table in spec is weird)"
     n -> fail ("invalid version of data storage fill value message " <> show n)
+getMessage 0x0006 = do
+  version <- getWord8
+  when (version /= 1) (fail ("invalid link info message version (is not 1) " <> show version))
+  flags <- getWord8
+  let firstTwoBits = flags .&. 0b11
+      getLengthOfLinkName :: Get Word64
+      getLengthOfLinkName =
+        case firstTwoBits of
+          0 -> fromIntegral <$> getWord8
+          1 -> fromIntegral <$> getWord16le
+          2 -> fromIntegral <$> getWord32le
+          _ -> getWord64le
+  linkTypeEnum <-
+    if flags .&. 0b1000 > 0
+      then getLinkTypeEnum
+      else pure HardLinkEnum
+  creationOrder <-
+    if flags .&. 0b100 > 0
+      then Just <$> getWord64le
+      else pure Nothing
+  linkNameCharacterSet <-
+    if flags .&. 0b10000 > 0
+      then Just <$> getWord8
+      else pure Nothing
+  lengthOfLinkName <- getLengthOfLinkName
+  linkName <- getByteString' lengthOfLinkName
+  linkType <- getLinkType linkTypeEnum
+  void getRemainingLazyByteString
+  pure (LinkMessage (LinkMessageData creationOrder linkNameCharacterSet linkName linkType))
+getMessage 0x000a = do
+  version <- getWord8
+  when (version /= 0) (fail ("group info message has invalid version " <> show version))
+  flags <- getWord8
+  maxCompactValueLinkPhaseChange <-
+    if flags .&. 1 > 0
+      then Just <$> getWord16le
+      else pure Nothing
+  maxDenseValueLinkPhaseChange <-
+    if flags .&. 1 > 0
+      then Just <$> getWord16le
+      else pure Nothing
+  estimatedNumberOfEntries <-
+    if flags .&. 2 > 0
+      then Just <$> getWord16le
+      else pure Nothing
+  estimatedLinkNameLengthOfEntries <-
+    if flags .&. 2 > 0
+      then Just <$> getWord16le
+      else pure Nothing
+  void getRemainingLazyByteString
+  pure
+    ( GroupInfoMessage
+        ( GroupInfoMessageData
+            maxCompactValueLinkPhaseChange
+            maxDenseValueLinkPhaseChange
+            estimatedNumberOfEntries
+            estimatedLinkNameLengthOfEntries
+        )
+    )
 getMessage 0x000b = do
   version <- getWord8
   when (version /= 1) (fail ("data storage filter pipeline message has invalid version " <> show version))
@@ -1121,11 +1291,24 @@ getObjectHeaderV1 = do
   let readMessage = do
         messageType <- getWord16le
         headerMessageDataSize <- getWord16le
-        _flags <- getWord8
+        flags <- getWord8
         skipLabeled "reserved" 3
-        -- The size contains padding, so we compensate by getting the remaining lazy byte string
-        isolate (fromIntegral headerMessageDataSize) (label "message inside object header" (getMessage messageType) <* getRemainingLazyByteString)
-      -- decodeMessages 0 = pure []
+        if flags .&. 0b10 > 0
+          then do
+            sharedVersion <- getWord8
+            sharedMessageType' <- getWord8
+            case sharedVersion of
+              2 -> do
+                sharedMessageType'' <- case sharedMessageType' of
+                  0 -> fail ("flags " <> show flags <> " indicate a shared message, but the type is 0, which is not shared at all")
+                  1 -> SharedMessageTypeShared <$> getWord64le
+                  2 -> SharedMessageTypeCommitted <$> getAddress
+                  3 -> pure SharedMessageShareable
+                  smv -> fail ("invalid shared message type " <> show smv)
+                skipLabeled "zeroes after body" (headerMessageDataSize - 10)
+                pure (SharedMessage (SharedMessageData messageType sharedMessageType''))
+              v -> fail ("invalid version of shared message: " <> show v)
+          else isolate (fromIntegral (debugLog "data size" headerMessageDataSize)) (label "message inside object header" (getMessage (debugLog "message type" messageType)) <* getRemainingLazyByteString)
       decodeMessages 0 = getRemainingLazyByteString >> pure []
       decodeMessages maxMessages = do
         bytesRead' <- bytesRead

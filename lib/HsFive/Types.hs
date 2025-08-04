@@ -10,6 +10,7 @@ import qualified Data.ByteString as BS
 import qualified Data.ByteString.Lazy as BSL
 import Data.Foldable (find, msum)
 import Data.IORef (IORef, modifyIORef, newIORef, readIORef)
+import Data.List (singleton)
 import qualified Data.List.NonEmpty as NE
 import Data.List.Split (chunksOf)
 import qualified Data.Map.Strict as Map
@@ -17,6 +18,7 @@ import Data.Maybe (mapMaybe)
 import qualified Data.Set as Set
 import Data.Text (Text, intercalate, null, pack, unpack)
 import Data.Text.Encoding (decodeUtf8Lenient)
+import Data.Word (Word64)
 import HsFive.Bitshuffle (DecompressResult (DecompressError, DecompressSuccess, decompressBytes), bshufDecompressLz4)
 import HsFive.CoreTypes
   ( Address,
@@ -36,10 +38,15 @@ import HsFive.CoreTypes
     GroupSymbolTableNode (GroupSymbolTableNode, gstnVersion),
     HeapWithData (HeapWithData),
     Length,
-    Message (AttributeMessage, DataStorageFilterPipelineMessage, DataStorageLayoutMessage, DataspaceMessage, DatatypeMessage, ObjectHeaderContinuationMessage, SymbolTableMessage),
+    LinkMessageData (LinkMessageData, linkInfoLinkType),
+    LinkType (HardLink),
+    Message (AttributeMessage, DataStorageFilterPipelineMessage, DataStorageLayoutMessage, DataspaceMessage, DatatypeMessage, LinkMessage, ObjectHeaderContinuationMessage, SharedMessage, SymbolTableMessage),
+    ObjectHeader (ObjectHeader),
     ReferenceType,
+    SharedMessageData (SharedMessageData),
+    SharedMessageType (SharedMessageTypeCommitted),
     Superblock,
-    SymbolTableEntry,
+    SymbolTableEntry (h5steLinkNameOffset),
     SymbolTableMessageData (SymbolTableMessageData, symbolTableMessageLocalHeapAddress, symbolTableMessageV1BTreeAddress),
     bltnChildPointers,
     bltnKeyOffsets,
@@ -55,7 +62,6 @@ import HsFive.CoreTypes
     getSuperblock,
     gstnEntries,
     h5sbSymbolTableEntry,
-    h5steLinkNameOffset,
     h5steObjectHeaderAddress,
     heapDataSegmentAddress,
     heapDataSegmentSize,
@@ -151,6 +157,46 @@ resolveContinuationMessages :: Handle -> [Message] -> IO [Message]
 resolveContinuationMessages handle messages = do
   putStrLn "resolving continuation"
   foldMap (resolveContinuationMessage handle) messages
+
+resolveSharedMessages :: Handle -> [Message] -> IO [Message]
+resolveSharedMessages handle messages = do
+  putStrLn "resolving shared messages"
+  foldMap (resolveSharedMessage handle) messages
+
+resolveHardLinks :: Handle -> IORef NodeReaderState -> Maybe Path -> Maybe (HeapWithData, Word64) -> [Message] -> IO [Node]
+resolveHardLinks handle readerStateRef previousPath maybeHeap messages = do
+  putStrLn "resolving hard links"
+  foldMap (resolveHardLink handle readerStateRef previousPath maybeHeap) messages
+
+resolveHardLink :: Handle -> IORef NodeReaderState -> Maybe Path -> Maybe (HeapWithData, Word64) -> Message -> IO [Node]
+resolveHardLink handle readerStateRef previousPath maybeHeap (LinkMessage (LinkMessageData {linkInfoLinkType = HardLink linkAddress})) =
+  singleton <$> readNode handle readerStateRef previousPath maybeHeap linkAddress
+-- putStrLn $ "seeking to hard link " <> show linkAddress
+-- hSeek handle AbsoluteSeek (fromIntegral linkAddress)
+-- objectHeaderData <- BSL.hGet handle 4096
+-- case runGetOrFail getObjectHeaderV1 objectHeaderData of
+--   Left (_, bytesConsumed, e') ->
+--     error
+--       ( "invalid object header at symbol table entry (consumed "
+--           <> show bytesConsumed
+--           <> " bytes): "
+--           <> show e'
+--       )
+--   Right (_, _, header) -> do
+resolveHardLink _handle _readerStateref _previousPath _maybeHeap _message = pure []
+
+resolveSharedMessage :: Handle -> Message -> IO [Message]
+resolveSharedMessage handle (SharedMessage (SharedMessageData _originalType (SharedMessageTypeCommitted otherHeaderAddress))) = do
+  putStrLn $ "continuation seeking to " <> show otherHeaderAddress
+  hSeek handle AbsoluteSeek (fromIntegral otherHeaderAddress)
+  data' <- BSL.hGet handle 4096
+  case runGetOrFail getObjectHeaderV1 data' of
+    Left (_, _, e') -> error ("parsing shared message target (object header) failed: " <> show e')
+    Right (_, _, ObjectHeader {ohHeaderMessages = [message]}) -> do
+      putStrLn $ "continuation message: " <> show message
+      pure [message]
+    Right (_, _, otherHeader) -> error ("parsing shared message target (object header) failed, expected exactly one message in the shared message object header, but got: " <> show otherHeader)
+resolveSharedMessage _handle m = pure [m]
 
 resolveContinuationMessage :: Handle -> Message -> IO [Message]
 resolveContinuationMessage handle (ObjectHeaderContinuationMessage continuationAddress length') = do
@@ -308,19 +354,19 @@ convertAttribute
     ) = do
     error $ "invalid attribute data for " <> show an <> ", not a known attribute type: " <> show realType <> ", bytes: " <> show (BSL.unpack content)
 
-readNode :: Handle -> IORef NodeReaderState -> Maybe Path -> Maybe HeapWithData -> SymbolTableEntry Address -> IO Node
+readNode :: Handle -> IORef NodeReaderState -> Maybe Path -> Maybe (HeapWithData, Word64) -> Address -> IO Node
 readNode handle readerStateRef previousPath maybeHeap e = do
   let updateVisiting a = do
-        putStrLn $ "adding " <> show (h5steObjectHeaderAddress e) <> " to visiting nodes"
+        putStrLn $ "adding " <> show e <> " to visiting nodes"
         modifyIORef
           readerStateRef
           ( \s -> s {nodeReaderStateVisiting = Set.insert a (nodeReaderStateVisiting s)}
           )
 
   readerState <- readIORef readerStateRef
-  updateVisiting (h5steObjectHeaderAddress e)
-  putStrLn $ "node seeking to " <> show (h5steObjectHeaderAddress e)
-  hSeek handle AbsoluteSeek (fromIntegral (h5steObjectHeaderAddress e))
+  updateVisiting e
+  putStrLn $ "node seeking to " <> show e
+  hSeek handle AbsoluteSeek (fromIntegral e)
   objectHeaderData <- BSL.hGet handle 4096
   case runGetOrFail getObjectHeaderV1 objectHeaderData of
     Left (_, bytesConsumed, e') ->
@@ -335,7 +381,7 @@ readNode handle readerStateRef previousPath maybeHeap e = do
           newPath =
             case maybeHeap of
               Nothing -> rootPath
-              Just (HeapWithData _heapHeader heapData'') ->
+              Just (HeapWithData _heapHeader heapData'', linkNameOffset) ->
                 case previousPath of
                   Nothing -> rootPath
                   Just previousPath' ->
@@ -344,10 +390,10 @@ readNode handle readerStateRef previousPath maybeHeap e = do
                       ( decodeUtf8Lenient $
                           BSL.toStrict $
                             BSL.takeWhile (/= 0) $
-                              BSL.drop (fromIntegral (h5steLinkNameOffset e)) heapData''
+                              BSL.drop (fromIntegral linkNameOffset) heapData''
                       )
-      -- putStrLn $ "object header for " <> show newPath <> ": " <> show header
-      allMessages <- resolveContinuationMessages handle (ohHeaderMessages header)
+      allMessagesAfterContinuations <- resolveContinuationMessages handle (ohHeaderMessages header)
+      allMessages <- resolveSharedMessages handle allMessagesAfterContinuations
       let filterAttribute (AttributeMessage attributeData) = Just attributeData
           filterAttribute _ = Nothing
           filterSymbolTable (SymbolTableMessage d) = Just d
@@ -365,7 +411,18 @@ readNode handle readerStateRef previousPath maybeHeap e = do
               searchMessage :: (Message -> Maybe a) -> Maybe a
               searchMessage finder = headMay (mapMaybe finder allMessages)
           case searchMessage filterDatatype of
-            Nothing -> fail ("dataset without datatype; all messages: " <> show allMessages)
+            Nothing -> do
+              hardLinkNodes <- resolveHardLinks handle readerStateRef (Just newPath) maybeHeap allMessages
+              case hardLinkNodes of
+                [] -> fail ("dataset without datatype and without any hardlinks; all messages: " <> show allMessages)
+                hardlinksNonEmpty -> do
+                  pure $
+                    GroupNode $
+                      GroupData
+                        { groupPath = newPath,
+                          groupAttributes = [],
+                          groupChildren = hardlinksNonEmpty
+                        }
             Just (DatatypeMessageData {datatypeClass}) ->
               case searchMessage filterDataspace of
                 Nothing -> pure (DatatypeNode datatypeClass)
@@ -436,7 +493,14 @@ readNode handle readerStateRef previousPath maybeHeap e = do
 
                   childNodes <-
                     mapM
-                      (readNode handle readerStateRef (Just newPath) (Just (HeapWithData heapHeader' heapData')))
+                      ( \entry ->
+                          readNode
+                            handle
+                            readerStateRef
+                            (Just newPath)
+                            (Just (HeapWithData heapHeader' heapData', h5steLinkNameOffset entry))
+                            (h5steObjectHeaderAddress entry)
+                      )
                       (concatMap gstnEntries childrenOnHeap)
 
                   attributes <- mapM (convertAttribute handle) (mapMaybe filterAttribute allMessages)
@@ -463,7 +527,7 @@ readH5 fileNameEncoded = do
       Nothing -> error "couldn't read superblock"
       Just superblock' -> do
         readerState <- newIORef (NodeReaderState mempty mempty)
-        node <- readNode handle readerState Nothing Nothing (h5sbSymbolTableEntry superblock')
+        node <- readNode handle readerState Nothing Nothing (h5steObjectHeaderAddress (h5sbSymbolTableEntry superblock'))
         case node of
           GroupNode groupData -> pure groupData
           _ -> error "illegal h5: superblock didn't refer to a group but a dataset"
