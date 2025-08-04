@@ -5,7 +5,7 @@ module HsFive.Types where
 
 import Control.Monad (MonadPlus, replicateM)
 import Data.Binary (getWord8)
-import Data.Binary.Get (bytesRead, getInt32le, getInt64le, getWord16le, isEmpty, isolate, runGet, runGetOrFail, skip)
+import Data.Binary.Get (bytesRead, getInt32le, getInt64le, getWord16le, isEmpty, isolate, label, runGet, runGetOrFail, skip)
 import qualified Data.ByteString as BS
 import qualified Data.ByteString.Lazy as BSL
 import Data.Foldable (find, msum)
@@ -22,7 +22,7 @@ import Data.Word (Word64)
 import HsFive.Bitshuffle (DecompressResult (DecompressError, DecompressSuccess, decompressBytes), bshufDecompressLz4)
 import HsFive.CoreTypes
   ( Address,
-    AttributeContent (AttributeContentFixedString, AttributeContentFloating, AttributeContentIntegral, AttributeContentReference, AttributeContentTodo, AttributeContentVariableString),
+    AttributeContent (AttributeContentEnumeration, AttributeContentFixedString, AttributeContentFloating, AttributeContentIntegral, AttributeContentReference, AttributeContentTodo, AttributeContentVariableString),
     BLinkTreeNode (BLinkTreeNodeChunkedRawData, BLinkTreeNodeGroup, bltnChunks),
     ByteOrder (LittleEndian),
     ChunkInfo (ciChunkPointer, ciSize),
@@ -33,6 +33,7 @@ import HsFive.CoreTypes
     DataspaceMessageData (DataspaceMessageData, dataspaceDimensions, dataspacePermutationIndices),
     Datatype (DatatypeFixedPoint, fixedPointByteOrder, fixedPointDataElementSize),
     DatatypeMessageData (DatatypeMessageData, datatypeClass),
+    EnumerationMap,
     GlobalHeap (globalHeapObjects),
     GlobalHeapObject (GlobalHeapObject, globalHeapObjectData, globalHeapObjectIndex),
     GroupSymbolTableNode (GroupSymbolTableNode, gstnVersion),
@@ -50,6 +51,7 @@ import HsFive.CoreTypes
     SymbolTableMessageData (SymbolTableMessageData, symbolTableMessageLocalHeapAddress, symbolTableMessageV1BTreeAddress),
     bltnChildPointers,
     bltnKeyOffsets,
+    convertDatatypeIntoIntReader,
     dataStoragePipelineFilterClientDataValues,
     dataStoragePipelineFilterId,
     debugLog,
@@ -96,6 +98,7 @@ data AttributeData
   | AttributeDataIntegral !Integer
   | AttributeDataFloating !Double
   | AttributeDataReference !ReferenceType !BSL.ByteString
+  | AttributeDataEnumeration !EnumerationMap !Int
   deriving (Show)
 
 data Attribute = Attribute
@@ -209,7 +212,7 @@ resolveContinuationMessage handle (ObjectHeaderContinuationMessage continuationA
         headerMessageDataSize <- getWord16le
         _flags <- getWord8
         skip 3
-        isolate (fromIntegral (debugLog "header data size" headerMessageDataSize)) (getMessage (debugLog "message type" messageType))
+        label ("message type " <> show messageType) (isolate (fromIntegral headerMessageDataSize) (getMessage messageType))
       decodeMessages = do
         bytesRead' <- bytesRead
         let remainder = bytesRead' `mod` 8
@@ -261,6 +264,23 @@ convertAttribute
           attributeDimensions = debugLog "dataspace dimensions" dataspaceDimensions,
           attributePermutationIndices = dataspacePermutationIndices,
           attributeData = AttributeDataString (decodeUtf8Lenient $ BS.takeWhile (/= 0) (debugLog "content" content))
+        }
+convertAttribute
+  handle
+  ( CoreTypes.AttributeData
+      { CoreTypes.attributeName = an,
+        CoreTypes.attributeDatatypeMessageData = DatatypeMessageData {datatypeClass = typeData},
+        CoreTypes.attributeDataspaceMessageData = DataspaceMessageData {dataspaceDimensions, dataspacePermutationIndices},
+        CoreTypes.attributeContent = AttributeContentEnumeration enumerationMap enumerationValue
+      }
+    ) =
+    pure
+      Attribute
+        { attributeName = decodeUtf8Lenient $ BS.takeWhile (/= 0) an,
+          attributeType = debugLog "type" typeData,
+          attributeDimensions = debugLog "dataspace dimensions" dataspaceDimensions,
+          attributePermutationIndices = dataspacePermutationIndices,
+          attributeData = AttributeDataEnumeration enumerationMap enumerationValue
         }
 convertAttribute
   handle

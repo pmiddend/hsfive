@@ -22,7 +22,7 @@ import HsFive.CoreTypes
   )
 import HsFive.Types
   ( Attribute (Attribute, attributeData, attributeType),
-    AttributeData (AttributeDataFloating, AttributeDataIntegral, AttributeDataReference, AttributeDataString),
+    AttributeData (AttributeDataEnumeration, AttributeDataFloating, AttributeDataIntegral, AttributeDataReference, AttributeDataString),
     DatasetData (DatasetData, datasetAttributes, datasetDatatype, datasetDimensions, datasetPath, datasetStorageLayout),
     GroupData (GroupData, groupAttributes, groupChildren, groupPath),
     Node (DatasetNode, DatatypeNode, GroupNode),
@@ -91,7 +91,7 @@ datatypeToDoc (DatatypeFixedPoint {fixedPointByteOrder = LittleEndian, fixedPoin
 datatypeToDoc (DatatypeFixedPoint {fixedPointByteOrder = BigEndian, fixedPointBitPrecision = 32, fixedPointSigned = True}) _layout = "DATATYPE  H5T_STD_I32BE"
 datatypeToDoc (DatatypeFixedPoint {fixedPointByteOrder = LittleEndian, fixedPointBitPrecision = 64, fixedPointSigned = True}) _layout = "DATATYPE  H5T_STD_I64LE"
 datatypeToDoc (DatatypeFixedPoint {fixedPointByteOrder = LittleEndian, fixedPointBitPrecision = 16, fixedPointSigned = False}) _layout = "DATATYPE  H5T_STD_U16LE"
-datatypeToDoc (DatatypeEnumeration enumValues) _layout =
+datatypeToDoc (DatatypeEnumeration _baseType enumValues) _layout =
   prefixAndBodyToDoc
     "DATATYPE  H5T_ENUM {"
     ( [ "H5T_STD_I8LE;"
@@ -137,6 +137,8 @@ charsetToDoc CharacterSetUtf8 = "H5T_CSET_UTF8"
 attributeDatatypeToDoc :: Datatype -> [DataspaceDimension] -> Maybe Text -> Doc ()
 attributeDatatypeToDoc (DatatypeFixedPoint {}) _ _ = "DATATYPE  H5T_STD_U16BE"
 attributeDatatypeToDoc (DatatypeFloatingPoint {floatingPointByteOrder = BigEndian, floatingPointBitPrecision = 32}) _ _ = "DATATYPE  H5T_STD_F32BE"
+attributeDatatypeToDoc (DatatypeFloatingPoint {floatingPointByteOrder = LittleEndian, floatingPointBitPrecision = 64}) _ _ = "DATATYPE  H5T_STD_F64LE"
+attributeDatatypeToDoc (DatatypeEnumeration baseType enumValues) _ _ = "DATATYPE  ENUM"
 attributeDatatypeToDoc (DatatypeVariableLengthString padding charset _word) _ _ =
   prefixAndBodyToDoc
     "DATATYPE  H5T_STRING"
@@ -186,6 +188,13 @@ attributeToDoc (Attribute {attributeName, attributeType, attributeDimensions, at
     [ attributeDatatypeToDoc attributeType attributeDimensions Nothing,
       dataspaceToDoc attributeDimensions,
       prefixAndBodyToDoc "DATA" ["(0): " <> pretty floatingValue]
+    ]
+attributeToDoc (Attribute {attributeName, attributeType, attributeDimensions, attributeData = AttributeDataEnumeration enumMap enumValue}) =
+  prefixAndBodyToDoc
+    (namedPrefix "ATTRIBUTE" (pretty attributeName))
+    [ attributeDatatypeToDoc attributeType attributeDimensions Nothing,
+      dataspaceToDoc attributeDimensions,
+      prefixAndBodyToDoc "DATA" ["(0): " <> pretty enumValue]
     ]
 attributeToDoc (Attribute {attributeData = AttributeDataReference ObjectReference _}) = "DATATYPE  H5T_REFERENCE { H5T_STD_REF_OBJECT }"
 attributeToDoc (Attribute {attributeName, attributeType, attributeDimensions, attributeData}) = error ("invalid attribute type: " <> show attributeData)

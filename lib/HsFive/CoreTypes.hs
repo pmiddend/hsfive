@@ -72,6 +72,8 @@ data MantissaNormalization
   | MostSignificantMantissaImplied
   deriving (Show, Eq)
 
+type EnumerationMap = [(BSL.ByteString, Int)]
+
 data Datatype
   = DatatypeFixedPoint
       { fixedPointDataElementSize :: !Word32,
@@ -104,7 +106,7 @@ data Datatype
   | DatatypeCompoundV2 ![CompoundDatatypeMemberV2]
   | DatatypeArray {arraySizes :: ![Word32], arrayBaseType :: !Datatype}
   | DatatypeReference !ReferenceType
-  | DatatypeEnumeration [(BSL.ByteString, Int)]
+  | DatatypeEnumeration !Datatype !EnumerationMap
   deriving (Show)
 
 data AttributeContent
@@ -113,6 +115,7 @@ data AttributeContent
   | AttributeContentIntegral !Integer
   | AttributeContentFloating !Double
   | AttributeContentReference ReferenceType !BSL.ByteString
+  | AttributeContentEnumeration !EnumerationMap !Int
   | AttributeContentTodo !Datatype !BSL.ByteString
   deriving (Show)
 
@@ -683,7 +686,7 @@ getDatatypeMessageData = do
             pure bs
       names <- replicateM' numberOfMembers (label "enumeration label string, padded" getAndPadEnumLabel)
       values <- replicateM' numberOfMembers (convertDatatypeIntoIntReader (datatypeClass baseType))
-      pure (DatatypeMessageData version $ DatatypeEnumeration $ zip names values)
+      pure (DatatypeMessageData version $ DatatypeEnumeration (datatypeClass baseType) $ zip names values)
     ClassFixedPoint -> do
       let byteOrder = if bits0to7 .&. 1 == 0 then LittleEndian else BigEndian
           loPadBit = bits0to7 .&. 0b0000010 > 0
@@ -1186,6 +1189,8 @@ getMessage 0x000c = do
       -- not sure why this is needed
       void getRemainingLazyByteString
       pure result
+    DatatypeEnumeration baseType enumMap ->
+      AttributeContentEnumeration enumMap <$> convertDatatypeIntoIntReader baseType <* getRemainingLazyByteString
     DatatypeVariableLengthString PaddingNullTerminate charset _size -> do
       size' <- getWord32le
       globalHeapAddress <- getWord64le
