@@ -10,7 +10,7 @@ module HsFive.CoreTypes where
 import Control.Monad (replicateM, replicateM_, void, when)
 import Data.Binary (Get, getWord8)
 import Data.Binary.Get (bytesRead, getByteString, getLazyByteStringNul, getRemainingLazyByteString, getWord16be, getWord16le, getWord32be, getWord32le, getWord64le, isEmpty, isolate, label, skip)
-import Data.Binary.IEEE754 (getFloat32be)
+import Data.Binary.IEEE754 (getFloat32be, getFloat64le)
 import Data.Bits (Bits (shiftL, (.|.)), shiftR, (.&.))
 import qualified Data.ByteString as BS
 import qualified Data.ByteString.Lazy as BSL
@@ -1178,6 +1178,11 @@ getMessage 0x000c = do
       pure result
     DatatypeFloatingPoint {floatingPointBitPrecision = 32, floatingPointByteOrder = BigEndian} -> do
       result <- AttributeContentFloating . realToFrac <$> getFloat32be
+      -- not sure why this is needed
+      void getRemainingLazyByteString
+      pure result
+    DatatypeFloatingPoint {floatingPointBitPrecision = 64, floatingPointByteOrder = LittleEndian} -> do
+      result <- AttributeContentFloating . realToFrac <$> getFloat64le
       -- not sure why this is needed
       void getRemainingLazyByteString
       pure result
