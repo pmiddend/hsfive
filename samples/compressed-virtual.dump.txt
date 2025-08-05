@@ -1,0 +1,18 @@
+GROUP "/" {
+  DATASET "data" {
+    DATATYPE  H5T_IEEE_F64LE
+    DATASPACE  SIMPLE { ( 100 ) / ( 100 ) }
+  }
+  DATASET "data_compressed" {
+    DATATYPE  H5T_IEEE_F64LE
+    DATASPACE  SIMPLE { ( 100 ) / ( 100 ) }
+  }
+  DATASET "data_compressed_via_vds" {
+    DATATYPE  H5T_IEEE_F64LE
+    DATASPACE  SIMPLE { ( 50 ) / ( 50 ) }
+  }
+  DATASET "data_via_vds" {
+    DATATYPE  H5T_IEEE_F64LE
+    DATASPACE  SIMPLE { ( 50 ) / ( 50 ) }
+  }
+}
