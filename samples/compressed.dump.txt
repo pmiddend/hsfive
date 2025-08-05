@@ -1,0 +1,18 @@
+GROUP "/" {
+  DATASET "bitshuffled" {
+    DATATYPE  H5T_IEEE_F64LE
+    DATASPACE  SIMPLE { ( 1000, 1000 ) / ( 1000, 1000 ) }
+  }
+  DATASET "gzip" {
+    DATATYPE  H5T_IEEE_F64LE
+    DATASPACE  SIMPLE { ( 1000, 1000 ) / ( 1000, 1000 ) }
+  }
+  DATASET "gzip_shuffle" {
+    DATATYPE  H5T_IEEE_F64LE
+    DATASPACE  SIMPLE { ( 1000, 1000 ) / ( 1000, 1000 ) }
+  }
+  DATASET "scaleoffset" {
+    DATATYPE  H5T_IEEE_F64LE
+    DATASPACE  SIMPLE { ( 1000, 1000 ) / ( 1000, 1000 ) }
+  }
+}

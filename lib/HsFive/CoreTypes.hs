@@ -106,6 +106,7 @@ data Datatype
   | DatatypeCompoundV2 ![CompoundDatatypeMemberV2]
   | DatatypeArray {arraySizes :: ![Word32], arrayBaseType :: !Datatype}
   | DatatypeReference !ReferenceType
+  | DatatypeOpaqaue !BS.ByteString
   | DatatypeEnumeration !Datatype !EnumerationMap
   deriving (Show)
 
@@ -217,8 +218,15 @@ data GlobalHeap = GlobalHeap
   }
   deriving (Show)
 
+data DataspaceType
+  = DataspaceScalar
+  | DataspaceSimple
+  | DataspaceNull
+  deriving (Show)
+
 data DataspaceMessageData = DataspaceMessageData
   { dataspaceDimensions :: ![DataspaceDimension],
+    dataspaceType :: !(Maybe DataspaceType),
     dataspacePermutationIndices :: ![Length]
   }
   deriving (Show)
@@ -578,6 +586,15 @@ getDataStorageLayoutClass = do
     3 -> pure LayoutClassVirtual
     n -> fail ("invalid data storage layout class value " <> show n)
 
+getDataspaceType :: Get DataspaceType
+getDataspaceType = do
+  v <- getWord8
+  case v of
+    0 -> pure DataspaceScalar
+    1 -> pure DataspaceSimple
+    2 -> pure DataspaceNull
+    _ -> fail ("dataspace type wasn't 0, 1 or 2 but " <> show v)
+
 getDataspaceMessageData :: Get DataspaceMessageData
 getDataspaceMessageData = do
   -- This value is used to determine the format of the Dataspace
@@ -587,7 +604,7 @@ getDataspaceMessageData = do
   -- This document describes version one (1) (there was no version
   -- zero (0)).
   version <- getWord8
-  when (version /= 1) (fail ("dataspace version is not 1 but " <> show version))
+  when (version /= 1 && version /= 2) (fail ("dataspace version is not 1 or 2 but " <> show version))
   -- This value is the number of dimensions that the data object has.
   dimensionality <- getWord8
   -- This field is used to store flags to indicate the presence of
@@ -595,13 +612,21 @@ getDataspaceMessageData = do
   -- to indicate that maximum dimensions are present. Bit 1 is used to
   -- indicate that permutation indices are present.
   flags <- getWord8
+  type' <- if version == 1 then pure Nothing else Just <$> getDataspaceType
   let maxDimsStored :: Bool
       maxDimsStored = flags .&. 1 > 0
       permutationIndicesStored = flags .&. 2 > 0
   -- Reserved
-  skip 5
+  when (version == 1) (skipLabeled "reserved in version 1" 5)
   if dimensionality == 0
-    then pure (DataspaceMessageData [] [])
+    then
+      pure
+        ( DataspaceMessageData
+            { dataspaceDimensions = [],
+              dataspaceType = type',
+              dataspacePermutationIndices = []
+            }
+        )
     else do
       dimensions <- replicateM (fromIntegral dimensionality) getLength
       maxSizes <-
@@ -613,7 +638,13 @@ getDataspaceMessageData = do
           then replicateM (fromIntegral dimensionality) getLength
           else pure []
       -- TODO: This message has _lots_ more information to it
-      pure (DataspaceMessageData (zipWith DataspaceDimension dimensions maxSizes) permutationIndices)
+      pure
+        ( DataspaceMessageData
+            { dataspaceDimensions = zipWith DataspaceDimension dimensions maxSizes,
+              dataspaceType = type',
+              dataspacePermutationIndices = permutationIndices
+            }
+        )
 
 data CompoundDatatypeMemberV1 = CompoundDatatypeMemberV1
   { cdm1Name :: !BS.ByteString,
@@ -661,6 +692,7 @@ convertDatatypeIntoIntReader :: Datatype -> Get Int
 convertDatatypeIntoIntReader (DatatypeFixedPoint {fixedPointDataElementSize = 1}) = label "datatype as int, 1 byte" (fromIntegral <$> getWord8)
 convertDatatypeIntoIntReader (DatatypeFixedPoint {fixedPointDataElementSize = 2, fixedPointByteOrder = BigEndian}) = label "datatype as int, 2 byte BE" (fromIntegral <$> getWord16be)
 convertDatatypeIntoIntReader (DatatypeFixedPoint {fixedPointDataElementSize = 4, fixedPointByteOrder = BigEndian}) = label "datatype as int, 4 byte BE" (fromIntegral <$> getWord32be)
+convertDatatypeIntoIntReader (DatatypeFixedPoint {fixedPointDataElementSize = 4, fixedPointByteOrder = LittleEndian}) = label "datatype as int, 4 byte LE" (fromIntegral <$> getWord32le)
 convertDatatypeIntoIntReader dt = fail $ "expected an integral datatype, but got the following: " <> show dt
 
 getDatatypeMessageData :: Get DatatypeMessageData
@@ -775,9 +807,9 @@ getDatatypeMessageData = do
           members <- replicateM (fromIntegral (debugLog ("compound datatype member count: " <> show bits0to7 <> ", " <> show bits8to15) numberOfMembers)) getCompoundDatatypeMemberV2
           pure (DatatypeMessageData version (DatatypeCompoundV2 (debugLog "members" members)))
         _ -> fail ("class Compound, version " <> show version <> " properties not supported yet")
-    ClassArray -> do
-      case version of
-        1 -> do
+    ClassArray ->
+      if version == 1 || version == 2
+        then do
           dimensionality <- getWord8
           skipLabeled "reserved" 3
           sizes <- replicateM (fromIntegral dimensionality) getWord32le
@@ -789,7 +821,7 @@ getDatatypeMessageData = do
                 version
                 (DatatypeArray {arraySizes = sizes, arrayBaseType = datatypeClass baseType})
             )
-        _ -> fail ("class Array, version " <> show version <> " properties not supported yet")
+        else fail ("class Array, version " <> show version <> " properties not supported yet")
     ClassReference -> do
       referenceType <-
         case bits0to7 of
@@ -800,6 +832,13 @@ getDatatypeMessageData = do
         ( DatatypeMessageData
             version
             (DatatypeReference referenceType)
+        )
+    ClassOpaque -> do
+      tag <- getByteString' bits0to7
+      pure
+        ( DatatypeMessageData
+            version
+            (DatatypeOpaqaue tag)
         )
     _ -> fail ("class " <> show class' <> ", version " <> show version <> " properties not supported yet")
 
