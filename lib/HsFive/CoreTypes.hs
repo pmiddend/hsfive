@@ -7,6 +7,7 @@
 
 module HsFive.CoreTypes where
 
+import Control.Applicative ((<|>))
 import Control.Monad (replicateM, replicateM_, void, when)
 import Data.Binary (Get, getWord8)
 import Data.Binary.Get (bytesRead, getByteString, getLazyByteStringNul, getRemainingLazyByteString, getWord16be, getWord16le, getWord32be, getWord32le, getWord64le, isEmpty, isolate, label, skip)
@@ -17,6 +18,9 @@ import qualified Data.ByteString.Lazy as BSL
 import Data.Maybe (fromJust)
 import Data.Text.Encoding (decodeLatin1)
 import Data.Text.Read (decimal)
+import Data.Time (secondsToNominalDiffTime)
+import Data.Time.Clock (UTCTime)
+import Data.Time.Clock.POSIX (posixSecondsToUTCTime)
 import Data.Word (Word16, Word32, Word64, Word8)
 import Debug.Trace (trace)
 import HsFive.Util
@@ -263,6 +267,14 @@ data LinkInfoMessageData = LinkInfoMessageData
   }
   deriving (Show)
 
+data AttributeInfoMessageData = AttributeInfoMessageData
+  { attributeInfoMaximumCreationIndex :: !(Maybe Word16),
+    attributeInfoFractalHeapAddress :: !Address,
+    attributeInfoAttributeNamev2BtreeAddress :: !Address,
+    attributeInfoCreationOrderv2BtreeAddress :: !(Maybe Address)
+  }
+  deriving (Show)
+
 data LinkMessageData = LinkMessageData
   { linkInfoCreationOrder :: !(Maybe Word64),
     linkInfoLinkNameCharacterSet :: !(Maybe Word8),
@@ -322,15 +334,23 @@ data Message
         objectModificationTimeOldSecond :: !Int
       }
   | AttributeMessage !AttributeData
+  | AttributeInfoMessage !AttributeInfoMessageData
   | GroupInfoMessage !GroupInfoMessageData
+  deriving (Show)
+
+data ObjectHeaderTimes = ObjectHeaderTimes
+  { ohAccessTime :: !UTCTime,
+    ohModificationTime :: !UTCTime,
+    ohChangeTime :: !UTCTime,
+    ohBirthTime :: !UTCTime
+  }
   deriving (Show)
 
 data ObjectHeader = ObjectHeader
   { ohVersion :: !Word8,
     ohObjectReferenceCount :: !Word32,
-    ohObjectHeaderSize :: !Word32,
+    ohTimes :: !(Maybe ObjectHeaderTimes),
     ohHeaderMessages :: ![Message]
-    -- ohHeaderMessages :: ![(Word16, BS.ByteString)]
   }
   deriving (Show)
 
@@ -932,6 +952,11 @@ getMessage 0x0003 = do
   m <- DatatypeMessage <$> getDatatypeMessageData
   void getRemainingLazyByteString
   pure m
+-- IV.A.2.e. The Data Storage - Fill Value (Old) Message
+getMessage 0x0004 = do
+  size <- label "data storage fill value old, size" getWord32le
+  _fillValue <- label "data storage fill value old, fill value" (getByteString' size)
+  pure DataStorageFillValueOldMessage
 getMessage 0x0005 = do
   version <- getWord8
   case version of
@@ -1264,11 +1289,30 @@ getMessage 0x000c = do
               attributeContent'
           )
     )
--- IV.A.2.e. The Data Storage - Fill Value (Old) Message
-getMessage 0x0004 = do
-  size <- label "data storage fill value old, size" getWord32le
-  _fillValue <- label "data storage fill value old, fill value" (getByteString' size)
-  pure DataStorageFillValueOldMessage
+-- IV.A.2.v. The Attribute Info Message
+getMessage 0x0015 = do
+  version <- getWord8
+  when (version /= 0) (fail ("invalid attribute info message version " <> show version))
+  flags <- getWord8
+  maximumCreationIndex <-
+    if flags .&. 0b1 > 0
+      then Just <$> getWord16le
+      else pure Nothing
+  fractalHeapAddress <- getAddress
+  attributeNamev2BtreeAddress <- getAddress
+  attributeCreationOrderv2BtreeAddress <-
+    if flags .&. 0b10 > 0
+      then Just <$> getAddress
+      else pure Nothing
+  pure
+    ( AttributeInfoMessage $
+        AttributeInfoMessageData
+          { attributeInfoMaximumCreationIndex = maximumCreationIndex,
+            attributeInfoFractalHeapAddress = fractalHeapAddress,
+            attributeInfoAttributeNamev2BtreeAddress = attributeNamev2BtreeAddress,
+            attributeInfoCreationOrderv2BtreeAddress = attributeCreationOrderv2BtreeAddress
+          }
+    )
 getMessage n = fail ("invalid message type " <> show n)
 
 getGlobalHeapObject :: Get GlobalHeapObject
@@ -1320,6 +1364,94 @@ getGlobalHeap = do
 
   objects <- getNextGlobalHeapObject
   pure (GlobalHeap version objects)
+
+getUnixSecondsSinceEpoch :: Get UTCTime
+getUnixSecondsSinceEpoch = posixSecondsToUTCTime . secondsToNominalDiffTime . fromIntegral <$> getWord32le
+
+getObjectHeaderTimes :: Get ObjectHeaderTimes
+getObjectHeaderTimes =
+  ObjectHeaderTimes
+    <$> getUnixSecondsSinceEpoch
+    <*> getUnixSecondsSinceEpoch
+    <*> getUnixSecondsSinceEpoch
+    <*> getUnixSecondsSinceEpoch
+
+getObjectHeaderV2 :: Get ObjectHeader
+getObjectHeaderV2 = do
+  signature' <- getByteString 4
+  -- "OHDR" in ASCII
+  when (signature' /= BS.pack [79, 72, 68, 82]) (fail ("invalid object header v2 signature: " <> show signature'))
+  version <- getWord8
+  when (version /= 2) (fail ("object header version was not 2 but " <> show version))
+  objectHeaderFlags <- getWord8
+  times <-
+    if objectHeaderFlags .&. 0b100000 > 0
+      then Just <$> label "object header v2 times" getObjectHeaderTimes
+      else pure Nothing
+  _maxCompact <- if objectHeaderFlags .&. 0b10000 > 0 then Just <$> getWord16le else pure Nothing
+  _maxDense <- if objectHeaderFlags .&. 0b10000 > 0 then Just <$> getWord16le else pure Nothing
+  let getSizeOfChunk0 =
+        case objectHeaderFlags .&. 0b11 of
+          0 -> fromIntegral <$> getWord8
+          1 -> fromIntegral <$> getWord16le
+          2 -> fromIntegral <$> getWord32le
+          3 -> getWord64le
+          n -> fail ("size of chunk #0 is not 0-3 but " <> show n)
+  sizeOfChunk0 <- getSizeOfChunk0
+  let readMessage = do
+        messageType <- getWord8
+        headerMessageDataSize <- getWord16le
+        flags <- getWord8
+        when (objectHeaderFlags .&. 0b100 > 0) (void getWord16le)
+        if (debugLog ("v2 message type " <> show messageType <> ", flags " <> show flags) (flags .&. 0b10)) > 0
+          then do
+            sharedVersion <- getWord8
+            sharedMessageType' <- getWord8
+            case sharedVersion of
+              2 -> do
+                sharedMessageType'' <- case sharedMessageType' of
+                  0 -> fail ("flags " <> show flags <> " indicate a shared message, but the type is 0, which is not shared at all")
+                  1 -> SharedMessageTypeShared <$> getWord64le
+                  2 -> SharedMessageTypeCommitted <$> getAddress
+                  3 -> pure SharedMessageShareable
+                  smv -> fail ("invalid shared message type " <> show smv)
+                skipLabeled "zeroes after body" (headerMessageDataSize - 10)
+                pure
+                  ( SharedMessage
+                      ( SharedMessageData
+                          (fromIntegral messageType)
+                          sharedMessageType''
+                      )
+                  )
+              v -> fail ("invalid version of shared message: " <> show v <> ", message flags were " <> show flags)
+          else
+            isolate
+              (fromIntegral (debugLog ("v2 non-shared message type " <> show messageType <> ", flags " <> show flags) headerMessageDataSize))
+              ( label
+                  "message inside v2 object header"
+                  (getMessage (fromIntegral messageType))
+                  <* getRemainingLazyByteString
+              )
+      decodeMessages = do
+        bytesRead' <- bytesRead
+        if sizeOfChunk0 - fromIntegral bytesRead' <= 9
+          then pure []
+          else do
+            m <- readMessage
+            ms <- decodeMessages
+            pure (m : ms)
+  messages <-
+    isolate
+      (fromIntegral sizeOfChunk0)
+      decodeMessages
+  pure
+    ( ObjectHeader
+        { ohVersion = version,
+          ohObjectReferenceCount = 1,
+          ohTimes = times,
+          ohHeaderMessages = messages
+        }
+    )
 
 getObjectHeaderV1 :: Get ObjectHeader
 getObjectHeaderV1 = do
@@ -1378,7 +1510,17 @@ getObjectHeaderV1 = do
   -- rawContent <- getByteString (fromIntegral headerMessageDataSize)
   -- pure (messageType, getMessage rawContent)
   -- messages <- replicateM (fromIntegral messageCount) readMessage
-  pure (ObjectHeader version objectReferenceCount objectHeaderSize messages)
+  pure
+    ( ObjectHeader
+        { ohVersion = version,
+          ohObjectReferenceCount = objectReferenceCount,
+          ohHeaderMessages = messages,
+          ohTimes = Nothing
+        }
+    )
+
+getObjectHeader :: Get ObjectHeader
+getObjectHeader = getObjectHeaderV1 <|> getObjectHeaderV2
 
 getHeapHeader :: Get HeapHeader
 getHeapHeader = do

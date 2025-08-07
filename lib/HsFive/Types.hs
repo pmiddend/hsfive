@@ -51,7 +51,6 @@ import HsFive.CoreTypes
     SymbolTableMessageData (SymbolTableMessageData, symbolTableMessageLocalHeapAddress, symbolTableMessageV1BTreeAddress),
     bltnChildPointers,
     bltnKeyOffsets,
-    convertDatatypeIntoIntReader,
     dataStoragePipelineFilterClientDataValues,
     dataStoragePipelineFilterId,
     debugLog,
@@ -60,7 +59,7 @@ import HsFive.CoreTypes
     getGroupSymbolTableNode,
     getHeapHeader,
     getMessage,
-    getObjectHeaderV1,
+    getObjectHeader,
     getSuperblock,
     gstnEntries,
     h5sbSymbolTableEntry,
@@ -193,7 +192,7 @@ resolveSharedMessage handle (SharedMessage (SharedMessageData _originalType (Sha
   putStrLn $ "continuation seeking to " <> show otherHeaderAddress
   hSeek handle AbsoluteSeek (fromIntegral otherHeaderAddress)
   data' <- BSL.hGet handle 4096
-  case runGetOrFail getObjectHeaderV1 data' of
+  case runGetOrFail getObjectHeader data' of
     Left (_, _, e') -> error ("parsing shared message target (object header) failed: " <> show e')
     Right (_, _, ObjectHeader {ohHeaderMessages = [message]}) -> do
       putStrLn $ "continuation message: " <> show message
@@ -266,7 +265,7 @@ convertAttribute
           attributeData = AttributeDataString (decodeUtf8Lenient $ BS.takeWhile (/= 0) (debugLog "content" content))
         }
 convertAttribute
-  handle
+  _
   ( CoreTypes.AttributeData
       { CoreTypes.attributeName = an,
         CoreTypes.attributeDatatypeMessageData = DatatypeMessageData {datatypeClass = typeData},
@@ -388,7 +387,7 @@ readNode handle readerStateRef previousPath maybeHeap e = do
   putStrLn $ "node seeking to " <> show e
   hSeek handle AbsoluteSeek (fromIntegral e)
   objectHeaderData <- BSL.hGet handle 4096
-  case runGetOrFail getObjectHeaderV1 objectHeaderData of
+  case runGetOrFail getObjectHeader objectHeaderData of
     Left (_, bytesConsumed, e') ->
       error
         ( "invalid object header at symbol table entry (consumed "

@@ -13,6 +13,21 @@ The goal of this project is to implement at least a read-only version of an HDF5
 
 This is very much a piece of nothing right now, don't take the project too seriously. Once it's got Haddocks and is on hackage, take notice of this.
 
+We're trying to implement support for all sample HDF5 files on the [silx.org](http://www.silx.org/pub/h5web/) website. Currently we have:
+
+- `water_224.h5`
+- `epics.h5`
+- `dtype.h5`
+- `dtype_attrs.h5` (can be read, but it only contains attributes confusing our own H5Dump tool)
+- `destfile.h5`
+- `compressed-virtual.h5`
+- `compressed.h5`
+- `complex_aux.h5`
+- `committed_type.h5`
+- `braggy.h5`
+- `bamboo.h5`
+- `201805_WSe2_arpes.nxs`
+
 ### C bits
 
 LZ4/Bitshuffle is currently still C code, look at the `cbits` directory. At some point I'd like to change this, but compiling a few C files is a good tradeoff to separately compiling, shipping and linking the bitshuffle plugin DLL.
