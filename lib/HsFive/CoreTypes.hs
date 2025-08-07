@@ -10,7 +10,7 @@ module HsFive.CoreTypes where
 import Control.Applicative ((<|>))
 import Control.Monad (replicateM, replicateM_, void, when)
 import Data.Binary (Get, getWord8)
-import Data.Binary.Get (bytesRead, getByteString, getLazyByteStringNul, getRemainingLazyByteString, getWord16be, getWord16le, getWord32be, getWord32le, getWord64le, isEmpty, isolate, label, skip)
+import Data.Binary.Get (bytesRead, getByteString, getLazyByteStringNul, getRemainingLazyByteString, getWord16be, getWord16le, getWord32be, getWord32le, getWord64be, getWord64le, isEmpty, isolate, label, skip)
 import Data.Binary.IEEE754 (getFloat32be, getFloat64le)
 import Data.Bits (Bits (shiftL, (.|.)), shiftR, (.&.))
 import qualified Data.ByteString as BS
@@ -1240,6 +1240,16 @@ getMessage 0x000c = do
       pure result
     DatatypeFixedPoint {fixedPointDataElementSize = 4, fixedPointByteOrder = LittleEndian} -> do
       result <- AttributeContentIntegral . fromIntegral <$> getWord32le
+      -- not sure why this is needed
+      void getRemainingLazyByteString
+      pure result
+    DatatypeFixedPoint {fixedPointDataElementSize = 8, fixedPointByteOrder = LittleEndian} -> do
+      result <- AttributeContentIntegral . fromIntegral <$> getWord64le
+      -- not sure why this is needed
+      void getRemainingLazyByteString
+      pure result
+    DatatypeFixedPoint {fixedPointDataElementSize = 8, fixedPointByteOrder = BigEndian} -> do
+      result <- AttributeContentIntegral . fromIntegral <$> getWord64be
       -- not sure why this is needed
       void getRemainingLazyByteString
       pure result
