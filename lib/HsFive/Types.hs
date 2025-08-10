@@ -22,7 +22,8 @@ import Data.Word (Word64)
 import HsFive.Bitshuffle (DecompressResult (DecompressError, DecompressSuccess, decompressBytes), bshufDecompressLz4)
 import HsFive.CoreTypes
   ( Address,
-    AttributeContent (AttributeContentEnumeration, AttributeContentFixedString, AttributeContentFloating, AttributeContentIntegral, AttributeContentReference, AttributeContentTodo, AttributeContentVariableString),
+    AttributeContent (AttributeContentCompound, AttributeContentEnumeration, AttributeContentFixedString, AttributeContentFloating, AttributeContentIntegral, AttributeContentReference, AttributeContentTodo, AttributeContentVariableString),
+    AttributeContentCompoundMember (AttributeContentCompoundMember),
     BLinkTreeNode (BLinkTreeNodeChunkedRawData, BLinkTreeNodeGroup, bltnChunks),
     ByteOrder (LittleEndian),
     ChunkInfo (ciChunkPointer, ciSize),
@@ -98,6 +99,7 @@ data AttributeData
   | AttributeDataFloating !Double
   | AttributeDataReference !ReferenceType !BSL.ByteString
   | AttributeDataEnumeration !EnumerationMap !Int
+  | AttributeDataCompound ![(Text, AttributeData)]
   deriving (Show)
 
 data Attribute = Attribute
@@ -246,132 +248,57 @@ infixl 5 </
 rootPath :: Path
 rootPath = Path mempty
 
+convertAttributeContent :: Handle -> CoreTypes.AttributeContent -> IO AttributeData
+convertAttributeContent _handle (AttributeContentFixedString content) = pure $ AttributeDataString (decodeUtf8Lenient $ BS.takeWhile (/= 0) content)
+convertAttributeContent _handle (AttributeContentEnumeration enumerationMap enumerationValue) = pure $ AttributeDataEnumeration enumerationMap enumerationValue
+convertAttributeContent handle (AttributeContentVariableString heapAddress objectIndex _size _charset) = do
+  -- TODO: apply heap cache here?
+  putStrLn $ "seeking to heap at " <> show heapAddress
+  hSeek handle AbsoluteSeek (fromIntegral heapAddress)
+  heapData <- BSL.hGet handle 8192
+  case runGetOrFail getGlobalHeap heapData of
+    Left (_, bytesConsumed, e') ->
+      error
+        ( "invalid global heap (consumed "
+            <> show bytesConsumed
+            <> " bytes): "
+            <> show e'
+        )
+    Right (_, _, globalHeap) -> do
+      case find (\ho -> globalHeapObjectIndex ho == fromIntegral objectIndex) (globalHeapObjects globalHeap) of
+        Nothing -> error ("cannot find object " <> show objectIndex <> " in global heap")
+        Just (GlobalHeapObject {globalHeapObjectData}) ->
+          pure $ AttributeDataString (decodeUtf8Lenient $ BS.takeWhile (/= 0) globalHeapObjectData)
+convertAttributeContent _handle (AttributeContentIntegral number) = pure $ AttributeDataIntegral number
+convertAttributeContent _handle (AttributeContentFloating number) = pure $ AttributeDataFloating number
+convertAttributeContent _handle (AttributeContentReference referenceType content) = pure $ AttributeDataReference referenceType content
+convertAttributeContent handle (AttributeContentCompound members) = do
+  let convertWithName (AttributeContentCompoundMember name content) = do
+        convertedContent <- convertAttributeContent handle content
+        pure (decodeUtf8Lenient name, convertedContent)
+  convertedMembers <- traverse convertWithName members
+  pure (AttributeDataCompound convertedMembers)
+convertAttributeContent _handle (AttributeContentTodo realType content) = error $ "invalid attribute data, not a known attribute type: " <> show realType <> ", bytes: " <> show (BSL.unpack content)
+
 convertAttribute :: Handle -> CoreTypes.AttributeData -> IO Attribute
-convertAttribute
-  _
-  ( CoreTypes.AttributeData
-      { CoreTypes.attributeName = an,
-        CoreTypes.attributeDatatypeMessageData = DatatypeMessageData {datatypeClass = typeData},
-        CoreTypes.attributeDataspaceMessageData = DataspaceMessageData {dataspaceDimensions, dataspacePermutationIndices},
-        CoreTypes.attributeContent = AttributeContentFixedString content
-      }
-    ) =
-    pure
-      Attribute
-        { attributeName = decodeUtf8Lenient $ BS.takeWhile (/= 0) an,
-          attributeType = debugLog "type" typeData,
-          attributeDimensions = debugLog "dataspace dimensions" dataspaceDimensions,
-          attributePermutationIndices = dataspacePermutationIndices,
-          attributeData = AttributeDataString (decodeUtf8Lenient $ BS.takeWhile (/= 0) (debugLog "content" content))
-        }
-convertAttribute
-  _
-  ( CoreTypes.AttributeData
-      { CoreTypes.attributeName = an,
-        CoreTypes.attributeDatatypeMessageData = DatatypeMessageData {datatypeClass = typeData},
-        CoreTypes.attributeDataspaceMessageData = DataspaceMessageData {dataspaceDimensions, dataspacePermutationIndices},
-        CoreTypes.attributeContent = AttributeContentEnumeration enumerationMap enumerationValue
-      }
-    ) =
-    pure
-      Attribute
-        { attributeName = decodeUtf8Lenient $ BS.takeWhile (/= 0) an,
-          attributeType = debugLog "type" typeData,
-          attributeDimensions = debugLog "dataspace dimensions" dataspaceDimensions,
-          attributePermutationIndices = dataspacePermutationIndices,
-          attributeData = AttributeDataEnumeration enumerationMap enumerationValue
-        }
 convertAttribute
   handle
   ( CoreTypes.AttributeData
       { CoreTypes.attributeName = an,
         CoreTypes.attributeDatatypeMessageData = DatatypeMessageData {datatypeClass = typeData},
         CoreTypes.attributeDataspaceMessageData = DataspaceMessageData {dataspaceDimensions, dataspacePermutationIndices},
-        CoreTypes.attributeContent = AttributeContentVariableString heapAddress objectIndex _size _charset
+        CoreTypes.attributeContent = content
       }
     ) = do
-    putStrLn $ "seeking to heap at " <> show heapAddress
-    hSeek handle AbsoluteSeek (fromIntegral heapAddress)
-    heapData <- BSL.hGet handle 8192
-    case runGetOrFail getGlobalHeap heapData of
-      Left (_, bytesConsumed, e') ->
-        error
-          ( "invalid global heap (consumed "
-              <> show bytesConsumed
-              <> " bytes): "
-              <> show e'
-          )
-      Right (_, _, globalHeap) -> do
-        case find (\ho -> globalHeapObjectIndex ho == fromIntegral objectIndex) (globalHeapObjects globalHeap) of
-          Nothing -> error ("cannot find object " <> show objectIndex <> " in global heap")
-          Just (GlobalHeapObject {globalHeapObjectData}) ->
-            pure
-              Attribute
-                { attributeName = decodeUtf8Lenient $ BS.takeWhile (/= 0) an,
-                  attributeType = debugLog "type" typeData,
-                  attributeDimensions = debugLog "dataspace dimensions" dataspaceDimensions,
-                  attributePermutationIndices = dataspacePermutationIndices,
-                  attributeData = AttributeDataString (decodeUtf8Lenient $ BS.takeWhile (/= 0) globalHeapObjectData)
-                }
-convertAttribute
-  _
-  ( CoreTypes.AttributeData
-      { CoreTypes.attributeName = an,
-        CoreTypes.attributeDatatypeMessageData = DatatypeMessageData {datatypeClass = typeData},
-        CoreTypes.attributeDataspaceMessageData = DataspaceMessageData {dataspaceDimensions, dataspacePermutationIndices},
-        CoreTypes.attributeContent = AttributeContentIntegral number
-      }
-    ) = do
+    contentConverted <- convertAttributeContent handle content
     pure
       Attribute
         { attributeName = decodeUtf8Lenient $ BS.takeWhile (/= 0) an,
           attributeType = typeData,
           attributeDimensions = dataspaceDimensions,
           attributePermutationIndices = dataspacePermutationIndices,
-          attributeData = AttributeDataIntegral number
+          attributeData = contentConverted
         }
-convertAttribute
-  _
-  ( CoreTypes.AttributeData
-      { CoreTypes.attributeName = an,
-        CoreTypes.attributeDatatypeMessageData = DatatypeMessageData {datatypeClass = typeData},
-        CoreTypes.attributeDataspaceMessageData = DataspaceMessageData {dataspaceDimensions, dataspacePermutationIndices},
-        CoreTypes.attributeContent = AttributeContentReference referenceType content
-      }
-    ) = do
-    pure
-      Attribute
-        { attributeName = decodeUtf8Lenient $ BS.takeWhile (/= 0) an,
-          attributeType = typeData,
-          attributeDimensions = dataspaceDimensions,
-          attributePermutationIndices = dataspacePermutationIndices,
-          attributeData = AttributeDataReference referenceType content
-        }
-convertAttribute
-  _
-  ( CoreTypes.AttributeData
-      { CoreTypes.attributeName = an,
-        CoreTypes.attributeDatatypeMessageData = DatatypeMessageData {datatypeClass = typeData},
-        CoreTypes.attributeDataspaceMessageData = DataspaceMessageData {dataspaceDimensions, dataspacePermutationIndices},
-        CoreTypes.attributeContent = AttributeContentFloating number
-      }
-    ) = do
-    pure
-      Attribute
-        { attributeName = decodeUtf8Lenient $ BS.takeWhile (/= 0) an,
-          attributeType = typeData,
-          attributeDimensions = dataspaceDimensions,
-          attributePermutationIndices = dataspacePermutationIndices,
-          attributeData = AttributeDataFloating number
-        }
-convertAttribute
-  _
-  ( CoreTypes.AttributeData
-      { CoreTypes.attributeName = an,
-        CoreTypes.attributeContent = AttributeContentTodo realType content
-      }
-    ) = do
-    error $ "invalid attribute data for " <> show an <> ", not a known attribute type: " <> show realType <> ", bytes: " <> show (BSL.unpack content)
 
 readNode :: Handle -> IORef NodeReaderState -> Maybe Path -> Maybe (HeapWithData, Word64) -> Address -> IO Node
 readNode handle readerStateRef previousPath maybeHeap e = do

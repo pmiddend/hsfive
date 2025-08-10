@@ -1,5 +1,6 @@
 {-# LANGUAGE BinaryLiterals #-}
 {-# LANGUAGE DeriveFunctor #-}
+{-# LANGUAGE NamedFieldPuns #-}
 {-# HLINT ignore "Use <$>" #-}
 {-# OPTIONS_GHC -Wno-type-defaults #-}
 {-# HLINT ignore "Use newtype instead of data" #-}
@@ -114,6 +115,12 @@ data Datatype
   | DatatypeEnumeration !Datatype !EnumerationMap
   deriving (Show)
 
+data AttributeContentCompoundMember = AttributeContentCompoundMember
+  { attributeContentCompoundMemberName :: !BS.ByteString,
+    attributeContentCompoundMemberType :: !AttributeContent
+  }
+  deriving (Show)
+
 data AttributeContent
   = AttributeContentFixedString !BS.ByteString
   | AttributeContentVariableString !Address !Word32 !Word32 !CharacterSet
@@ -121,6 +128,7 @@ data AttributeContent
   | AttributeContentFloating !Double
   | AttributeContentReference ReferenceType !BSL.ByteString
   | AttributeContentEnumeration !EnumerationMap !Int
+  | AttributeContentCompound ![AttributeContentCompoundMember]
   | AttributeContentTodo !Datatype !BSL.ByteString
   deriving (Show)
 
@@ -910,6 +918,63 @@ getLinkType (UserDefinedLinkEnum linkCode) = do
   UserDefinedLink linkCode <$> getByteString' lengthOfData
 getLinkType ReservedLinkEnum = pure ReservedLink
 
+getAttributeContentByType :: Datatype -> Get AttributeContent
+getAttributeContentByType (DatatypeString _padding _charset _size) =
+  AttributeContentFixedString . BSL.toStrict <$> getRemainingLazyByteString
+getAttributeContentByType (DatatypeFixedPoint {fixedPointDataElementSize = 1}) = do
+  result <- AttributeContentIntegral . fromIntegral <$> getWord8
+  pure result
+getAttributeContentByType (DatatypeFixedPoint {fixedPointDataElementSize = 2, fixedPointByteOrder = BigEndian}) = do
+  result <- AttributeContentIntegral . fromIntegral <$> getWord16be
+  pure result
+getAttributeContentByType (DatatypeFixedPoint {fixedPointDataElementSize = 4, fixedPointByteOrder = BigEndian}) = do
+  result <- AttributeContentIntegral . fromIntegral <$> getWord32be
+  pure result
+getAttributeContentByType (DatatypeFixedPoint {fixedPointDataElementSize = 4, fixedPointByteOrder = LittleEndian}) = do
+  result <- AttributeContentIntegral . fromIntegral <$> getWord32le
+  pure result
+getAttributeContentByType (DatatypeFixedPoint {fixedPointDataElementSize = 8, fixedPointByteOrder = LittleEndian}) = do
+  result <- AttributeContentIntegral . fromIntegral <$> getWord64le
+  pure result
+getAttributeContentByType (DatatypeFixedPoint {fixedPointDataElementSize = 8, fixedPointByteOrder = BigEndian}) = do
+  result <- AttributeContentIntegral . fromIntegral <$> getWord64be
+  pure result
+getAttributeContentByType (DatatypeFloatingPoint {floatingPointBitPrecision = 32, floatingPointByteOrder = BigEndian}) = do
+  result <- AttributeContentFloating . realToFrac <$> getFloat32be
+  pure result
+getAttributeContentByType (DatatypeFloatingPoint {floatingPointBitPrecision = 64, floatingPointByteOrder = LittleEndian}) = do
+  result <- AttributeContentFloating . realToFrac <$> getFloat64le
+  pure result
+getAttributeContentByType (DatatypeEnumeration baseType enumMap) = AttributeContentEnumeration enumMap <$> convertDatatypeIntoIntReader baseType
+getAttributeContentByType (DatatypeVariableLengthString PaddingNullTerminate charset _size) = do
+  size' <- getWord32le
+  globalHeapAddress <- getWord64le
+  objectIndex <- getWord32le
+  pure
+    ( AttributeContentVariableString
+        globalHeapAddress
+        objectIndex
+        size'
+        charset
+    )
+getAttributeContentByType (DatatypeReference referenceType) = do
+  content <- getRemainingLazyByteString
+  pure
+    ( AttributeContentReference referenceType content
+    )
+getAttributeContentByType (DatatypeCompoundV1 members) = do
+  let convertMember (CompoundDatatypeMemberV1 {cdm1Datatype = DatatypeMessageData {datatypeClass}, cdm1Name}) = do
+        convertedType <- label ("compound member " <> show cdm1Name) (getAttributeContentByType datatypeClass)
+        pure (AttributeContentCompoundMember cdm1Name convertedType)
+  membersConverted <- mapM convertMember members
+  pure (AttributeContentCompound membersConverted)
+getAttributeContentByType type' = do
+  remainder <- getRemainingLazyByteString
+  pure
+    $ trace
+      ("attributo type: " <> show type')
+    $ AttributeContentTodo type' remainder
+
 getMessage :: Word16 -> Get Message
 getMessage 0x0000 = do
   void getRemainingLazyByteString
@@ -1220,75 +1285,8 @@ getMessage 0x000c = do
   skipTo8 (trace ("datatype: " <> show datatypeMessage) datatypeSize)
   dataspaceMessage <- getDataspaceMessageData
   skipTo8 (debugLog "dataspace size" dataspaceSize)
-  attributeContent' <- case debugLog "attribute class" (datatypeClass datatypeMessage) of
-    DatatypeString _padding _charset _size ->
-      AttributeContentFixedString . BSL.toStrict <$> getRemainingLazyByteString
-    DatatypeFixedPoint {fixedPointDataElementSize = 1} -> do
-      result <- AttributeContentIntegral . fromIntegral <$> getWord8
-      -- not sure why this is needed
-      void getRemainingLazyByteString
-      pure result
-    DatatypeFixedPoint {fixedPointDataElementSize = 2, fixedPointByteOrder = BigEndian} -> do
-      result <- AttributeContentIntegral . fromIntegral <$> getWord16be
-      -- not sure why this is needed
-      void getRemainingLazyByteString
-      pure result
-    DatatypeFixedPoint {fixedPointDataElementSize = 4, fixedPointByteOrder = BigEndian} -> do
-      result <- AttributeContentIntegral . fromIntegral <$> getWord32be
-      -- not sure why this is needed
-      void getRemainingLazyByteString
-      pure result
-    DatatypeFixedPoint {fixedPointDataElementSize = 4, fixedPointByteOrder = LittleEndian} -> do
-      result <- AttributeContentIntegral . fromIntegral <$> getWord32le
-      -- not sure why this is needed
-      void getRemainingLazyByteString
-      pure result
-    DatatypeFixedPoint {fixedPointDataElementSize = 8, fixedPointByteOrder = LittleEndian} -> do
-      result <- AttributeContentIntegral . fromIntegral <$> getWord64le
-      -- not sure why this is needed
-      void getRemainingLazyByteString
-      pure result
-    DatatypeFixedPoint {fixedPointDataElementSize = 8, fixedPointByteOrder = BigEndian} -> do
-      result <- AttributeContentIntegral . fromIntegral <$> getWord64be
-      -- not sure why this is needed
-      void getRemainingLazyByteString
-      pure result
-    DatatypeFloatingPoint {floatingPointBitPrecision = 32, floatingPointByteOrder = BigEndian} -> do
-      result <- AttributeContentFloating . realToFrac <$> getFloat32be
-      -- not sure why this is needed
-      void getRemainingLazyByteString
-      pure result
-    DatatypeFloatingPoint {floatingPointBitPrecision = 64, floatingPointByteOrder = LittleEndian} -> do
-      result <- AttributeContentFloating . realToFrac <$> getFloat64le
-      -- not sure why this is needed
-      void getRemainingLazyByteString
-      pure result
-    DatatypeEnumeration baseType enumMap ->
-      AttributeContentEnumeration enumMap <$> convertDatatypeIntoIntReader baseType <* getRemainingLazyByteString
-    DatatypeVariableLengthString PaddingNullTerminate charset _size -> do
-      size' <- getWord32le
-      globalHeapAddress <- getWord64le
-      objectIndex <- getWord32le
-      -- I have no idea what the remainder of this message consists of
-      void getRemainingLazyByteString
-      pure
-        ( AttributeContentVariableString
-            globalHeapAddress
-            objectIndex
-            size'
-            charset
-        )
-    DatatypeReference referenceType -> do
-      content <- getRemainingLazyByteString
-      pure
-        ( AttributeContentReference referenceType content
-        )
-    _ -> do
-      remainder <- getRemainingLazyByteString
-      pure
-        $ trace
-          ("attributo type: " <> show (datatypeClass datatypeMessage))
-        $ AttributeContentTodo (datatypeClass datatypeMessage) remainder
+  attributeContent' <- label ("attribute " <> show (datatypeClass datatypeMessage) <> " message type") (getAttributeContentByType (datatypeClass datatypeMessage))
+  void getRemainingLazyByteString
   pure
     ( debugLog "attribute message" $
         AttributeMessage
