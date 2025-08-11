@@ -110,7 +110,7 @@ data Datatype
   | DatatypeCompoundV1 ![CompoundDatatypeMemberV1]
   | DatatypeCompoundV2 ![CompoundDatatypeMemberV2]
   | DatatypeArray {arraySizes :: ![Word32], arrayBaseType :: !Datatype}
-  | DatatypeReference !ReferenceType
+  | DatatypeReference !ReferenceType !Word32
   | DatatypeOpaqaue !BS.ByteString
   | DatatypeEnumeration !Datatype !EnumerationMap
   deriving (Show)
@@ -126,7 +126,7 @@ data AttributeContent
   | AttributeContentVariableString !Address !Word32 !Word32 !CharacterSet
   | AttributeContentIntegral !Integer
   | AttributeContentFloating !Double
-  | AttributeContentReference ReferenceType !BSL.ByteString
+  | AttributeContentReference ReferenceType !BS.ByteString
   | AttributeContentEnumeration !EnumerationMap !Int
   | AttributeContentCompound ![AttributeContentCompoundMember]
   | AttributeContentTodo !Datatype !BSL.ByteString
@@ -859,7 +859,7 @@ getDatatypeMessageData = do
       pure
         ( DatatypeMessageData
             version
-            (DatatypeReference referenceType)
+            (DatatypeReference referenceType size)
         )
     ClassOpaque -> do
       tag <- getByteString' bits0to7
@@ -921,30 +921,22 @@ getLinkType ReservedLinkEnum = pure ReservedLink
 getAttributeContentByType :: Datatype -> Get AttributeContent
 getAttributeContentByType (DatatypeString _padding _charset _size) =
   AttributeContentFixedString . BSL.toStrict <$> getRemainingLazyByteString
-getAttributeContentByType (DatatypeFixedPoint {fixedPointDataElementSize = 1}) = do
-  result <- AttributeContentIntegral . fromIntegral <$> getWord8
-  pure result
-getAttributeContentByType (DatatypeFixedPoint {fixedPointDataElementSize = 2, fixedPointByteOrder = BigEndian}) = do
-  result <- AttributeContentIntegral . fromIntegral <$> getWord16be
-  pure result
-getAttributeContentByType (DatatypeFixedPoint {fixedPointDataElementSize = 4, fixedPointByteOrder = BigEndian}) = do
-  result <- AttributeContentIntegral . fromIntegral <$> getWord32be
-  pure result
-getAttributeContentByType (DatatypeFixedPoint {fixedPointDataElementSize = 4, fixedPointByteOrder = LittleEndian}) = do
-  result <- AttributeContentIntegral . fromIntegral <$> getWord32le
-  pure result
-getAttributeContentByType (DatatypeFixedPoint {fixedPointDataElementSize = 8, fixedPointByteOrder = LittleEndian}) = do
-  result <- AttributeContentIntegral . fromIntegral <$> getWord64le
-  pure result
-getAttributeContentByType (DatatypeFixedPoint {fixedPointDataElementSize = 8, fixedPointByteOrder = BigEndian}) = do
-  result <- AttributeContentIntegral . fromIntegral <$> getWord64be
-  pure result
-getAttributeContentByType (DatatypeFloatingPoint {floatingPointBitPrecision = 32, floatingPointByteOrder = BigEndian}) = do
-  result <- AttributeContentFloating . realToFrac <$> getFloat32be
-  pure result
-getAttributeContentByType (DatatypeFloatingPoint {floatingPointBitPrecision = 64, floatingPointByteOrder = LittleEndian}) = do
-  result <- AttributeContentFloating . realToFrac <$> getFloat64le
-  pure result
+getAttributeContentByType (DatatypeFixedPoint {fixedPointDataElementSize = 1}) =
+  AttributeContentIntegral . fromIntegral <$> getWord8
+getAttributeContentByType (DatatypeFixedPoint {fixedPointDataElementSize = 2, fixedPointByteOrder = BigEndian}) =
+  AttributeContentIntegral . fromIntegral <$> getWord16be
+getAttributeContentByType (DatatypeFixedPoint {fixedPointDataElementSize = 4, fixedPointByteOrder = BigEndian}) =
+  AttributeContentIntegral . fromIntegral <$> getWord32be
+getAttributeContentByType (DatatypeFixedPoint {fixedPointDataElementSize = 4, fixedPointByteOrder = LittleEndian}) =
+  AttributeContentIntegral . fromIntegral <$> getWord32le
+getAttributeContentByType (DatatypeFixedPoint {fixedPointDataElementSize = 8, fixedPointByteOrder = LittleEndian}) =
+  AttributeContentIntegral . fromIntegral <$> getWord64le
+getAttributeContentByType (DatatypeFixedPoint {fixedPointDataElementSize = 8, fixedPointByteOrder = BigEndian}) =
+  AttributeContentIntegral . fromIntegral <$> getWord64be
+getAttributeContentByType (DatatypeFloatingPoint {floatingPointBitPrecision = 32, floatingPointByteOrder = BigEndian}) =
+  AttributeContentFloating . realToFrac <$> getFloat32be
+getAttributeContentByType (DatatypeFloatingPoint {floatingPointBitPrecision = 64, floatingPointByteOrder = LittleEndian}) =
+  AttributeContentFloating . realToFrac <$> getFloat64le
 getAttributeContentByType (DatatypeEnumeration baseType enumMap) = AttributeContentEnumeration enumMap <$> convertDatatypeIntoIntReader baseType
 getAttributeContentByType (DatatypeVariableLengthString PaddingNullTerminate charset _size) = do
   size' <- getWord32le
@@ -957,8 +949,8 @@ getAttributeContentByType (DatatypeVariableLengthString PaddingNullTerminate cha
         size'
         charset
     )
-getAttributeContentByType (DatatypeReference referenceType) = do
-  content <- getRemainingLazyByteString
+getAttributeContentByType (DatatypeReference referenceType size) = do
+  content <- getByteString' size
   pure
     ( AttributeContentReference referenceType content
     )
@@ -1528,7 +1520,8 @@ getObjectHeaderV1 = do
     )
 
 getObjectHeader :: Get ObjectHeader
-getObjectHeader = getObjectHeaderV1 <|> getObjectHeaderV2
+-- getObjectHeader = getObjectHeaderV1 <|> getObjectHeaderV2
+getObjectHeader = getObjectHeaderV2 <|> getObjectHeaderV1
 
 getHeapHeader :: Get HeapHeader
 getHeapHeader = do

@@ -203,11 +203,11 @@ GROUP "/" {
       DATASPACE  SCALAR
     }
     DATASET "ref" {
-      invalid datatype: DatatypeReference ObjectReference
+      invalid datatype: DatatypeReference ObjectReference 8
       DATASPACE  SCALAR
     }
     DATASET "regionref" {
-      invalid datatype: DatatypeReference DatasetRegionReference
+      invalid datatype: DatatypeReference DatasetRegionReference 12
       DATASPACE  SCALAR
     }
     DATASET "u1" {

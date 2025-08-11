@@ -97,7 +97,7 @@ data AttributeData
   = AttributeDataString !Text
   | AttributeDataIntegral !Integer
   | AttributeDataFloating !Double
-  | AttributeDataReference !ReferenceType !BSL.ByteString
+  | AttributeDataReference !ReferenceType !BS.ByteString
   | AttributeDataEnumeration !EnumerationMap !Int
   | AttributeDataCompound ![(Text, AttributeData)]
   deriving (Show)
