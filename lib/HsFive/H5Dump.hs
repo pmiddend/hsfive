@@ -22,7 +22,7 @@ import HsFive.CoreTypes
   )
 import HsFive.Types
   ( Attribute (Attribute, attributeData, attributeType),
-    AttributeData (AttributeDataEnumeration, AttributeDataFloating, AttributeDataIntegral, AttributeDataReference, AttributeDataString),
+    AttributeData (AttributeDataCompound, AttributeDataEnumeration, AttributeDataFloating, AttributeDataIntegral, AttributeDataReference, AttributeDataString, AttributeDataVariableLengthRaw),
     DatasetData (DatasetData, datasetAttributes, datasetDatatype, datasetDimensions, datasetPath, datasetStorageLayout),
     GroupData (GroupData, groupAttributes, groupChildren, groupPath),
     Node (DatasetNode, DatatypeNode, GroupNode),
@@ -197,6 +197,8 @@ attributeToDoc (Attribute {attributeName, attributeType, attributeDimensions, at
       prefixAndBodyToDoc "DATA" ["(0): " <> pretty enumValue]
     ]
 attributeToDoc (Attribute {attributeData = AttributeDataReference ObjectReference _}) = "DATATYPE  H5T_REFERENCE { H5T_STD_REF_OBJECT }"
+attributeToDoc (Attribute {attributeName, attributeType, attributeDimensions, attributeData = AttributeDataCompound members}) = "DATATYPE COMPOUND TODO"
+attributeToDoc (Attribute {attributeName, attributeType, attributeDimensions, attributeData = AttributeDataVariableLengthRaw rawBytes}) = "DATATYPE VARIABLE LENGTH TODO"
 attributeToDoc (Attribute {attributeName, attributeType, attributeDimensions, attributeData}) = error ("invalid attribute type: " <> show attributeData)
 
 groupToDoc :: GroupData -> Doc ()

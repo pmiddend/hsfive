@@ -89,7 +89,7 @@ data Datatype
         fixedPointBitOffset :: !Word16,
         fixedPointBitPrecision :: !Word16
       }
-  | DatatypeVariableLengthSequence
+  | DatatypeVariableLengthSequence !Datatype
   | DatatypeVariableLengthString !StringPadding !CharacterSet !Word32
   | DatatypeString !StringPadding !CharacterSet !Word32
   | DatatypeFloatingPoint
@@ -130,6 +130,7 @@ data AttributeContent
   | AttributeContentEnumeration !EnumerationMap !Int
   | AttributeContentCompound ![AttributeContentCompoundMember]
   | AttributeContentTodo !Datatype !BSL.ByteString
+  | AttributeContentVariableLengthSequence !Datatype !Address !Word32 !Word32
   deriving (Show)
 
 data DataStorageSpaceAllocationTime
@@ -770,7 +771,14 @@ getDatatypeMessageData = do
     ClassVariableLength -> do
       let variableType = bits0to7 .&. 0b1111
       case variableType of
-        0 -> pure (DatatypeMessageData version DatatypeVariableLengthSequence)
+        0 -> do
+          baseType <- label "variable length, base type" getDatatypeMessageData
+          pure
+            ( DatatypeMessageData
+                version
+                ( DatatypeVariableLengthSequence (datatypeClass baseType)
+                )
+            )
         1 -> do
           let paddingTypeNumeric = (bits0to7 .&. 0b11110000) `shiftR` 4
           paddingType <- if paddingTypeNumeric == 0 then pure PaddingNullTerminate else if paddingTypeNumeric == 1 then pure PaddingNull else if paddingTypeNumeric == 2 then pure PaddingSpace else fail ("invalid variable length string padding type " <> show paddingTypeNumeric)
@@ -953,6 +961,17 @@ getAttributeContentByType (DatatypeReference referenceType size) = do
   content <- getByteString' size
   pure
     ( AttributeContentReference referenceType content
+    )
+getAttributeContentByType (DatatypeVariableLengthSequence baseType) = do
+  size' <- getWord32le
+  globalHeapAddress <- getWord64le
+  objectIndex <- getWord32le
+  pure
+    ( AttributeContentVariableLengthSequence
+        baseType
+        globalHeapAddress
+        objectIndex
+        size'
     )
 getAttributeContentByType (DatatypeCompoundV1 members) = do
   let convertMember (CompoundDatatypeMemberV1 {cdm1Datatype = DatatypeMessageData {datatypeClass}, cdm1Name}) = do

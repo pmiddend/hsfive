@@ -224,7 +224,7 @@ GROUP "/" {
       DATASPACE  SCALAR
     }
     DATASET "vlen" {
-      invalid datatype: DatatypeVariableLengthSequence
+      invalid datatype: DatatypeVariableLengthSequence (DatatypeFixedPoint {fixedPointDataElementSize = 4, fixedPointByteOrder = LittleEndian, fixedPointLoPadBit = False, fixedPointHiPadBit = False, fixedPointSigned = True, fixedPointBitOffset = 0, fixedPointBitPrecision = 32})
       DATASPACE  SCALAR
     }
   }

@@ -22,7 +22,7 @@ import Data.Word (Word64)
 import HsFive.Bitshuffle (DecompressResult (DecompressError, DecompressSuccess, decompressBytes), bshufDecompressLz4)
 import HsFive.CoreTypes
   ( Address,
-    AttributeContent (AttributeContentCompound, AttributeContentEnumeration, AttributeContentFixedString, AttributeContentFloating, AttributeContentIntegral, AttributeContentReference, AttributeContentTodo, AttributeContentVariableString),
+    AttributeContent (AttributeContentCompound, AttributeContentEnumeration, AttributeContentFixedString, AttributeContentFloating, AttributeContentIntegral, AttributeContentReference, AttributeContentTodo, AttributeContentVariableLengthSequence, AttributeContentVariableString),
     AttributeContentCompoundMember (AttributeContentCompoundMember),
     BLinkTreeNode (BLinkTreeNodeChunkedRawData, BLinkTreeNodeGroup, bltnChunks),
     ByteOrder (LittleEndian),
@@ -99,6 +99,7 @@ data AttributeData
   | AttributeDataFloating !Double
   | AttributeDataReference !ReferenceType !BS.ByteString
   | AttributeDataEnumeration !EnumerationMap !Int
+  | AttributeDataVariableLengthRaw !BS.ByteString
   | AttributeDataCompound ![(Text, AttributeData)]
   deriving (Show)
 
@@ -251,9 +252,26 @@ rootPath = Path mempty
 convertAttributeContent :: Handle -> CoreTypes.AttributeContent -> IO AttributeData
 convertAttributeContent _handle (AttributeContentFixedString content) = pure $ AttributeDataString (decodeUtf8Lenient $ BS.takeWhile (/= 0) content)
 convertAttributeContent _handle (AttributeContentEnumeration enumerationMap enumerationValue) = pure $ AttributeDataEnumeration enumerationMap enumerationValue
+convertAttributeContent handle (AttributeContentVariableLengthSequence baseType heapAddress objectIndex _size) = do
+  putStrLn $ "variable-length sequence: seeking to heap at " <> show heapAddress
+  hSeek handle AbsoluteSeek (fromIntegral heapAddress)
+  heapData <- BSL.hGet handle 8192
+  case runGetOrFail getGlobalHeap heapData of
+    Left (_, bytesConsumed, e') ->
+      error
+        ( "invalid global heap (consumed "
+            <> show bytesConsumed
+            <> " bytes): "
+            <> show e'
+        )
+    Right (_, _, globalHeap) -> do
+      case find (\ho -> globalHeapObjectIndex ho == fromIntegral objectIndex) (globalHeapObjects globalHeap) of
+        Nothing -> error ("cannot find variable-length object " <> show objectIndex <> " in global heap")
+        Just (GlobalHeapObject {globalHeapObjectData}) ->
+          pure (AttributeDataVariableLengthRaw globalHeapObjectData)
 convertAttributeContent handle (AttributeContentVariableString heapAddress objectIndex _size _charset) = do
   -- TODO: apply heap cache here?
-  putStrLn $ "seeking to heap at " <> show heapAddress
+  putStrLn $ "variable string: seeking to heap at " <> show heapAddress
   hSeek handle AbsoluteSeek (fromIntegral heapAddress)
   heapData <- BSL.hGet handle 8192
   case runGetOrFail getGlobalHeap heapData of
