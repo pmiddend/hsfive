@@ -1,0 +1,1072 @@
+GROUP "/" {
+  ATTRIBUTE "HDF5_Version" {
+    DATATYPE  H5T_STRING {
+      STRSIZE H5T_VARIABLE;
+      STRPAD H5T_STR_NULLTERM;
+      CSET H5T_CSET_UTF8;
+      CTYPE H5T_C_S1;
+    }
+    DATASPACE  SCALAR
+  }
+  ATTRIBUTE "creator" {
+    DATATYPE  H5T_STRING {
+      STRSIZE H5T_VARIABLE;
+      STRPAD H5T_STR_NULLTERM;
+      CSET H5T_CSET_UTF8;
+      CTYPE H5T_C_S1;
+    }
+    DATASPACE  SCALAR
+  }
+  ATTRIBUTE "default" {
+    DATATYPE  H5T_STRING {
+      STRSIZE H5T_VARIABLE;
+      STRPAD H5T_STR_NULLTERM;
+      CSET H5T_CSET_UTF8;
+      CTYPE H5T_C_S1;
+    }
+    DATASPACE  SCALAR
+  }
+  ATTRIBUTE "h5py_version" {
+    DATATYPE  H5T_STRING {
+      STRSIZE H5T_VARIABLE;
+      STRPAD H5T_STR_NULLTERM;
+      CSET H5T_CSET_UTF8;
+      CTYPE H5T_C_S1;
+    }
+    DATASPACE  SCALAR
+  }
+  DATASET "cxi_version" {
+    DATATYPE  H5T_STD_I64LE
+    DATASPACE  SCALAR
+  }
+  GROUP "entry_1" {
+    ATTRIBUTE "NX_class" {
+      DATATYPE  H5T_STRING {
+        STRSIZE H5T_VARIABLE;
+        STRPAD H5T_STR_NULLTERM;
+        CSET H5T_CSET_UTF8;
+        CTYPE H5T_C_S1;
+      }
+      DATASPACE  SCALAR
+    }
+    ATTRIBUTE "default" {
+      DATATYPE  H5T_STRING {
+        STRSIZE H5T_VARIABLE;
+        STRPAD H5T_STR_NULLTERM;
+        CSET H5T_CSET_UTF8;
+        CTYPE H5T_C_S1;
+      }
+      DATASPACE  SCALAR
+    }
+    GROUP "data_1" {
+      ATTRIBUTE "NX_class" {
+        DATATYPE  H5T_STRING {
+          STRSIZE H5T_VARIABLE;
+          STRPAD H5T_STR_NULLTERM;
+          CSET H5T_CSET_UTF8;
+          CTYPE H5T_C_S1;
+        }
+        DATASPACE  SCALAR
+      }
+      ATTRIBUTE "interpretation" {
+        DATATYPE  H5T_STRING {
+          STRSIZE H5T_VARIABLE;
+          STRPAD H5T_STR_NULLTERM;
+          CSET H5T_CSET_UTF8;
+          CTYPE H5T_C_S1;
+        }
+        DATASPACE  SCALAR
+      }
+      ATTRIBUTE "signal" {
+        DATATYPE  H5T_STRING {
+          STRSIZE H5T_VARIABLE;
+          STRPAD H5T_STR_NULLTERM;
+          CSET H5T_CSET_UTF8;
+          CTYPE H5T_C_S1;
+        }
+        DATASPACE  SCALAR
+      }
+    }
+    GROUP "instrument_1" {
+      ATTRIBUTE "NX_class" {
+        DATATYPE  H5T_STRING {
+          STRSIZE H5T_VARIABLE;
+          STRPAD H5T_STR_NULLTERM;
+          CSET H5T_CSET_UTF8;
+          CTYPE H5T_C_S1;
+        }
+        DATASPACE  SCALAR
+      }
+      GROUP "beam_1" {
+        ATTRIBUTE "NX_class" {
+          DATATYPE  H5T_STRING {
+            STRSIZE H5T_VARIABLE;
+            STRPAD H5T_STR_NULLTERM;
+            CSET H5T_CSET_UTF8;
+            CTYPE H5T_C_S1;
+          }
+          DATASPACE  SCALAR
+        }
+        DATASET "incident_energy" {
+          DATATYPE  H5T_IEEE_F64LE
+          DATASPACE  SCALAR
+          ATTRIBUTE "units" {
+            DATATYPE  H5T_STRING {
+              STRSIZE H5T_VARIABLE;
+              STRPAD H5T_STR_NULLTERM;
+              CSET H5T_CSET_UTF8;
+              CTYPE H5T_C_S1;
+            }
+            DATASPACE  SCALAR
+          }
+        }
+        DATASET "incident_wavelength" {
+          DATATYPE  H5T_IEEE_F64LE
+          DATASPACE  SCALAR
+          ATTRIBUTE "units" {
+            DATATYPE  H5T_STRING {
+              STRSIZE H5T_VARIABLE;
+              STRPAD H5T_STR_NULLTERM;
+              CSET H5T_CSET_UTF8;
+              CTYPE H5T_C_S1;
+            }
+            DATASPACE  SCALAR
+          }
+        }
+      }
+      GROUP "detector_1" {
+        ATTRIBUTE "NX_class" {
+          DATATYPE  H5T_STRING {
+            STRSIZE H5T_VARIABLE;
+            STRPAD H5T_STR_NULLTERM;
+            CSET H5T_CSET_UTF8;
+            CTYPE H5T_C_S1;
+          }
+          DATASPACE  SCALAR
+        }
+        DATASET "distance" {
+          DATATYPE  H5T_IEEE_F64LE
+          DATASPACE  SCALAR
+          ATTRIBUTE "units" {
+            DATATYPE  H5T_STRING {
+              STRSIZE H5T_VARIABLE;
+              STRPAD H5T_STR_NULLTERM;
+              CSET H5T_CSET_UTF8;
+              CTYPE H5T_C_S1;
+            }
+            DATASPACE  SCALAR
+          }
+        }
+        DATASET "x_pixel_size" {
+          DATATYPE  H5T_IEEE_F64LE
+          DATASPACE  SCALAR
+          ATTRIBUTE "units" {
+            DATATYPE  H5T_STRING {
+              STRSIZE H5T_VARIABLE;
+              STRPAD H5T_STR_NULLTERM;
+              CSET H5T_CSET_UTF8;
+              CTYPE H5T_C_S1;
+            }
+            DATASPACE  SCALAR
+          }
+        }
+        DATASET "y_pixel_size" {
+          DATATYPE  H5T_IEEE_F64LE
+          DATASPACE  SCALAR
+          ATTRIBUTE "units" {
+            DATATYPE  H5T_STRING {
+              STRSIZE H5T_VARIABLE;
+              STRPAD H5T_STR_NULLTERM;
+              CSET H5T_CSET_UTF8;
+              CTYPE H5T_C_S1;
+            }
+            DATASPACE  SCALAR
+          }
+        }
+      }
+      DATASET "name" {
+        DATATYPE  H5T_STRING {
+          STRSIZE H5T_VARIABLE;
+          STRPAD H5T_STR_NULLTERM;
+          CSET H5T_CSET_UTF8;
+          CTYPE H5T_C_S1;
+        }
+        DATASPACE  SCALAR
+      }
+      GROUP "source_1" {
+        ATTRIBUTE "NX_class" {
+          DATATYPE  H5T_STRING {
+            STRSIZE H5T_VARIABLE;
+            STRPAD H5T_STR_NULLTERM;
+            CSET H5T_CSET_UTF8;
+            CTYPE H5T_C_S1;
+          }
+          DATASPACE  SCALAR
+        }
+        ATTRIBUTE "note" {
+          DATATYPE  H5T_STRING {
+            STRSIZE H5T_VARIABLE;
+            STRPAD H5T_STR_NULLTERM;
+            CSET H5T_CSET_UTF8;
+            CTYPE H5T_C_S1;
+          }
+          DATASPACE  SCALAR
+        }
+        DATASET "energy" {
+          DATATYPE  H5T_IEEE_F64LE
+          DATASPACE  SCALAR
+          ATTRIBUTE "units" {
+            DATATYPE  H5T_STRING {
+              STRSIZE H5T_VARIABLE;
+              STRPAD H5T_STR_NULLTERM;
+              CSET H5T_CSET_UTF8;
+              CTYPE H5T_C_S1;
+            }
+            DATASPACE  SCALAR
+          }
+        }
+      }
+    }
+    GROUP "process_1" {
+      ATTRIBUTE "NX_class" {
+        DATATYPE  H5T_STRING {
+          STRSIZE H5T_VARIABLE;
+          STRPAD H5T_STR_NULLTERM;
+          CSET H5T_CSET_UTF8;
+          CTYPE H5T_C_S1;
+        }
+        DATASPACE  SCALAR
+      }
+      DATASET "command" {
+        DATATYPE  H5T_STRING {
+          STRSIZE H5T_VARIABLE;
+          STRPAD H5T_STR_NULLTERM;
+          CSET H5T_CSET_UTF8;
+          CTYPE H5T_C_S1;
+        }
+        DATASPACE  SCALAR
+      }
+      GROUP "configuration" {
+        ATTRIBUTE "NX_class" {
+          DATATYPE  H5T_STRING {
+            STRSIZE H5T_VARIABLE;
+            STRPAD H5T_STR_NULLTERM;
+            CSET H5T_CSET_UTF8;
+            CTYPE H5T_C_S1;
+          }
+          DATASPACE  SCALAR
+        }
+        DATASET "algorithm" {
+          DATATYPE  H5T_STRING {
+            STRSIZE H5T_VARIABLE;
+            STRPAD H5T_STR_NULLTERM;
+            CSET H5T_CSET_UTF8;
+            CTYPE H5T_C_S1;
+          }
+          DATASPACE  SCALAR
+        }
+        DATASET "autocenter" {
+          DATATYPE  H5T_ENUM { {
+            H5T_STD_I8LE;
+            "FALSE"            0
+            "TRUE"            1
+          }
+          DATASPACE  SCALAR
+        }
+        DATASET "center_probe_max_shift" {
+          DATATYPE  H5T_STD_I64LE
+          DATASPACE  SCALAR
+        }
+        DATASET "center_probe_n" {
+          DATATYPE  H5T_STD_I64LE
+          DATASPACE  SCALAR
+        }
+        DATASET "cxifile" {
+          DATATYPE  H5T_STRING {
+            STRSIZE H5T_VARIABLE;
+            STRPAD H5T_STR_NULLTERM;
+            CSET H5T_CSET_UTF8;
+            CTYPE H5T_C_S1;
+          }
+          DATASPACE  SCALAR
+        }
+        DATASET "data2cxi" {
+          DATATYPE  H5T_ENUM { {
+            H5T_STD_I8LE;
+            "FALSE"            0
+            "TRUE"            1
+          }
+          DATASPACE  SCALAR
+        }
+        DATASET "defocus" {
+          DATATYPE  H5T_IEEE_F64LE
+          DATASPACE  SCALAR
+        }
+        DATASET "detectordistance" {
+          DATATYPE  H5T_IEEE_F64LE
+          DATASPACE  SCALAR
+        }
+        DATASET "dm_loop_obj_probe" {
+          DATATYPE  H5T_STD_I64LE
+          DATASPACE  SCALAR
+        }
+        DATASET "epoch" {
+          DATATYPE  H5T_IEEE_F64LE
+          DATASPACE  SCALAR
+        }
+        DATASET "fig_num" {
+          DATATYPE  H5T_STD_I64LE
+          DATASPACE  SCALAR
+        }
+        DATASET "instrument" {
+          DATATYPE  H5T_STRING {
+            STRSIZE H5T_VARIABLE;
+            STRPAD H5T_STR_NULLTERM;
+            CSET H5T_CSET_UTF8;
+            CTYPE H5T_C_S1;
+          }
+          DATASPACE  SCALAR
+        }
+        DATASET "liveplot" {
+          DATATYPE  H5T_ENUM { {
+            H5T_STD_I8LE;
+            "FALSE"            0
+            "TRUE"            1
+          }
+          DATASPACE  SCALAR
+        }
+        DATASET "livescan" {
+          DATATYPE  H5T_ENUM { {
+            H5T_STD_I8LE;
+            "FALSE"            0
+            "TRUE"            1
+          }
+          DATASPACE  SCALAR
+        }
+        DATASET "maxsize" {
+          DATATYPE  H5T_STD_I64LE
+          DATASPACE  SCALAR
+        }
+        DATASET "mpi" {
+          DATATYPE  H5T_STRING {
+            STRSIZE H5T_VARIABLE;
+            STRPAD H5T_STR_NULLTERM;
+            CSET H5T_CSET_UTF8;
+            CTYPE H5T_C_S1;
+          }
+          DATASPACE  SCALAR
+        }
+        DATASET "mpi_split_nb_neighbour" {
+          DATATYPE  H5T_STD_I64LE
+          DATASPACE  SCALAR
+        }
+        DATASET "mpi_split_nb_overlap" {
+          DATATYPE  H5T_STD_I64LE
+          DATASPACE  SCALAR
+        }
+        DATASET "nbrun" {
+          DATATYPE  H5T_STD_I64LE
+          DATASPACE  SCALAR
+        }
+        DATASET "nrj" {
+          DATATYPE  H5T_IEEE_F64LE
+          DATASPACE  SCALAR
+        }
+        DATASET "obj_inertia" {
+          DATATYPE  H5T_IEEE_F64LE
+          DATASPACE  SCALAR
+        }
+        DATASET "obj_margin" {
+          DATATYPE  H5T_STD_I64LE
+          DATASPACE  SCALAR
+        }
+        DATASET "obj_max_pix" {
+          DATATYPE  H5T_STD_I64LE
+          DATASPACE  SCALAR
+        }
+        DATASET "obj_smooth" {
+          DATATYPE  H5T_STD_I64LE
+          DATASPACE  SCALAR
+        }
+        DATASET "object" {
+          DATATYPE  H5T_STRING {
+            STRSIZE H5T_VARIABLE;
+            STRPAD H5T_STR_NULLTERM;
+            CSET H5T_CSET_UTF8;
+            CTYPE H5T_C_S1;
+          }
+          DATASPACE  SCALAR
+        }
+        DATASET "orientation_round_robin" {
+          DATATYPE  H5T_ENUM { {
+            H5T_STD_I8LE;
+            "FALSE"            0
+            "TRUE"            1
+          }
+          DATASPACE  SCALAR
+        }
+        DATASET "output_format" {
+          DATATYPE  H5T_STRING {
+            STRSIZE H5T_VARIABLE;
+            STRPAD H5T_STR_NULLTERM;
+            CSET H5T_CSET_UTF8;
+            CTYPE H5T_C_S1;
+          }
+          DATASPACE  SCALAR
+        }
+        DATASET "pixelsize" {
+          DATATYPE  H5T_IEEE_F64LE
+          DATASPACE  SCALAR
+        }
+        DATASET "pos_max_shift" {
+          DATATYPE  H5T_STD_I64LE
+          DATASPACE  SCALAR
+        }
+        DATASET "pos_min_shift" {
+          DATATYPE  H5T_STD_I64LE
+          DATASPACE  SCALAR
+        }
+        DATASET "pos_mult" {
+          DATATYPE  H5T_STD_I64LE
+          DATASPACE  SCALAR
+        }
+        DATASET "pos_threshold" {
+          DATATYPE  H5T_IEEE_F64LE
+          DATASPACE  SCALAR
+        }
+        DATASET "probe" {
+          DATATYPE  H5T_STRING {
+            STRSIZE H5T_VARIABLE;
+            STRPAD H5T_STR_NULLTERM;
+            CSET H5T_CSET_UTF8;
+            CTYPE H5T_C_S1;
+          }
+          DATASPACE  SCALAR
+        }
+        DATASET "probe_inertia" {
+          DATATYPE  H5T_IEEE_F64LE
+          DATASPACE  SCALAR
+        }
+        DATASET "probe_smooth" {
+          DATATYPE  H5T_STD_I64LE
+          DATASPACE  SCALAR
+        }
+        DATASET "profiling" {
+          DATATYPE  H5T_ENUM { {
+            H5T_STD_I8LE;
+            "FALSE"            0
+            "TRUE"            1
+          }
+          DATASPACE  SCALAR
+        }
+        DATASET "regularization" {
+          DATATYPE  H5T_STD_I64LE
+          DATASPACE  SCALAR
+        }
+        DATASET "remove_obj_phase_ramp" {
+          DATATYPE  H5T_ENUM { {
+            H5T_STD_I8LE;
+            "FALSE"            0
+            "TRUE"            1
+          }
+          DATASPACE  SCALAR
+        }
+        DATASET "roi" {
+          DATATYPE  H5T_STRING {
+            STRSIZE H5T_VARIABLE;
+            STRPAD H5T_STR_NULLTERM;
+            CSET H5T_CSET_UTF8;
+            CTYPE H5T_C_S1;
+          }
+          DATASPACE  SCALAR
+        }
+        DATASET "roi_actual" {
+          DATATYPE  H5T_STD_I64LE
+          DATASPACE  SIMPLE { ( 4 ) / ( 4 ) }
+        }
+        DATASET "save" {
+          DATATYPE  H5T_STRING {
+            STRSIZE H5T_VARIABLE;
+            STRPAD H5T_STR_NULLTERM;
+            CSET H5T_CSET_UTF8;
+            CTYPE H5T_C_S1;
+          }
+          DATASPACE  SCALAR
+        }
+        DATASET "saveplot" {
+          DATATYPE  H5T_ENUM { {
+            H5T_STD_I8LE;
+            "FALSE"            0
+            "TRUE"            1
+          }
+          DATASPACE  SCALAR
+        }
+        DATASET "saveprefix" {
+          DATATYPE  H5T_STRING {
+            STRSIZE H5T_VARIABLE;
+            STRPAD H5T_STR_NULLTERM;
+            CSET H5T_CSET_UTF8;
+            CTYPE H5T_C_S1;
+          }
+          DATASPACE  SCALAR
+        }
+        DATASET "verbose" {
+          DATATYPE  H5T_STD_I64LE
+          DATASPACE  SCALAR
+        }
+      }
+      DATASET "parameters_all" {
+        DATATYPE  H5T_STRING {
+          STRSIZE H5T_VARIABLE;
+          STRPAD H5T_STR_NULLTERM;
+          CSET H5T_CSET_UTF8;
+          CTYPE H5T_C_S1;
+        }
+        DATASPACE  SCALAR
+      }
+      DATASET "program" {
+        DATATYPE  H5T_STRING {
+          STRSIZE H5T_VARIABLE;
+          STRPAD H5T_STR_NULLTERM;
+          CSET H5T_CSET_UTF8;
+          CTYPE H5T_C_S1;
+        }
+        DATASPACE  SCALAR
+      }
+      GROUP "results" {
+        ATTRIBUTE "NX_class" {
+          DATATYPE  H5T_STRING {
+            STRSIZE H5T_VARIABLE;
+            STRPAD H5T_STR_NULLTERM;
+            CSET H5T_CSET_UTF8;
+            CTYPE H5T_C_S1;
+          }
+          DATASPACE  SCALAR
+        }
+        DATASET "cycle_history" {
+          invalid datatype: DatatypeCompoundV1 [CompoundDatatypeMemberV1 {cdm1Name = "cycle", cdm1ByteOffset = 0, cdm1Dimensions = [], cdm1Datatype = DatatypeMessageData {datatypeMessageVersion = 1, datatypeClass = DatatypeFixedPoint {fixedPointDataElementSize = 8, fixedPointByteOrder = LittleEndian, fixedPointLoPadBit = False, fixedPointHiPadBit = False, fixedPointSigned = True, fixedPointBitOffset = 0, fixedPointBitPrecision = 64}}},CompoundDatatypeMemberV1 {cdm1Name = "time", cdm1ByteOffset = 8, cdm1Dimensions = [], cdm1Datatype = DatatypeMessageData {datatypeMessageVersion = 1, datatypeClass = DatatypeFloatingPoint {floatingPointByteOrder = LittleEndian, floatingPointLowBitPad = False, floatingPointHighBitPad = False, floatingPointInternalBitPad = False, floatingPointMantissaNormalization = NoNormalization, floatingPointSignLocation = 63, floatingPointBitOffset = 0, floatingPointBitPrecision = 64, floatingPointExponentLocation = 52, floatingPointExponentSize = 11, floatingPointMantissaLocation = 0, floatingPointMantissaSize = 52, floatingPointExponentBias = 1023}}},CompoundDatatypeMemberV1 {cdm1Name = "epoch", cdm1ByteOffset = 16, cdm1Dimensions = [], cdm1Datatype = DatatypeMessageData {datatypeMessageVersion = 1, datatypeClass = DatatypeFloatingPoint {floatingPointByteOrder = LittleEndian, floatingPointLowBitPad = False, floatingPointHighBitPad = False, floatingPointInternalBitPad = False, floatingPointMantissaNormalization = NoNormalization, floatingPointSignLocation = 63, floatingPointBitOffset = 0, floatingPointBitPrecision = 64, floatingPointExponentLocation = 52, floatingPointExponentSize = 11, floatingPointMantissaLocation = 0, floatingPointMantissaSize = 52, floatingPointExponentBias = 1023}}},CompoundDatatypeMemberV1 {cdm1Name = "llk_poisson", cdm1ByteOffset = 24, cdm1Dimensions = [], cdm1Datatype = DatatypeMessageData {datatypeMessageVersion = 1, datatypeClass = DatatypeFloatingPoint {floatingPointByteOrder = LittleEndian, floatingPointLowBitPad = False, floatingPointHighBitPad = False, floatingPointInternalBitPad = False, floatingPointMantissaNormalization = NoNormalization, floatingPointSignLocation = 63, floatingPointBitOffset = 0, floatingPointBitPrecision = 64, floatingPointExponentLocation = 52, floatingPointExponentSize = 11, floatingPointMantissaLocation = 0, floatingPointMantissaSize = 52, floatingPointExponentBias = 1023}}},CompoundDatatypeMemberV1 {cdm1Name = "llk_gaussian", cdm1ByteOffset = 32, cdm1Dimensions = [], cdm1Datatype = DatatypeMessageData {datatypeMessageVersion = 1, datatypeClass = DatatypeFloatingPoint {floatingPointByteOrder = LittleEndian, floatingPointLowBitPad = False, floatingPointHighBitPad = False, floatingPointInternalBitPad = False, floatingPointMantissaNormalization = NoNormalization, floatingPointSignLocation = 63, floatingPointBitOffset = 0, floatingPointBitPrecision = 64, floatingPointExponentLocation = 52, floatingPointExponentSize = 11, floatingPointMantissaLocation = 0, floatingPointMantissaSize = 52, floatingPointExponentBias = 1023}}},CompoundDatatypeMemberV1 {cdm1Name = "llk_euclidian", cdm1ByteOffset = 40, cdm1Dimensions = [], cdm1Datatype = DatatypeMessageData {datatypeMessageVersion = 1, datatypeClass = DatatypeFloatingPoint {floatingPointByteOrder = LittleEndian, floatingPointLowBitPad = False, floatingPointHighBitPad = False, floatingPointInternalBitPad = False, floatingPointMantissaNormalization = NoNormalization, floatingPointSignLocation = 63, floatingPointBitOffset = 0, floatingPointBitPrecision = 64, floatingPointExponentLocation = 52, floatingPointExponentSize = 11, floatingPointMantissaLocation = 0, floatingPointMantissaSize = 52, floatingPointExponentBias = 1023}}},CompoundDatatypeMemberV1 {cdm1Name = "nb_photons_calc", cdm1ByteOffset = 48, cdm1Dimensions = [], cdm1Datatype = DatatypeMessageData {datatypeMessageVersion = 1, datatypeClass = DatatypeFloatingPoint {floatingPointByteOrder = LittleEndian, floatingPointLowBitPad = False, floatingPointHighBitPad = False, floatingPointInternalBitPad = False, floatingPointMantissaNormalization = NoNormalization, floatingPointSignLocation = 31, floatingPointBitOffset = 0, floatingPointBitPrecision = 32, floatingPointExponentLocation = 23, floatingPointExponentSize = 8, floatingPointMantissaLocation = 0, floatingPointMantissaSize = 23, floatingPointExponentBias = 127}}},CompoundDatatypeMemberV1 {cdm1Name = "nb_obj", cdm1ByteOffset = 52, cdm1Dimensions = [], cdm1Datatype = DatatypeMessageData {datatypeMessageVersion = 1, datatypeClass = DatatypeFixedPoint {fixedPointDataElementSize = 8, fixedPointByteOrder = LittleEndian, fixedPointLoPadBit = False, fixedPointHiPadBit = False, fixedPointSigned = True, fixedPointBitOffset = 0, fixedPointBitPrecision = 64}}},CompoundDatatypeMemberV1 {cdm1Name = "nb_probe", cdm1ByteOffset = 60, cdm1Dimensions = [], cdm1Datatype = DatatypeMessageData {datatypeMessageVersion = 1, datatypeClass = DatatypeFixedPoint {fixedPointDataElementSize = 8, fixedPointByteOrder = LittleEndian, fixedPointLoPadBit = False, fixedPointHiPadBit = False, fixedPointSigned = True, fixedPointBitOffset = 0, fixedPointBitPrecision = 64}}},CompoundDatatypeMemberV1 {cdm1Name = "update_background", cdm1ByteOffset = 68, cdm1Dimensions = [], cdm1Datatype = DatatypeMessageData {datatypeMessageVersion = 1, datatypeClass = DatatypeEnumeration (DatatypeFixedPoint {fixedPointDataElementSize = 1, fixedPointByteOrder = LittleEndian, fixedPointLoPadBit = False, fixedPointHiPadBit = False, fixedPointSigned = True, fixedPointBitOffset = 0, fixedPointBitPrecision = 8}) [("FALSE",0),("TRUE",1)]}},CompoundDatatypeMemberV1 {cdm1Name = "algorithm", cdm1ByteOffset = 69, cdm1Dimensions = [], cdm1Datatype = DatatypeMessageData {datatypeMessageVersion = 1, datatypeClass = DatatypeString PaddingNull CharacterSetAscii 2}},CompoundDatatypeMemberV1 {cdm1Name = "update_obj", cdm1ByteOffset = 71, cdm1Dimensions = [], cdm1Datatype = DatatypeMessageData {datatypeMessageVersion = 1, datatypeClass = DatatypeFixedPoint {fixedPointDataElementSize = 8, fixedPointByteOrder = LittleEndian, fixedPointLoPadBit = False, fixedPointHiPadBit = False, fixedPointSigned = True, fixedPointBitOffset = 0, fixedPointBitPrecision = 64}}},CompoundDatatypeMemberV1 {cdm1Name = "update_probe", cdm1ByteOffset = 79, cdm1Dimensions = [], cdm1Datatype = DatatypeMessageData {datatypeMessageVersion = 1, datatypeClass = DatatypeFixedPoint {fixedPointDataElementSize = 8, fixedPointByteOrder = LittleEndian, fixedPointLoPadBit = False, fixedPointHiPadBit = False, fixedPointSigned = True, fixedPointBitOffset = 0, fixedPointBitPrecision = 64}}},CompoundDatatypeMemberV1 {cdm1Name = "update_pos", cdm1ByteOffset = 87, cdm1Dimensions = [], cdm1Datatype = DatatypeMessageData {datatypeMessageVersion = 1, datatypeClass = DatatypeFixedPoint {fixedPointDataElementSize = 8, fixedPointByteOrder = LittleEndian, fixedPointLoPadBit = False, fixedPointHiPadBit = False, fixedPointSigned = True, fixedPointBitOffset = 0, fixedPointBitPrecision = 64}}},CompoundDatatypeMemberV1 {cdm1Name = "verbose", cdm1ByteOffset = 95, cdm1Dimensions = [], cdm1Datatype = DatatypeMessageData {datatypeMessageVersion = 1, datatypeClass = DatatypeFixedPoint {fixedPointDataElementSize = 8, fixedPointByteOrder = LittleEndian, fixedPointLoPadBit = False, fixedPointHiPadBit = False, fixedPointSigned = True, fixedPointBitOffset = 0, fixedPointBitPrecision = 64}}},CompoundDatatypeMemberV1 {cdm1Name = "dt", cdm1ByteOffset = 103, cdm1Dimensions = [], cdm1Datatype = DatatypeMessageData {datatypeMessageVersion = 1, datatypeClass = DatatypeFloatingPoint {floatingPointByteOrder = LittleEndian, floatingPointLowBitPad = False, floatingPointHighBitPad = False, floatingPointInternalBitPad = False, floatingPointMantissaNormalization = NoNormalization, floatingPointSignLocation = 63, floatingPointBitOffset = 0, floatingPointBitPrecision = 64, floatingPointExponentLocation = 52, floatingPointExponentSize = 11, floatingPointMantissaLocation = 0, floatingPointMantissaSize = 52, floatingPointExponentBias = 1023}}}]
+          DATASPACE  SIMPLE { ( 551 ) / ( 551 ) }
+        }
+        DATASET "cycle_history_algorithm" {
+          invalid datatype: DatatypeCompoundV1 [CompoundDatatypeMemberV1 {cdm1Name = "cycle", cdm1ByteOffset = 0, cdm1Dimensions = [], cdm1Datatype = DatatypeMessageData {datatypeMessageVersion = 1, datatypeClass = DatatypeFixedPoint {fixedPointDataElementSize = 8, fixedPointByteOrder = LittleEndian, fixedPointLoPadBit = False, fixedPointHiPadBit = False, fixedPointSigned = True, fixedPointBitOffset = 0, fixedPointBitPrecision = 64}}},CompoundDatatypeMemberV1 {cdm1Name = "data", cdm1ByteOffset = 8, cdm1Dimensions = [], cdm1Datatype = DatatypeMessageData {datatypeMessageVersion = 1, datatypeClass = DatatypeString PaddingNull CharacterSetAscii 2}}]
+          DATASPACE  SIMPLE { ( 551 ) / ( 551 ) }
+        }
+        DATASET "cycle_history_dt" {
+          invalid datatype: DatatypeCompoundV1 [CompoundDatatypeMemberV1 {cdm1Name = "cycle", cdm1ByteOffset = 0, cdm1Dimensions = [], cdm1Datatype = DatatypeMessageData {datatypeMessageVersion = 1, datatypeClass = DatatypeFixedPoint {fixedPointDataElementSize = 8, fixedPointByteOrder = LittleEndian, fixedPointLoPadBit = False, fixedPointHiPadBit = False, fixedPointSigned = True, fixedPointBitOffset = 0, fixedPointBitPrecision = 64}}},CompoundDatatypeMemberV1 {cdm1Name = "data", cdm1ByteOffset = 8, cdm1Dimensions = [], cdm1Datatype = DatatypeMessageData {datatypeMessageVersion = 1, datatypeClass = DatatypeFloatingPoint {floatingPointByteOrder = LittleEndian, floatingPointLowBitPad = False, floatingPointHighBitPad = False, floatingPointInternalBitPad = False, floatingPointMantissaNormalization = NoNormalization, floatingPointSignLocation = 63, floatingPointBitOffset = 0, floatingPointBitPrecision = 64, floatingPointExponentLocation = 52, floatingPointExponentSize = 11, floatingPointMantissaLocation = 0, floatingPointMantissaSize = 52, floatingPointExponentBias = 1023}}}]
+          DATASPACE  SIMPLE { ( 14 ) / ( 14 ) }
+        }
+        DATASET "cycle_history_epoch" {
+          invalid datatype: DatatypeCompoundV1 [CompoundDatatypeMemberV1 {cdm1Name = "cycle", cdm1ByteOffset = 0, cdm1Dimensions = [], cdm1Datatype = DatatypeMessageData {datatypeMessageVersion = 1, datatypeClass = DatatypeFixedPoint {fixedPointDataElementSize = 8, fixedPointByteOrder = LittleEndian, fixedPointLoPadBit = False, fixedPointHiPadBit = False, fixedPointSigned = True, fixedPointBitOffset = 0, fixedPointBitPrecision = 64}}},CompoundDatatypeMemberV1 {cdm1Name = "data", cdm1ByteOffset = 8, cdm1Dimensions = [], cdm1Datatype = DatatypeMessageData {datatypeMessageVersion = 1, datatypeClass = DatatypeFloatingPoint {floatingPointByteOrder = LittleEndian, floatingPointLowBitPad = False, floatingPointHighBitPad = False, floatingPointInternalBitPad = False, floatingPointMantissaNormalization = NoNormalization, floatingPointSignLocation = 63, floatingPointBitOffset = 0, floatingPointBitPrecision = 64, floatingPointExponentLocation = 52, floatingPointExponentSize = 11, floatingPointMantissaLocation = 0, floatingPointMantissaSize = 52, floatingPointExponentBias = 1023}}}]
+          DATASPACE  SIMPLE { ( 551 ) / ( 551 ) }
+        }
+        DATASET "cycle_history_llk_euclidian" {
+          invalid datatype: DatatypeCompoundV1 [CompoundDatatypeMemberV1 {cdm1Name = "cycle", cdm1ByteOffset = 0, cdm1Dimensions = [], cdm1Datatype = DatatypeMessageData {datatypeMessageVersion = 1, datatypeClass = DatatypeFixedPoint {fixedPointDataElementSize = 8, fixedPointByteOrder = LittleEndian, fixedPointLoPadBit = False, fixedPointHiPadBit = False, fixedPointSigned = True, fixedPointBitOffset = 0, fixedPointBitPrecision = 64}}},CompoundDatatypeMemberV1 {cdm1Name = "data", cdm1ByteOffset = 8, cdm1Dimensions = [], cdm1Datatype = DatatypeMessageData {datatypeMessageVersion = 1, datatypeClass = DatatypeFloatingPoint {floatingPointByteOrder = LittleEndian, floatingPointLowBitPad = False, floatingPointHighBitPad = False, floatingPointInternalBitPad = False, floatingPointMantissaNormalization = NoNormalization, floatingPointSignLocation = 63, floatingPointBitOffset = 0, floatingPointBitPrecision = 64, floatingPointExponentLocation = 52, floatingPointExponentSize = 11, floatingPointMantissaLocation = 0, floatingPointMantissaSize = 52, floatingPointExponentBias = 1023}}}]
+          DATASPACE  SIMPLE { ( 15 ) / ( 15 ) }
+        }
+        DATASET "cycle_history_llk_gaussian" {
+          invalid datatype: DatatypeCompoundV1 [CompoundDatatypeMemberV1 {cdm1Name = "cycle", cdm1ByteOffset = 0, cdm1Dimensions = [], cdm1Datatype = DatatypeMessageData {datatypeMessageVersion = 1, datatypeClass = DatatypeFixedPoint {fixedPointDataElementSize = 8, fixedPointByteOrder = LittleEndian, fixedPointLoPadBit = False, fixedPointHiPadBit = False, fixedPointSigned = True, fixedPointBitOffset = 0, fixedPointBitPrecision = 64}}},CompoundDatatypeMemberV1 {cdm1Name = "data", cdm1ByteOffset = 8, cdm1Dimensions = [], cdm1Datatype = DatatypeMessageData {datatypeMessageVersion = 1, datatypeClass = DatatypeFloatingPoint {floatingPointByteOrder = LittleEndian, floatingPointLowBitPad = False, floatingPointHighBitPad = False, floatingPointInternalBitPad = False, floatingPointMantissaNormalization = NoNormalization, floatingPointSignLocation = 63, floatingPointBitOffset = 0, floatingPointBitPrecision = 64, floatingPointExponentLocation = 52, floatingPointExponentSize = 11, floatingPointMantissaLocation = 0, floatingPointMantissaSize = 52, floatingPointExponentBias = 1023}}}]
+          DATASPACE  SIMPLE { ( 15 ) / ( 15 ) }
+        }
+        DATASET "cycle_history_llk_poisson" {
+          invalid datatype: DatatypeCompoundV1 [CompoundDatatypeMemberV1 {cdm1Name = "cycle", cdm1ByteOffset = 0, cdm1Dimensions = [], cdm1Datatype = DatatypeMessageData {datatypeMessageVersion = 1, datatypeClass = DatatypeFixedPoint {fixedPointDataElementSize = 8, fixedPointByteOrder = LittleEndian, fixedPointLoPadBit = False, fixedPointHiPadBit = False, fixedPointSigned = True, fixedPointBitOffset = 0, fixedPointBitPrecision = 64}}},CompoundDatatypeMemberV1 {cdm1Name = "data", cdm1ByteOffset = 8, cdm1Dimensions = [], cdm1Datatype = DatatypeMessageData {datatypeMessageVersion = 1, datatypeClass = DatatypeFloatingPoint {floatingPointByteOrder = LittleEndian, floatingPointLowBitPad = False, floatingPointHighBitPad = False, floatingPointInternalBitPad = False, floatingPointMantissaNormalization = NoNormalization, floatingPointSignLocation = 63, floatingPointBitOffset = 0, floatingPointBitPrecision = 64, floatingPointExponentLocation = 52, floatingPointExponentSize = 11, floatingPointMantissaLocation = 0, floatingPointMantissaSize = 52, floatingPointExponentBias = 1023}}}]
+          DATASPACE  SIMPLE { ( 15 ) / ( 15 ) }
+        }
+        DATASET "cycle_history_nb_obj" {
+          invalid datatype: DatatypeCompoundV1 [CompoundDatatypeMemberV1 {cdm1Name = "cycle", cdm1ByteOffset = 0, cdm1Dimensions = [], cdm1Datatype = DatatypeMessageData {datatypeMessageVersion = 1, datatypeClass = DatatypeFixedPoint {fixedPointDataElementSize = 8, fixedPointByteOrder = LittleEndian, fixedPointLoPadBit = False, fixedPointHiPadBit = False, fixedPointSigned = True, fixedPointBitOffset = 0, fixedPointBitPrecision = 64}}},CompoundDatatypeMemberV1 {cdm1Name = "data", cdm1ByteOffset = 8, cdm1Dimensions = [], cdm1Datatype = DatatypeMessageData {datatypeMessageVersion = 1, datatypeClass = DatatypeFixedPoint {fixedPointDataElementSize = 8, fixedPointByteOrder = LittleEndian, fixedPointLoPadBit = False, fixedPointHiPadBit = False, fixedPointSigned = True, fixedPointBitOffset = 0, fixedPointBitPrecision = 64}}}]
+          DATASPACE  SIMPLE { ( 15 ) / ( 15 ) }
+        }
+        DATASET "cycle_history_nb_photons_calc" {
+          invalid datatype: DatatypeCompoundV1 [CompoundDatatypeMemberV1 {cdm1Name = "cycle", cdm1ByteOffset = 0, cdm1Dimensions = [], cdm1Datatype = DatatypeMessageData {datatypeMessageVersion = 1, datatypeClass = DatatypeFixedPoint {fixedPointDataElementSize = 8, fixedPointByteOrder = LittleEndian, fixedPointLoPadBit = False, fixedPointHiPadBit = False, fixedPointSigned = True, fixedPointBitOffset = 0, fixedPointBitPrecision = 64}}},CompoundDatatypeMemberV1 {cdm1Name = "data", cdm1ByteOffset = 8, cdm1Dimensions = [], cdm1Datatype = DatatypeMessageData {datatypeMessageVersion = 1, datatypeClass = DatatypeFloatingPoint {floatingPointByteOrder = LittleEndian, floatingPointLowBitPad = False, floatingPointHighBitPad = False, floatingPointInternalBitPad = False, floatingPointMantissaNormalization = NoNormalization, floatingPointSignLocation = 31, floatingPointBitOffset = 0, floatingPointBitPrecision = 32, floatingPointExponentLocation = 23, floatingPointExponentSize = 8, floatingPointMantissaLocation = 0, floatingPointMantissaSize = 23, floatingPointExponentBias = 127}}}]
+          DATASPACE  SIMPLE { ( 15 ) / ( 15 ) }
+        }
+        DATASET "cycle_history_nb_probe" {
+          invalid datatype: DatatypeCompoundV1 [CompoundDatatypeMemberV1 {cdm1Name = "cycle", cdm1ByteOffset = 0, cdm1Dimensions = [], cdm1Datatype = DatatypeMessageData {datatypeMessageVersion = 1, datatypeClass = DatatypeFixedPoint {fixedPointDataElementSize = 8, fixedPointByteOrder = LittleEndian, fixedPointLoPadBit = False, fixedPointHiPadBit = False, fixedPointSigned = True, fixedPointBitOffset = 0, fixedPointBitPrecision = 64}}},CompoundDatatypeMemberV1 {cdm1Name = "data", cdm1ByteOffset = 8, cdm1Dimensions = [], cdm1Datatype = DatatypeMessageData {datatypeMessageVersion = 1, datatypeClass = DatatypeFixedPoint {fixedPointDataElementSize = 8, fixedPointByteOrder = LittleEndian, fixedPointLoPadBit = False, fixedPointHiPadBit = False, fixedPointSigned = True, fixedPointBitOffset = 0, fixedPointBitPrecision = 64}}}]
+          DATASPACE  SIMPLE { ( 15 ) / ( 15 ) }
+        }
+        DATASET "cycle_history_time" {
+          invalid datatype: DatatypeCompoundV1 [CompoundDatatypeMemberV1 {cdm1Name = "cycle", cdm1ByteOffset = 0, cdm1Dimensions = [], cdm1Datatype = DatatypeMessageData {datatypeMessageVersion = 1, datatypeClass = DatatypeFixedPoint {fixedPointDataElementSize = 8, fixedPointByteOrder = LittleEndian, fixedPointLoPadBit = False, fixedPointHiPadBit = False, fixedPointSigned = True, fixedPointBitOffset = 0, fixedPointBitPrecision = 64}}},CompoundDatatypeMemberV1 {cdm1Name = "data", cdm1ByteOffset = 8, cdm1Dimensions = [], cdm1Datatype = DatatypeMessageData {datatypeMessageVersion = 1, datatypeClass = DatatypeFloatingPoint {floatingPointByteOrder = LittleEndian, floatingPointLowBitPad = False, floatingPointHighBitPad = False, floatingPointInternalBitPad = False, floatingPointMantissaNormalization = NoNormalization, floatingPointSignLocation = 63, floatingPointBitOffset = 0, floatingPointBitPrecision = 64, floatingPointExponentLocation = 52, floatingPointExponentSize = 11, floatingPointMantissaLocation = 0, floatingPointMantissaSize = 52, floatingPointExponentBias = 1023}}}]
+          DATASPACE  SIMPLE { ( 551 ) / ( 551 ) }
+        }
+        DATASET "cycle_history_update_background" {
+          invalid datatype: DatatypeCompoundV1 [CompoundDatatypeMemberV1 {cdm1Name = "cycle", cdm1ByteOffset = 0, cdm1Dimensions = [], cdm1Datatype = DatatypeMessageData {datatypeMessageVersion = 1, datatypeClass = DatatypeFixedPoint {fixedPointDataElementSize = 8, fixedPointByteOrder = LittleEndian, fixedPointLoPadBit = False, fixedPointHiPadBit = False, fixedPointSigned = True, fixedPointBitOffset = 0, fixedPointBitPrecision = 64}}},CompoundDatatypeMemberV1 {cdm1Name = "data", cdm1ByteOffset = 8, cdm1Dimensions = [], cdm1Datatype = DatatypeMessageData {datatypeMessageVersion = 1, datatypeClass = DatatypeEnumeration (DatatypeFixedPoint {fixedPointDataElementSize = 1, fixedPointByteOrder = LittleEndian, fixedPointLoPadBit = False, fixedPointHiPadBit = False, fixedPointSigned = True, fixedPointBitOffset = 0, fixedPointBitPrecision = 8}) [("FALSE",0),("TRUE",1)]}}]
+          DATASPACE  SIMPLE { ( 551 ) / ( 551 ) }
+        }
+        DATASET "cycle_history_update_obj" {
+          invalid datatype: DatatypeCompoundV1 [CompoundDatatypeMemberV1 {cdm1Name = "cycle", cdm1ByteOffset = 0, cdm1Dimensions = [], cdm1Datatype = DatatypeMessageData {datatypeMessageVersion = 1, datatypeClass = DatatypeFixedPoint {fixedPointDataElementSize = 8, fixedPointByteOrder = LittleEndian, fixedPointLoPadBit = False, fixedPointHiPadBit = False, fixedPointSigned = True, fixedPointBitOffset = 0, fixedPointBitPrecision = 64}}},CompoundDatatypeMemberV1 {cdm1Name = "data", cdm1ByteOffset = 8, cdm1Dimensions = [], cdm1Datatype = DatatypeMessageData {datatypeMessageVersion = 1, datatypeClass = DatatypeEnumeration (DatatypeFixedPoint {fixedPointDataElementSize = 1, fixedPointByteOrder = LittleEndian, fixedPointLoPadBit = False, fixedPointHiPadBit = False, fixedPointSigned = True, fixedPointBitOffset = 0, fixedPointBitPrecision = 8}) [("FALSE",0),("TRUE",1)]}}]
+          DATASPACE  SIMPLE { ( 536 ) / ( 536 ) }
+        }
+        DATASET "cycle_history_update_pos" {
+          invalid datatype: DatatypeCompoundV1 [CompoundDatatypeMemberV1 {cdm1Name = "cycle", cdm1ByteOffset = 0, cdm1Dimensions = [], cdm1Datatype = DatatypeMessageData {datatypeMessageVersion = 1, datatypeClass = DatatypeFixedPoint {fixedPointDataElementSize = 8, fixedPointByteOrder = LittleEndian, fixedPointLoPadBit = False, fixedPointHiPadBit = False, fixedPointSigned = True, fixedPointBitOffset = 0, fixedPointBitPrecision = 64}}},CompoundDatatypeMemberV1 {cdm1Name = "data", cdm1ByteOffset = 8, cdm1Dimensions = [], cdm1Datatype = DatatypeMessageData {datatypeMessageVersion = 1, datatypeClass = DatatypeEnumeration (DatatypeFixedPoint {fixedPointDataElementSize = 1, fixedPointByteOrder = LittleEndian, fixedPointLoPadBit = False, fixedPointHiPadBit = False, fixedPointSigned = True, fixedPointBitOffset = 0, fixedPointBitPrecision = 8}) [("FALSE",0),("TRUE",1)]}}]
+          DATASPACE  SIMPLE { ( 536 ) / ( 536 ) }
+        }
+        DATASET "cycle_history_update_probe" {
+          invalid datatype: DatatypeCompoundV1 [CompoundDatatypeMemberV1 {cdm1Name = "cycle", cdm1ByteOffset = 0, cdm1Dimensions = [], cdm1Datatype = DatatypeMessageData {datatypeMessageVersion = 1, datatypeClass = DatatypeFixedPoint {fixedPointDataElementSize = 8, fixedPointByteOrder = LittleEndian, fixedPointLoPadBit = False, fixedPointHiPadBit = False, fixedPointSigned = True, fixedPointBitOffset = 0, fixedPointBitPrecision = 64}}},CompoundDatatypeMemberV1 {cdm1Name = "data", cdm1ByteOffset = 8, cdm1Dimensions = [], cdm1Datatype = DatatypeMessageData {datatypeMessageVersion = 1, datatypeClass = DatatypeEnumeration (DatatypeFixedPoint {fixedPointDataElementSize = 1, fixedPointByteOrder = LittleEndian, fixedPointLoPadBit = False, fixedPointHiPadBit = False, fixedPointSigned = True, fixedPointBitOffset = 0, fixedPointBitPrecision = 8}) [("FALSE",0),("TRUE",1)]}}]
+          DATASPACE  SIMPLE { ( 536 ) / ( 536 ) }
+        }
+        DATASET "cycle_history_verbose" {
+          invalid datatype: DatatypeCompoundV1 [CompoundDatatypeMemberV1 {cdm1Name = "cycle", cdm1ByteOffset = 0, cdm1Dimensions = [], cdm1Datatype = DatatypeMessageData {datatypeMessageVersion = 1, datatypeClass = DatatypeFixedPoint {fixedPointDataElementSize = 8, fixedPointByteOrder = LittleEndian, fixedPointLoPadBit = False, fixedPointHiPadBit = False, fixedPointSigned = True, fixedPointBitOffset = 0, fixedPointBitPrecision = 64}}},CompoundDatatypeMemberV1 {cdm1Name = "data", cdm1ByteOffset = 8, cdm1Dimensions = [], cdm1Datatype = DatatypeMessageData {datatypeMessageVersion = 1, datatypeClass = DatatypeEnumeration (DatatypeFixedPoint {fixedPointDataElementSize = 1, fixedPointByteOrder = LittleEndian, fixedPointLoPadBit = False, fixedPointHiPadBit = False, fixedPointSigned = True, fixedPointBitOffset = 0, fixedPointBitPrecision = 8}) [("FALSE",0),("TRUE",1)]}}]
+          DATASPACE  SIMPLE { ( 536 ) / ( 536 ) }
+        }
+        DATASET "llk_euclidian" {
+          DATATYPE  H5T_IEEE_F64LE
+          DATASPACE  SCALAR
+        }
+        DATASET "llk_gaussian" {
+          DATATYPE  H5T_IEEE_F64LE
+          DATASPACE  SCALAR
+        }
+        DATASET "llk_poisson" {
+          DATATYPE  H5T_IEEE_F64LE
+          DATASPACE  SCALAR
+        }
+        DATASET "nb_photons_calc" {
+          DATATYPE  H5T_IEEE_F32LE
+          DATASPACE  SCALAR
+        }
+        DATASET "obj_phase_ramp_dxy" {
+          DATATYPE  H5T_IEEE_F32LE
+          DATASPACE  SIMPLE { ( 2 ) / ( 2 ) }
+          ATTRIBUTE "note" {
+            DATATYPE  H5T_STRING {
+              STRSIZE H5T_VARIABLE;
+              STRPAD H5T_STR_NULLTERM;
+              CSET H5T_CSET_UTF8;
+              CTYPE H5T_C_S1;
+            }
+            DATASPACE  SCALAR
+          }
+        }
+      }
+      DATASET "version" {
+        DATATYPE  H5T_STRING {
+          STRSIZE H5T_VARIABLE;
+          STRPAD H5T_STR_NULLTERM;
+          CSET H5T_CSET_UTF8;
+          CTYPE H5T_C_S1;
+        }
+        DATASPACE  SCALAR
+      }
+    }
+    DATASET "program_name" {
+      DATATYPE  H5T_STRING {
+        STRSIZE H5T_VARIABLE;
+        STRPAD H5T_STR_NULLTERM;
+        CSET H5T_CSET_UTF8;
+        CTYPE H5T_C_S1;
+      }
+      DATASPACE  SCALAR
+    }
+    GROUP "result_1" {
+      ATTRIBUTE "NX_class" {
+        DATATYPE  H5T_STRING {
+          STRSIZE H5T_VARIABLE;
+          STRPAD H5T_STR_NULLTERM;
+          CSET H5T_CSET_UTF8;
+          CTYPE H5T_C_S1;
+        }
+        DATASPACE  SCALAR
+      }
+      ATTRIBUTE "auxiliary_signals" {
+        DATATYPE  H5T_STRING {
+          STRSIZE H5T_VARIABLE;
+          STRPAD H5T_STR_NULLTERM;
+          CSET H5T_CSET_UTF8;
+          CTYPE H5T_C_S1;
+        }
+        DATASPACE  SIMPLE { ( 2 ) / ( 2 ) }
+      }
+      ATTRIBUTE "axes" {
+        DATATYPE  H5T_STRING {
+          STRSIZE H5T_VARIABLE;
+          STRPAD H5T_STR_NULLTERM;
+          CSET H5T_CSET_UTF8;
+          CTYPE H5T_C_S1;
+        }
+        DATASPACE  SIMPLE { ( 2 ) / ( 2 ) }
+      }
+      ATTRIBUTE "signal" {
+        DATATYPE  H5T_STRING {
+          STRSIZE H5T_VARIABLE;
+          STRPAD H5T_STR_NULLTERM;
+          CSET H5T_CSET_UTF8;
+          CTYPE H5T_C_S1;
+        }
+        DATASPACE  SCALAR
+      }
+      DATASET "Object-layer00" {
+        invalid datatype: DatatypeCompoundV1 [CompoundDatatypeMemberV1 {cdm1Name = "r", cdm1ByteOffset = 0, cdm1Dimensions = [], cdm1Datatype = DatatypeMessageData {datatypeMessageVersion = 1, datatypeClass = DatatypeFloatingPoint {floatingPointByteOrder = LittleEndian, floatingPointLowBitPad = False, floatingPointHighBitPad = False, floatingPointInternalBitPad = False, floatingPointMantissaNormalization = NoNormalization, floatingPointSignLocation = 31, floatingPointBitOffset = 0, floatingPointBitPrecision = 32, floatingPointExponentLocation = 23, floatingPointExponentSize = 8, floatingPointMantissaLocation = 0, floatingPointMantissaSize = 23, floatingPointExponentBias = 127}}},CompoundDatatypeMemberV1 {cdm1Name = "i", cdm1ByteOffset = 4, cdm1Dimensions = [], cdm1Datatype = DatatypeMessageData {datatypeMessageVersion = 1, datatypeClass = DatatypeFloatingPoint {floatingPointByteOrder = LittleEndian, floatingPointLowBitPad = False, floatingPointHighBitPad = False, floatingPointInternalBitPad = False, floatingPointMantissaNormalization = NoNormalization, floatingPointSignLocation = 31, floatingPointBitOffset = 0, floatingPointBitPrecision = 32, floatingPointExponentLocation = 23, floatingPointExponentSize = 8, floatingPointMantissaLocation = 0, floatingPointMantissaSize = 23, floatingPointExponentBias = 127}}}]
+        DATASPACE  SIMPLE { ( 796, 800 ) / ( 796, 800 ) }
+        ATTRIBUTE "interpretation" {
+          DATATYPE  H5T_STRING {
+            STRSIZE H5T_VARIABLE;
+            STRPAD H5T_STR_NULLTERM;
+            CSET H5T_CSET_UTF8;
+            CTYPE H5T_C_S1;
+          }
+          DATASPACE  SCALAR
+        }
+      }
+      DATASET "basis_vectors" {
+        DATATYPE  H5T_IEEE_F32LE
+        DATASPACE  SIMPLE { ( 2, 3 ) / ( 2, 3 ) }
+      }
+      DATASET "col_coords" {
+        DATATYPE  H5T_IEEE_F64LE
+        DATASPACE  SIMPLE { ( 800 ) / ( 800 ) }
+        ATTRIBUTE "long_name" {
+          DATATYPE  H5T_STRING {
+            STRSIZE H5T_VARIABLE;
+            STRPAD H5T_STR_NULLTERM;
+            CSET H5T_CSET_UTF8;
+            CTYPE H5T_C_S1;
+          }
+          DATASPACE  SCALAR
+        }
+        ATTRIBUTE "units" {
+          DATATYPE  H5T_STRING {
+            STRSIZE H5T_VARIABLE;
+            STRPAD H5T_STR_NULLTERM;
+            CSET H5T_CSET_UTF8;
+            CTYPE H5T_C_S1;
+          }
+          DATASPACE  SCALAR
+        }
+      }
+      DATASET "corner_positions" {
+        DATATYPE  H5T_IEEE_F64LE
+        DATASPACE  SIMPLE { ( 3 ) / ( 3 ) }
+      }
+      DATASET "data" {
+        invalid datatype: DatatypeCompoundV1 [CompoundDatatypeMemberV1 {cdm1Name = "r", cdm1ByteOffset = 0, cdm1Dimensions = [], cdm1Datatype = DatatypeMessageData {datatypeMessageVersion = 1, datatypeClass = DatatypeFloatingPoint {floatingPointByteOrder = LittleEndian, floatingPointLowBitPad = False, floatingPointHighBitPad = False, floatingPointInternalBitPad = False, floatingPointMantissaNormalization = NoNormalization, floatingPointSignLocation = 31, floatingPointBitOffset = 0, floatingPointBitPrecision = 32, floatingPointExponentLocation = 23, floatingPointExponentSize = 8, floatingPointMantissaLocation = 0, floatingPointMantissaSize = 23, floatingPointExponentBias = 127}}},CompoundDatatypeMemberV1 {cdm1Name = "i", cdm1ByteOffset = 4, cdm1Dimensions = [], cdm1Datatype = DatatypeMessageData {datatypeMessageVersion = 1, datatypeClass = DatatypeFloatingPoint {floatingPointByteOrder = LittleEndian, floatingPointLowBitPad = False, floatingPointHighBitPad = False, floatingPointInternalBitPad = False, floatingPointMantissaNormalization = NoNormalization, floatingPointSignLocation = 31, floatingPointBitOffset = 0, floatingPointBitPrecision = 32, floatingPointExponentLocation = 23, floatingPointExponentSize = 8, floatingPointMantissaLocation = 0, floatingPointMantissaSize = 23, floatingPointExponentBias = 127}}}]
+        DATASPACE  SIMPLE { ( 1, 796, 800 ) / ( 1, 796, 800 ) }
+      }
+      DATASET "data_space" {
+        DATATYPE  H5T_STRING {
+          STRSIZE H5T_VARIABLE;
+          STRPAD H5T_STR_NULLTERM;
+          CSET H5T_CSET_UTF8;
+          CTYPE H5T_C_S1;
+        }
+        DATASPACE  SCALAR
+      }
+      DATASET "data_type" {
+        DATATYPE  H5T_STRING {
+          STRSIZE H5T_VARIABLE;
+          STRPAD H5T_STR_NULLTERM;
+          CSET H5T_CSET_UTF8;
+          CTYPE H5T_C_S1;
+        }
+        DATASPACE  SCALAR
+      }
+      DATASET "image_size" {
+        DATATYPE  H5T_IEEE_F64LE
+        DATASPACE  SIMPLE { ( 2 ) / ( 2 ) }
+      }
+      DATASET "mask" {
+        DATATYPE  H5T_STD_I64LE
+        DATASPACE  SIMPLE { ( 796, 800 ) / ( 796, 800 ) }
+        ATTRIBUTE "note" {
+          DATATYPE  H5T_STRING {
+            STRSIZE H5T_VARIABLE;
+            STRPAD H5T_STR_NULLTERM;
+            CSET H5T_CSET_UTF8;
+            CTYPE H5T_C_S1;
+          }
+          DATASPACE  SCALAR
+        }
+      }
+      DATASET "obj_illumination" {
+        DATATYPE  H5T_IEEE_F32LE
+        DATASPACE  SIMPLE { ( 796, 800 ) / ( 796, 800 ) }
+        ATTRIBUTE "note" {
+          DATATYPE  H5T_STRING {
+            STRSIZE H5T_VARIABLE;
+            STRPAD H5T_STR_NULLTERM;
+            CSET H5T_CSET_UTF8;
+            CTYPE H5T_C_S1;
+          }
+          DATASPACE  SCALAR
+        }
+      }
+      DATASET "row_coords" {
+        DATATYPE  H5T_IEEE_F64LE
+        DATASPACE  SIMPLE { ( 796 ) / ( 796 ) }
+        ATTRIBUTE "long_name" {
+          DATATYPE  H5T_STRING {
+            STRSIZE H5T_VARIABLE;
+            STRPAD H5T_STR_NULLTERM;
+            CSET H5T_CSET_UTF8;
+            CTYPE H5T_C_S1;
+          }
+          DATASPACE  SCALAR
+        }
+        ATTRIBUTE "units" {
+          DATATYPE  H5T_STRING {
+            STRSIZE H5T_VARIABLE;
+            STRPAD H5T_STR_NULLTERM;
+            CSET H5T_CSET_UTF8;
+            CTYPE H5T_C_S1;
+          }
+          DATASPACE  SCALAR
+        }
+      }
+      DATASET "title" {
+        DATATYPE  H5T_STRING {
+          STRSIZE H5T_VARIABLE;
+          STRPAD H5T_STR_NULLTERM;
+          CSET H5T_CSET_UTF8;
+          CTYPE H5T_C_S1;
+        }
+        DATASPACE  SCALAR
+      }
+      DATASET "x_pixel_size" {
+        DATATYPE  H5T_IEEE_F64LE
+        DATASPACE  SCALAR
+      }
+      DATASET "y_pixel_size" {
+        DATATYPE  H5T_IEEE_F64LE
+        DATASPACE  SCALAR
+      }
+    }
+    GROUP "result_2" {
+      ATTRIBUTE "NX_class" {
+        DATATYPE  H5T_STRING {
+          STRSIZE H5T_VARIABLE;
+          STRPAD H5T_STR_NULLTERM;
+          CSET H5T_CSET_UTF8;
+          CTYPE H5T_C_S1;
+        }
+        DATASPACE  SCALAR
+      }
+      ATTRIBUTE "axes" {
+        DATATYPE  H5T_STRING {
+          STRSIZE H5T_VARIABLE;
+          STRPAD H5T_STR_NULLTERM;
+          CSET H5T_CSET_UTF8;
+          CTYPE H5T_C_S1;
+        }
+        DATASPACE  SIMPLE { ( 2 ) / ( 2 ) }
+      }
+      ATTRIBUTE "signal" {
+        DATATYPE  H5T_STRING {
+          STRSIZE H5T_VARIABLE;
+          STRPAD H5T_STR_NULLTERM;
+          CSET H5T_CSET_UTF8;
+          CTYPE H5T_C_S1;
+        }
+        DATASPACE  SCALAR
+      }
+      DATASET "col_coords" {
+        DATATYPE  H5T_IEEE_F64LE
+        DATASPACE  SIMPLE { ( 400 ) / ( 400 ) }
+        ATTRIBUTE "long_name" {
+          DATATYPE  H5T_STRING {
+            STRSIZE H5T_VARIABLE;
+            STRPAD H5T_STR_NULLTERM;
+            CSET H5T_CSET_UTF8;
+            CTYPE H5T_C_S1;
+          }
+          DATASPACE  SCALAR
+        }
+        ATTRIBUTE "units" {
+          DATATYPE  H5T_STRING {
+            STRSIZE H5T_VARIABLE;
+            STRPAD H5T_STR_NULLTERM;
+            CSET H5T_CSET_UTF8;
+            CTYPE H5T_C_S1;
+          }
+          DATASPACE  SCALAR
+        }
+      }
+      DATASET "data" {
+        invalid datatype: DatatypeCompoundV1 [CompoundDatatypeMemberV1 {cdm1Name = "r", cdm1ByteOffset = 0, cdm1Dimensions = [], cdm1Datatype = DatatypeMessageData {datatypeMessageVersion = 1, datatypeClass = DatatypeFloatingPoint {floatingPointByteOrder = LittleEndian, floatingPointLowBitPad = False, floatingPointHighBitPad = False, floatingPointInternalBitPad = False, floatingPointMantissaNormalization = NoNormalization, floatingPointSignLocation = 31, floatingPointBitOffset = 0, floatingPointBitPrecision = 32, floatingPointExponentLocation = 23, floatingPointExponentSize = 8, floatingPointMantissaLocation = 0, floatingPointMantissaSize = 23, floatingPointExponentBias = 127}}},CompoundDatatypeMemberV1 {cdm1Name = "i", cdm1ByteOffset = 4, cdm1Dimensions = [], cdm1Datatype = DatatypeMessageData {datatypeMessageVersion = 1, datatypeClass = DatatypeFloatingPoint {floatingPointByteOrder = LittleEndian, floatingPointLowBitPad = False, floatingPointHighBitPad = False, floatingPointInternalBitPad = False, floatingPointMantissaNormalization = NoNormalization, floatingPointSignLocation = 31, floatingPointBitOffset = 0, floatingPointBitPrecision = 32, floatingPointExponentLocation = 23, floatingPointExponentSize = 8, floatingPointMantissaLocation = 0, floatingPointMantissaSize = 23, floatingPointExponentBias = 127}}}]
+        DATASPACE  SIMPLE { ( 3, 400, 400 ) / ( 3, 400, 400 ) }
+        ATTRIBUTE "interpretation" {
+          DATATYPE  H5T_STRING {
+            STRSIZE H5T_VARIABLE;
+            STRPAD H5T_STR_NULLTERM;
+            CSET H5T_CSET_UTF8;
+            CTYPE H5T_C_S1;
+          }
+          DATASPACE  SCALAR
+        }
+      }
+      DATASET "data_space" {
+        DATATYPE  H5T_STRING {
+          STRSIZE H5T_VARIABLE;
+          STRPAD H5T_STR_NULLTERM;
+          CSET H5T_CSET_UTF8;
+          CTYPE H5T_C_S1;
+        }
+        DATASPACE  SCALAR
+      }
+      DATASET "image_size" {
+        DATATYPE  H5T_IEEE_F64LE
+        DATASPACE  SIMPLE { ( 2 ) / ( 2 ) }
+      }
+      DATASET "mask" {
+        DATATYPE  H5T_STD_I64LE
+        DATASPACE  SIMPLE { ( 400, 400 ) / ( 400, 400 ) }
+      }
+      DATASET "row_coords" {
+        DATATYPE  H5T_IEEE_F64LE
+        DATASPACE  SIMPLE { ( 400 ) / ( 400 ) }
+        ATTRIBUTE "long_name" {
+          DATATYPE  H5T_STRING {
+            STRSIZE H5T_VARIABLE;
+            STRPAD H5T_STR_NULLTERM;
+            CSET H5T_CSET_UTF8;
+            CTYPE H5T_C_S1;
+          }
+          DATASPACE  SCALAR
+        }
+        ATTRIBUTE "units" {
+          DATATYPE  H5T_STRING {
+            STRSIZE H5T_VARIABLE;
+            STRPAD H5T_STR_NULLTERM;
+            CSET H5T_CSET_UTF8;
+            CTYPE H5T_C_S1;
+          }
+          DATASPACE  SCALAR
+        }
+      }
+      DATASET "title" {
+        DATATYPE  H5T_STRING {
+          STRSIZE H5T_VARIABLE;
+          STRPAD H5T_STR_NULLTERM;
+          CSET H5T_CSET_UTF8;
+          CTYPE H5T_C_S1;
+        }
+        DATASPACE  SCALAR
+      }
+      DATASET "x_pixel_size" {
+        DATATYPE  H5T_IEEE_F64LE
+        DATASPACE  SCALAR
+      }
+      DATASET "y_pixel_size" {
+        DATATYPE  H5T_IEEE_F64LE
+        DATASPACE  SCALAR
+      }
+    }
+    GROUP "result_3" {
+      ATTRIBUTE "NX_class" {
+        DATATYPE  H5T_STRING {
+          STRSIZE H5T_VARIABLE;
+          STRPAD H5T_STR_NULLTERM;
+          CSET H5T_CSET_UTF8;
+          CTYPE H5T_C_S1;
+        }
+        DATASPACE  SCALAR
+      }
+      ATTRIBUTE "signal" {
+        DATATYPE  H5T_STRING {
+          STRSIZE H5T_VARIABLE;
+          STRPAD H5T_STR_NULLTERM;
+          CSET H5T_CSET_UTF8;
+          CTYPE H5T_C_S1;
+        }
+        DATASPACE  SCALAR
+      }
+      DATASET "data" {
+        DATATYPE  H5T_IEEE_F32LE
+        DATASPACE  SIMPLE { ( 400, 400 ) / ( 400, 400 ) }
+        ATTRIBUTE "interpretation" {
+          DATATYPE  H5T_STRING {
+            STRSIZE H5T_VARIABLE;
+            STRPAD H5T_STR_NULLTERM;
+            CSET H5T_CSET_UTF8;
+            CTYPE H5T_C_S1;
+          }
+          DATASPACE  SCALAR
+        }
+      }
+      DATASET "data_space" {
+        DATATYPE  H5T_STRING {
+          STRSIZE H5T_VARIABLE;
+          STRPAD H5T_STR_NULLTERM;
+          CSET H5T_CSET_UTF8;
+          CTYPE H5T_C_S1;
+        }
+        DATASPACE  SCALAR
+      }
+      DATASET "data_type" {
+        DATATYPE  H5T_STRING {
+          STRSIZE H5T_VARIABLE;
+          STRPAD H5T_STR_NULLTERM;
+          CSET H5T_CSET_UTF8;
+          CTYPE H5T_C_S1;
+        }
+        DATASPACE  SCALAR
+      }
+      DATASET "title" {
+        DATATYPE  H5T_STRING {
+          STRSIZE H5T_VARIABLE;
+          STRPAD H5T_STR_NULLTERM;
+          CSET H5T_CSET_UTF8;
+          CTYPE H5T_C_S1;
+        }
+        DATASPACE  SCALAR
+      }
+    }
+    GROUP "result_5" {
+      ATTRIBUTE "NX_class" {
+        DATATYPE  H5T_STRING {
+          STRSIZE H5T_VARIABLE;
+          STRPAD H5T_STR_NULLTERM;
+          CSET H5T_CSET_UTF8;
+          CTYPE H5T_C_S1;
+        }
+        DATASPACE  SCALAR
+      }
+      ATTRIBUTE "note" {
+        DATATYPE  H5T_STRING {
+          STRSIZE H5T_VARIABLE;
+          STRPAD H5T_STR_NULLTERM;
+          CSET H5T_CSET_UTF8;
+          CTYPE H5T_C_S1;
+        }
+        DATASPACE  SCALAR
+      }
+      ATTRIBUTE "signal" {
+        DATATYPE  H5T_STRING {
+          STRSIZE H5T_VARIABLE;
+          STRPAD H5T_STR_NULLTERM;
+          CSET H5T_CSET_UTF8;
+          CTYPE H5T_C_S1;
+        }
+        DATASPACE  SCALAR
+      }
+      DATASET "data" {
+        DATATYPE  H5T_IEEE_F32LE
+        DATASPACE  SIMPLE { ( 4, 1025 ) / ( 4, 1025 ) }
+        ATTRIBUTE "interpretation" {
+          DATATYPE  H5T_STRING {
+            STRSIZE H5T_VARIABLE;
+            STRPAD H5T_STR_NULLTERM;
+            CSET H5T_CSET_UTF8;
+            CTYPE H5T_C_S1;
+          }
+          DATASPACE  SCALAR
+        }
+      }
+      DATASET "data_space" {
+        DATATYPE  H5T_STRING {
+          STRSIZE H5T_VARIABLE;
+          STRPAD H5T_STR_NULLTERM;
+          CSET H5T_CSET_UTF8;
+          CTYPE H5T_C_S1;
+        }
+        DATASPACE  SCALAR
+      }
+    }
+    DATASET "start_time" {
+      DATATYPE  H5T_STRING {
+        STRSIZE H5T_VARIABLE;
+        STRPAD H5T_STR_NULLTERM;
+        CSET H5T_CSET_UTF8;
+        CTYPE H5T_C_S1;
+      }
+      DATASPACE  SCALAR
+    }
+  }
+}

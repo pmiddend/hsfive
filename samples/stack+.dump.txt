@@ -1,0 +1,6 @@
+GROUP "/" {
+  DATASET "stack" {
+    DATATYPE  H5T_IEEE_F64LE
+    DATASPACE  SIMPLE { ( 3, 50, 10, 100 ) / ( 3, 50, 10, 100 ) }
+  }
+}

@@ -1,0 +1,57 @@
+GROUP "/" {
+  ATTRIBUTE "attr1" {
+    DATATYPE  H5T_STD_U16BE
+    DATASPACE  SIMPLE { ( 10 ) / ( 10 ) }
+    DATA {
+      (0): 97
+    }
+  }
+  ATTRIBUTE "attr2" {
+    DATATYPE  H5T_STD_U16BE
+    DATASPACE  SIMPLE { ( 2, 2 ) / ( 2, 2 ) }
+    DATA {
+      (0): 0
+    }
+  }
+  GROUP "g1" {
+    GROUP "g1.1" {
+      DATASET "dset1.1.1" {
+        DATATYPE  H5T_STD_I32BE
+        DATASPACE  SIMPLE { ( 10, 10 ) / ( 10, 10 ) }
+        ATTRIBUTE "attr1" {
+          DATATYPE  H5T_STD_U16BE
+          DATASPACE  SIMPLE { ( 27 ) / ( 27 ) }
+          DATA {
+            (0): 49
+          }
+        }
+        ATTRIBUTE "attr2" {
+          DATATYPE  H5T_STD_U16BE
+          DATASPACE  SIMPLE { ( 27 ) / ( 27 ) }
+          DATA {
+            (0): 50
+          }
+        }
+      }
+      DATASET "dset1.1.2" {
+        DATATYPE  H5T_STD_I32BE
+        DATASPACE  SIMPLE { ( 20 ) / ( 20 ) }
+      }
+    }
+    GROUP "g1.2" {
+      GROUP "g1.2" {
+
+      }
+    }
+  }
+  GROUP "g2" {
+    DATASET "dset2.1" {
+      DATATYPE  H5T_IEEE_F32BE
+      DATASPACE  SIMPLE { ( 10 ) / ( 10 ) }
+    }
+    DATASET "dset2.2" {
+      DATATYPE  H5T_IEEE_F32BE
+      DATASPACE  SIMPLE { ( 3, 5 ) / ( 3, 5 ) }
+    }
+  }
+}
