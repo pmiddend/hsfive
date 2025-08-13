@@ -2,7 +2,7 @@
 
 set -euo pipefail
 
-for file in samples/*.{h5,nxs,cxi,nx}; do
+for file in samples/*.{h5,nxs,cxi}; do
     dumpfile="${file%.*}.dump.txt"
     outfile="${file%.*}.out.txt"
     echo "Dumping $file"

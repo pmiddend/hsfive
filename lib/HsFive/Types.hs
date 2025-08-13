@@ -3,6 +3,7 @@
 
 module HsFive.Types where
 
+import Control.Applicative ((<|>))
 import Control.Monad (MonadPlus, replicateM)
 import Data.Binary (getWord8)
 import Data.Binary.Get (bytesRead, getInt32le, getInt64le, getWord16le, isEmpty, isolate, label, runGet, runGetOrFail, skip)
@@ -43,7 +44,7 @@ import HsFive.CoreTypes
     LinkMessageData (LinkMessageData, linkInfoLinkType),
     LinkType (HardLink),
     Message (AttributeMessage, DataStorageFilterPipelineMessage, DataStorageLayoutMessage, DataspaceMessage, DatatypeMessage, LinkMessage, ObjectHeaderContinuationMessage, SharedMessage, SymbolTableMessage),
-    ObjectHeader (ObjectHeader),
+    ObjectHeader (ObjectHeader, ohTrackCreationOrder),
     ReferenceType,
     SharedMessageData (SharedMessageData),
     SharedMessageType (SharedMessageTypeCommitted),
@@ -62,6 +63,7 @@ import HsFive.CoreTypes
     getMessage,
     getObjectHeader,
     getSuperblock,
+    getV2ObjectHeaderContinuationBlock,
     gstnEntries,
     h5sbSymbolTableEntry,
     h5steObjectHeaderAddress,
@@ -158,10 +160,10 @@ readSuperblock handle = do
 tryPick :: (Foldable t, MonadPlus m, Functor t) => (a1 -> m a2) -> t a1 -> m a2
 tryPick f as = msum (f <$> as)
 
-resolveContinuationMessages :: Handle -> [Message] -> IO [Message]
-resolveContinuationMessages handle messages = do
+resolveContinuationMessages :: Handle -> Bool -> [Message] -> IO [Message]
+resolveContinuationMessages handle trackCreationOrder messages = do
   putStrLn "resolving continuation"
-  foldMap (resolveContinuationMessage handle) messages
+  foldMap (resolveContinuationMessage handle trackCreationOrder) messages
 
 resolveSharedMessages :: Handle -> [Message] -> IO [Message]
 resolveSharedMessages handle messages = do
@@ -192,7 +194,7 @@ resolveHardLink _handle _readerStateref _previousPath _maybeHeap _message = pure
 
 resolveSharedMessage :: Handle -> Message -> IO [Message]
 resolveSharedMessage handle (SharedMessage (SharedMessageData _originalType (SharedMessageTypeCommitted otherHeaderAddress))) = do
-  putStrLn $ "continuation seeking to " <> show otherHeaderAddress
+  putStrLn $ "shared seeking to " <> show otherHeaderAddress
   hSeek handle AbsoluteSeek (fromIntegral otherHeaderAddress)
   data' <- BSL.hGet handle 4096
   case runGetOrFail getObjectHeader data' of
@@ -203,8 +205,8 @@ resolveSharedMessage handle (SharedMessage (SharedMessageData _originalType (Sha
     Right (_, _, otherHeader) -> error ("parsing shared message target (object header) failed, expected exactly one message in the shared message object header, but got: " <> show otherHeader)
 resolveSharedMessage _handle m = pure [m]
 
-resolveContinuationMessage :: Handle -> Message -> IO [Message]
-resolveContinuationMessage handle (ObjectHeaderContinuationMessage continuationAddress length') = do
+resolveContinuationMessage :: Handle -> Bool -> Message -> IO [Message]
+resolveContinuationMessage handle trackCreationOrder (ObjectHeaderContinuationMessage continuationAddress length') = do
   putStrLn $ "continuation seeking to " <> show continuationAddress
   hSeek handle AbsoluteSeek (fromIntegral continuationAddress)
   data' <- BSL.hGet handle (fromIntegral length')
@@ -215,7 +217,8 @@ resolveContinuationMessage handle (ObjectHeaderContinuationMessage continuationA
         _flags <- getWord8
         skip 3
         label ("message type " <> show messageType) (isolate (fromIntegral headerMessageDataSize) (getMessage messageType))
-      decodeMessages = do
+      decodeV2Messages = getV2ObjectHeaderContinuationBlock trackCreationOrder
+      decodeV1Messages = do
         bytesRead' <- bytesRead
         let remainder = bytesRead' `mod` 8
         skip (fromIntegral remainder)
@@ -225,15 +228,15 @@ resolveContinuationMessage handle (ObjectHeaderContinuationMessage continuationA
           then pure []
           else do
             m <- readMessage
-            ms <- decodeMessages
+            ms <- decodeV1Messages
             pure (debugLog "m" m : ms)
-  case runGetOrFail decodeMessages data' of
+  case runGetOrFail (decodeV2Messages <|> decodeV1Messages) data' of
     Left (_, _, e') -> error ("parsing continuation messages failed: " <> show e')
     Right (_, _, messages) -> do
       putStrLn $ "continuation messages: " <> show messages
       -- Important: We could have more continuations, recursively!
-      foldMap (resolveContinuationMessage handle) messages
-resolveContinuationMessage _handle m = pure [m]
+      foldMap (resolveContinuationMessage handle trackCreationOrder) messages
+resolveContinuationMessage _handle _trackCreationOrder m = pure [m]
 
 appendPath :: Path -> Text -> Path
 appendPath (Path xs) x
@@ -252,7 +255,7 @@ rootPath = Path mempty
 convertAttributeContent :: Handle -> CoreTypes.AttributeContent -> IO AttributeData
 convertAttributeContent _handle (AttributeContentFixedString content) = pure $ AttributeDataString (decodeUtf8Lenient $ BS.takeWhile (/= 0) content)
 convertAttributeContent _handle (AttributeContentEnumeration enumerationMap enumerationValue) = pure $ AttributeDataEnumeration enumerationMap enumerationValue
-convertAttributeContent handle (AttributeContentVariableLengthSequence baseType heapAddress objectIndex _size) = do
+convertAttributeContent handle (AttributeContentVariableLengthSequence _baseType heapAddress objectIndex _size) = do
   putStrLn $ "variable-length sequence: seeking to heap at " <> show heapAddress
   hSeek handle AbsoluteSeek (fromIntegral heapAddress)
   heapData <- BSL.hGet handle 8192
@@ -356,7 +359,11 @@ readNode handle readerStateRef previousPath maybeHeap e = do
                             BSL.takeWhile (/= 0) $
                               BSL.drop (fromIntegral linkNameOffset) heapData''
                       )
-      allMessagesAfterContinuations <- resolveContinuationMessages handle (ohHeaderMessages header)
+      allMessagesAfterContinuations <-
+        resolveContinuationMessages
+          handle
+          (ohTrackCreationOrder header)
+          (ohHeaderMessages header)
       allMessages <- resolveSharedMessages handle allMessagesAfterContinuations
       let filterAttribute (AttributeMessage attributeData) = Just attributeData
           filterAttribute _ = Nothing

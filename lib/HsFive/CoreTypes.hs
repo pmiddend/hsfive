@@ -8,7 +8,7 @@
 
 module HsFive.CoreTypes where
 
-import Control.Applicative ((<|>))
+import Control.Applicative (Alternative (some), (<|>))
 import Control.Monad (replicateM, replicateM_, void, when)
 import Data.Binary (Get, getWord8)
 import Data.Binary.Get (bytesRead, getByteString, getLazyByteStringNul, getRemainingLazyByteString, getWord16be, getWord16le, getWord32be, getWord32le, getWord64be, getWord64le, isEmpty, isolate, label, skip)
@@ -359,6 +359,7 @@ data ObjectHeader = ObjectHeader
   { ohVersion :: !Word8,
     ohObjectReferenceCount :: !Word32,
     ohTimes :: !(Maybe ObjectHeaderTimes),
+    ohTrackCreationOrder :: !Bool,
     ohHeaderMessages :: ![Message]
   }
   deriving (Show)
@@ -1395,6 +1396,42 @@ getObjectHeaderTimes =
     <*> getUnixSecondsSinceEpoch
     <*> getUnixSecondsSinceEpoch
 
+getMessageInsideBlockV2 :: Bool -> Get Message
+getMessageInsideBlockV2 trackCreationOrder = do
+  messageType <- getWord8
+  headerMessageDataSize <- getWord16le
+  flags <- getWord8
+  when trackCreationOrder (void getWord16le)
+  if (debugLog ("v2 message type " <> show messageType <> ", flags " <> show flags) (flags .&. 0b10)) > 0
+    then do
+      sharedVersion <- getWord8
+      sharedMessageType' <- getWord8
+      case sharedVersion of
+        2 -> do
+          sharedMessageType'' <- case sharedMessageType' of
+            0 -> fail ("flags " <> show flags <> " indicate a shared message, but the type is 0, which is not shared at all")
+            1 -> SharedMessageTypeShared <$> getWord64le
+            2 -> SharedMessageTypeCommitted <$> getAddress
+            3 -> pure SharedMessageShareable
+            smv -> fail ("invalid shared message type " <> show smv)
+          skipLabeled "zeroes after body" (headerMessageDataSize - 10)
+          pure
+            ( SharedMessage
+                ( SharedMessageData
+                    (fromIntegral messageType)
+                    sharedMessageType''
+                )
+            )
+        v -> fail ("invalid version of shared message: " <> show v <> ", message flags were " <> show flags)
+    else
+      isolate
+        (fromIntegral (debugLog ("v2 non-shared message type " <> show messageType <> ", flags " <> show flags) headerMessageDataSize))
+        ( label
+            "message inside v2 object header"
+            (getMessage (fromIntegral messageType))
+            <* getRemainingLazyByteString
+        )
+
 getObjectHeaderV2 :: Get ObjectHeader
 getObjectHeaderV2 = do
   signature' <- getByteString 4
@@ -1417,46 +1454,12 @@ getObjectHeaderV2 = do
           3 -> getWord64le
           n -> fail ("size of chunk #0 is not 0-3 but " <> show n)
   sizeOfChunk0 <- getSizeOfChunk0
-  let readMessage = do
-        messageType <- getWord8
-        headerMessageDataSize <- getWord16le
-        flags <- getWord8
-        when (objectHeaderFlags .&. 0b100 > 0) (void getWord16le)
-        if (debugLog ("v2 message type " <> show messageType <> ", flags " <> show flags) (flags .&. 0b10)) > 0
-          then do
-            sharedVersion <- getWord8
-            sharedMessageType' <- getWord8
-            case sharedVersion of
-              2 -> do
-                sharedMessageType'' <- case sharedMessageType' of
-                  0 -> fail ("flags " <> show flags <> " indicate a shared message, but the type is 0, which is not shared at all")
-                  1 -> SharedMessageTypeShared <$> getWord64le
-                  2 -> SharedMessageTypeCommitted <$> getAddress
-                  3 -> pure SharedMessageShareable
-                  smv -> fail ("invalid shared message type " <> show smv)
-                skipLabeled "zeroes after body" (headerMessageDataSize - 10)
-                pure
-                  ( SharedMessage
-                      ( SharedMessageData
-                          (fromIntegral messageType)
-                          sharedMessageType''
-                      )
-                  )
-              v -> fail ("invalid version of shared message: " <> show v <> ", message flags were " <> show flags)
-          else
-            isolate
-              (fromIntegral (debugLog ("v2 non-shared message type " <> show messageType <> ", flags " <> show flags) headerMessageDataSize))
-              ( label
-                  "message inside v2 object header"
-                  (getMessage (fromIntegral messageType))
-                  <* getRemainingLazyByteString
-              )
-      decodeMessages = do
+  let decodeMessages = do
         bytesRead' <- bytesRead
         if sizeOfChunk0 - fromIntegral bytesRead' <= 9
           then pure []
           else do
-            m <- readMessage
+            m <- getMessageInsideBlockV2 (objectHeaderFlags .&. 0b100 > 0)
             ms <- decodeMessages
             pure (m : ms)
   messages <-
@@ -1468,6 +1471,7 @@ getObjectHeaderV2 = do
         { ohVersion = version,
           ohObjectReferenceCount = 1,
           ohTimes = times,
+          ohTrackCreationOrder = objectHeaderFlags .&. 0b100 > 0,
           ohHeaderMessages = messages
         }
     )
@@ -1534,6 +1538,7 @@ getObjectHeaderV1 = do
         { ohVersion = version,
           ohObjectReferenceCount = objectReferenceCount,
           ohHeaderMessages = messages,
+          ohTrackCreationOrder = False,
           ohTimes = Nothing
         }
     )
@@ -1594,3 +1599,10 @@ getSuperblock = do
             fail ("Group Internal Node K must be greater than zero, but is " <> show (h5sbGroupInternalNodeK sb))
           pure sb
     else fail "couldn't get magic 8 bytes"
+
+getV2ObjectHeaderContinuationBlock :: Bool -> Get [Message]
+getV2ObjectHeaderContinuationBlock trackCreationOrder = do
+  signature' <- getByteString 4
+  -- "OCHK" in ASCII
+  when (signature' /= BS.pack [79, 67, 72, 75]) (fail "invalid object header continuation signature")
+  some (getMessageInsideBlockV2 trackCreationOrder)
