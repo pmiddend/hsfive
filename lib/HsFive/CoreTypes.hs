@@ -9,11 +9,11 @@
 module HsFive.CoreTypes where
 
 import Control.Applicative (Alternative (some), (<|>))
-import Control.Monad (replicateM, replicateM_, void, when)
+import Control.Monad (MonadPlus (mzero), forM, replicateM, replicateM_, void, when)
 import Data.Binary (Get, getWord8)
 import Data.Binary.Get (bytesRead, getByteString, getLazyByteStringNul, getRemainingLazyByteString, getWord16be, getWord16le, getWord32be, getWord32le, getWord64be, getWord64le, isEmpty, isolate, label, skip)
 import Data.Binary.IEEE754 (getFloat32be, getFloat64le)
-import Data.Bits (Bits (shiftL, (.|.)), shiftR, (.&.))
+import Data.Bits (Bits (shiftL, (.|.)), FiniteBits (countLeadingZeros, finiteBitSize), shiftR, (.&.))
 import qualified Data.ByteString as BS
 import qualified Data.ByteString.Lazy as BSL
 import Data.Maybe (fromJust)
@@ -41,6 +41,205 @@ getByteString' = getByteString . fromIntegral
 
 -- traceWith :: (a -> String) -> a -> a
 -- traceWith x f = f
+
+data FractalHeapHeader = FractalHeapHeader
+  { fhhAddressOfRootBlock :: !(Maybe Address),
+    fhhCurrentNumberOfRowsInRootIndirectBlock :: !Word16,
+    fhhStartingBlockSize :: !Length,
+    fhhTableWidth :: !Word16,
+    fhhMaximumHeapSize :: !Word16,
+    fhhMaximumDirectBlockSize :: !Length,
+    fhhDirectBlocksAreChecksummed :: !Bool
+  }
+  deriving (Show)
+
+getFractalHeapHeader :: Get FractalHeapHeader
+getFractalHeapHeader = do
+  signature' <- getByteString 4
+  -- "FRHP" in ASCII
+  when (signature' /= BS.pack [70, 82, 72, 80]) (fail "invalid fractal heap signature")
+
+  version <- getWord8
+  -- "FRHP" in ASCII
+  when (version /= 0) (fail $ "fractal heap version isn't 0 but " <> show version)
+  heapIdLength <- getWord16le
+
+  ioFiltersEncodedLength <- getWord16le
+  flags <- getWord8
+
+  let hugeIdWraparound = flags .&. 0b1 > 0
+      directBlocksAreChecksummed = flags .&. 0b10 > 0
+
+  maximumSizeOfManagedObjects <- getWord32le
+
+  nextHugeObjectId_ <- getLength
+
+  hugeObjectBtreeAddress <- getAddress
+  freeSpaceInManagedBlocks <- getLength
+  freeSpaceManagerAddress <- getAddress
+  amountOfManagedSpaceInHeap <- getLength
+  amountOfAllocatedManagedSpaceInHeap <- getLength
+  offsetOfDirectBlockAllocationIterator <- getLength
+  numberOfManagedObjectsInHeap <- getLength
+  sizeofHugeObjectsInHeap <- getLength
+  numberOfHugeObjectsInHeap <- getLength
+  sizeOfTinyObjectsInHeap <- getLength
+  numberOfTinyObjectsInHeap <- getLength
+  tableWidth <- getWord16le
+  startingBlockSize <- getLength
+  maximumDirectBlockSize <- getLength
+  maximumHeapSize <- getWord16le
+  startingNumberOfRowsInRootIndirectBlock <- getWord16le
+  addressOfRootBlock <- getMaybeLength
+  currentNumberOfRowsInRootIndirectBlock <- getWord16le
+  sizeOfFilteredRootDirectoryBlock <- if ioFiltersEncodedLength > 0 then Just <$> getLength else pure Nothing
+  ioFilterMask <- if ioFiltersEncodedLength > 0 then Just <$> getWord32le else pure Nothing
+  -- TODO: support this
+  skipLabeled "io filter information" ioFiltersEncodedLength
+  skipLabeled "checksum" 4
+  pure
+    ( FractalHeapHeader
+        { fhhAddressOfRootBlock = addressOfRootBlock,
+          fhhCurrentNumberOfRowsInRootIndirectBlock = currentNumberOfRowsInRootIndirectBlock,
+          fhhStartingBlockSize = startingBlockSize,
+          fhhTableWidth = tableWidth,
+          fhhMaximumHeapSize = maximumHeapSize,
+          fhhMaximumDirectBlockSize = maximumDirectBlockSize,
+          fhhDirectBlocksAreChecksummed = directBlocksAreChecksummed
+        }
+    )
+
+data FractalHeapDirectBlock = FractalHeapDirectBlock BSL.ByteString
+
+getBlockOffset :: (Show a, Integral a) => a -> Get Word64
+getBlockOffset maxHeapSize = do
+  let ceilDivedHeapSize = if maxHeapSize `mod` 8 == 0 then maxHeapSize else (maxHeapSize + 8 - 1) `div` 8
+  case ceilDivedHeapSize of
+    8 -> fromIntegral <$> getWord8
+    16 -> fromIntegral <$> getWord16le
+    32 -> fromIntegral <$> getWord32le
+    64 -> getWord64le
+    _ -> fail ("fractal heap direct block offset size is not 1-8 but " <> show ceilDivedHeapSize)
+
+getFractalHeapDirectBlock :: FractalHeapHeader -> Get FractalHeapDirectBlock
+getFractalHeapDirectBlock FractalHeapHeader {fhhMaximumHeapSize = maxHeapSize, fhhDirectBlocksAreChecksummed = useChecksum} = do
+  signature' <- getByteString 4
+  -- "FHDB" in ASCII
+  when (signature' /= BS.pack [70, 72, 68, 66]) (fail ("invalid fractal heap direct block signature: " <> show signature'))
+
+  version <- getWord8
+  when (version /= 0) (fail $ "fractal heap direct block version isn't 0 but " <> show version)
+
+  heapHeaderAddress <- getLength
+
+  blockOffset <- getBlockOffset maxHeapSize
+
+  checksum <- if useChecksum then Just <$> getWord32le else pure Nothing
+
+  objectData <- getRemainingLazyByteString
+
+  pure (FractalHeapDirectBlock objectData)
+
+data FractalHeapDirectBlockMeta = FractalHeapDirectBlockMeta
+  { fhdbmAddress :: !Address,
+    fhdbmBlockSize :: !Length
+  }
+  deriving (Show)
+
+data FractalHeapIndirectBlockMeta = FractalHeapIndirectBlockMeta
+  { fhibmAddress :: !Address,
+    fhibmBlockSize :: !Length,
+    fhibmNrows :: !Length
+  }
+  deriving (Show)
+
+data FractalHeapIndirectBlock = FractalHeapIndirectBlock
+  { fhibDirectBlocks :: ![FractalHeapDirectBlockMeta],
+    fhibIndirectBlocks :: ![FractalHeapIndirectBlockMeta]
+  }
+  deriving (Show)
+
+getFractalHeapIndirectBlock :: FractalHeapHeader -> Get FractalHeapIndirectBlock
+getFractalHeapIndirectBlock
+  ( FractalHeapHeader
+      { fhhMaximumHeapSize,
+        fhhTableWidth,
+        fhhStartingBlockSize,
+        fhhCurrentNumberOfRowsInRootIndirectBlock,
+        fhhMaximumDirectBlockSize
+      }
+    ) = do
+    signature' <- getByteString 4
+    -- "FHIB" in ASCII
+    when (signature' /= BS.pack [70, 72, 73, 66]) (fail "invalid fractal heap direct block signature")
+
+    version <- getWord8
+    when (version /= 0) (fail $ "fractal heap indirect block version isn't 0 but " <> show version)
+
+    heapHeaderAddress <- getLength
+
+    blockOffset <- getBlockOffset fhhMaximumHeapSize
+
+    let nobjects = fromIntegral (fhhCurrentNumberOfRowsInRootIndirectBlock * fhhTableWidth)
+        log2 :: (Num a, Eq a, Ord a, Integral a, Num b) => a -> b
+        log2 0 = error "log2 of 0 undefined"
+        log2 1 = 0
+        log2 x
+          | x < 0 = error "log2 of negative value undefined"
+          | otherwise = log2 (x `div` 2) + 1
+        maxDirectNRows :: Length
+        maxDirectNRows = log2 fhhMaximumDirectBlockSize - log2 fhhStartingBlockSize + 2
+        ndirectMax :: Length
+        ndirectMax = maxDirectNRows * fromIntegral fhhTableWidth
+        (numberOfDirectBlocks, numberOfIndirectBlocks) =
+          if fromIntegral fhhCurrentNumberOfRowsInRootIndirectBlock <= ndirectMax
+            then (nobjects, 0)
+            else (ndirectMax, nobjects - ndirectMax)
+        indirectNrowsSub = log2 fhhTableWidth + log2 fhhStartingBlockSize - 1
+        atMost' :: (Monad f, Alternative f) => [i] -> (i -> f a) -> f [a]
+        atMost' [] _ = pure []
+        atMost' (i : is) p = do
+          c <- p i
+          s <- atMost' is p
+          pure (c : s) <|> pure []
+        getIndexed f idx maxIdx
+          | idx == maxIdx = pure []
+          | otherwise = do
+              address <- getMaybeAddress
+              case address of
+                Nothing -> pure []
+                Just address' -> do
+                  remainder <- getIndexed f (idx + 1) maxIdx
+                  pure (f idx address' : remainder)
+        getDirectBlocks :: Length -> Length -> Get [FractalHeapDirectBlockMeta]
+        getDirectBlocks = getIndexed getDirect
+          where
+            getDirect blockIndex address =
+              let blockRow :: Length
+                  blockRow = blockIndex `div` fromIntegral fhhTableWidth
+               in FractalHeapDirectBlockMeta
+                    address
+                    (2 ^ (if blockRow == 0 then 0 else blockRow - 1) * fhhStartingBlockSize)
+        getIndirectBlocks :: Length -> Length -> Get [FractalHeapIndirectBlockMeta]
+        getIndirectBlocks = getIndexed getIndirect
+          where
+            getIndirect blockIndex address =
+              let blockRow :: Length
+                  blockRow = blockIndex `div` fromIntegral fhhTableWidth
+                  blockSize = (2 ^ max (blockRow - 1) 0) * fhhStartingBlockSize
+                  blockNrows = log2 blockSize - indirectNrowsSub
+               in FractalHeapIndirectBlockMeta
+                    address
+                    blockSize
+                    blockNrows
+
+    directBlocks <- getDirectBlocks 0 numberOfDirectBlocks
+    indirectBlocks <-
+      getIndirectBlocks
+        numberOfDirectBlocks
+        (numberOfDirectBlocks + numberOfIndirectBlocks)
+
+    pure (FractalHeapIndirectBlock directBlocks indirectBlocks)
 
 data DataspaceDimension = DataspaceDimension
   { ddSize :: !Length,
@@ -518,6 +717,12 @@ getLength = getWord64le
 
 getAddress :: Get Address
 getAddress = getWord64le
+
+getAddressSafe :: Get Address
+getAddressSafe = do
+  a <- getWord64le
+  when (a == 0xffffffffffffffff) (fail "got an unexpected undefined address")
+  pure a
 
 getBLinkTreeNode :: Maybe [DataspaceDimension] -> Get BLinkTreeNode
 getBLinkTreeNode maybeDataspace = do

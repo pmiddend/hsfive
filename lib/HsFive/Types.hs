@@ -4,12 +4,12 @@
 module HsFive.Types where
 
 import Control.Applicative ((<|>))
-import Control.Monad (MonadPlus, replicateM)
+import Control.Monad (MonadPlus, replicateM, when)
 import Data.Binary (getWord8)
 import Data.Binary.Get (bytesRead, getInt32le, getInt64le, getWord16le, isEmpty, isolate, label, runGet, runGetOrFail, skip)
 import qualified Data.ByteString as BS
 import qualified Data.ByteString.Lazy as BSL
-import Data.Foldable (find, msum)
+import Data.Foldable (find, forM_, msum)
 import Data.IORef (IORef, modifyIORef, newIORef, readIORef)
 import Data.List (singleton)
 import qualified Data.List.NonEmpty as NE
@@ -36,14 +36,19 @@ import HsFive.CoreTypes
     Datatype (DatatypeFixedPoint, fixedPointByteOrder, fixedPointDataElementSize),
     DatatypeMessageData (DatatypeMessageData, datatypeClass),
     EnumerationMap,
+    FractalHeapDirectBlock (FractalHeapDirectBlock),
+    FractalHeapDirectBlockMeta (fhdbmBlockSize),
+    FractalHeapHeader (FractalHeapHeader, fhhAddressOfRootBlock, fhhCurrentNumberOfRowsInRootIndirectBlock, fhhMaximumDirectBlockSize, fhhMaximumHeapSize, fhhStartingBlockSize, fhhTableWidth),
+    FractalHeapIndirectBlock (..),
     GlobalHeap (globalHeapObjects),
     GlobalHeapObject (GlobalHeapObject, globalHeapObjectData, globalHeapObjectIndex),
     GroupSymbolTableNode (GroupSymbolTableNode, gstnVersion),
     HeapWithData (HeapWithData),
     Length,
+    LinkInfoMessageData (LinkInfoMessageData, linkInfoFractalHeapAddress),
     LinkMessageData (LinkMessageData, linkInfoLinkType),
     LinkType (HardLink),
-    Message (AttributeMessage, DataStorageFilterPipelineMessage, DataStorageLayoutMessage, DataspaceMessage, DatatypeMessage, LinkMessage, ObjectHeaderContinuationMessage, SharedMessage, SymbolTableMessage),
+    Message (AttributeMessage, DataStorageFilterPipelineMessage, DataStorageLayoutMessage, DataspaceMessage, DatatypeMessage, LinkInfoMessage, LinkMessage, ObjectHeaderContinuationMessage, SharedMessage, SymbolTableMessage),
     ObjectHeader (ObjectHeader, ohTrackCreationOrder),
     ReferenceType,
     SharedMessageData (SharedMessageData),
@@ -56,7 +61,11 @@ import HsFive.CoreTypes
     dataStoragePipelineFilterClientDataValues,
     dataStoragePipelineFilterId,
     debugLog,
+    fhdbmAddress,
     getBLinkTreeNode,
+    getFractalHeapDirectBlock,
+    getFractalHeapHeader,
+    getFractalHeapIndirectBlock,
     getGlobalHeap,
     getGroupSymbolTableNode,
     getHeapHeader,
@@ -176,6 +185,57 @@ resolveHardLinks handle readerStateRef previousPath maybeHeap messages = do
   foldMap (resolveHardLink handle readerStateRef previousPath maybeHeap) messages
 
 resolveHardLink :: Handle -> IORef NodeReaderState -> Maybe Path -> Maybe (HeapWithData, Word64) -> Message -> IO [Node]
+resolveHardLink handle readerStateRef previousPath maybeHeap (LinkInfoMessage (LinkInfoMessageData {linkInfoFractalHeapAddress = Just fractalHeapAddress})) = do
+  putStrLn $ "seeking to fractal heap at " <> show fractalHeapAddress
+  hSeek handle AbsoluteSeek (fromIntegral fractalHeapAddress)
+  header' <- BSL.hGet handle 4096
+  case runGetOrFail getFractalHeapHeader header' of
+    Left (_, _, e') -> error ("parsing fractal heap header failed: " <> show e')
+    Right
+      ( _,
+        _,
+        ( FractalHeapHeader
+            { fhhAddressOfRootBlock = Nothing
+            }
+          )
+        ) -> error "fractal heap header without root block address found, not supported"
+    Right
+      ( _,
+        _,
+        fhh@( FractalHeapHeader
+                { fhhAddressOfRootBlock = Just rootBlockAddress,
+                  fhhMaximumHeapSize,
+                  fhhStartingBlockSize
+                }
+              )
+        ) -> do
+        putStrLn ("parsing fractal heap header success: " <> show fhh)
+        putStrLn $ "seeking to root block at " <> show rootBlockAddress
+        hSeek handle AbsoluteSeek (fromIntegral rootBlockAddress)
+        indirectHeader' <- BSL.hGet handle 8192
+        case runGetOrFail (getFractalHeapIndirectBlock fhh) indirectHeader' of
+          Left (_, _, e'') -> error ("parsing indirect fractal fractal heap block failed: " <> show e'')
+          Right (_, _, FractalHeapIndirectBlock {fhibDirectBlocks, fhibIndirectBlocks}) -> do
+            when (length fhibIndirectBlocks > 0) (error "fractal heap with actual indirect blocks found, not supported")
+            forM_ fhibDirectBlocks $ \directBlock -> do
+              putStrLn $ "seeking to direct block at " <> show (fhdbmAddress directBlock) <> ", size " <> show (fhdbmBlockSize directBlock)
+              hSeek handle AbsoluteSeek (fromIntegral (fhdbmAddress directBlock))
+              directBlockBytes <- BSL.hGet handle (fromIntegral (fhdbmBlockSize directBlock))
+              case runGetOrFail (getFractalHeapDirectBlock fhh) directBlockBytes of
+                Left (_, _, e'') -> error ("parsing direct fractal fractal heap block failed: " <> show e'')
+                Right (_, _, FractalHeapDirectBlock data') -> do
+                  putStrLn "read some data, decoding as link message..."
+                  case runGetOrFail () data' of {}
+            pure []
+
+-- error
+--   ( "indirect fractal fractal header: "
+--       <> show indirectHeader''
+--       <> ", starting bs "
+--       <> show (fhhStartingBlockSize)
+--       <> ", max heap size "
+--       <> show fhhMaximumHeapSize
+--   )
 resolveHardLink handle readerStateRef previousPath maybeHeap (LinkMessage (LinkMessageData {linkInfoLinkType = HardLink linkAddress})) =
   singleton <$> readNode handle readerStateRef previousPath maybeHeap linkAddress
 -- putStrLn $ "seeking to hard link " <> show linkAddress
@@ -332,7 +392,7 @@ readNode handle readerStateRef previousPath maybeHeap e = do
 
   readerState <- readIORef readerStateRef
   updateVisiting e
-  putStrLn $ "node seeking to " <> show e
+  putStrLn $ show previousPath <> ": node seeking to " <> show e
   hSeek handle AbsoluteSeek (fromIntegral e)
   objectHeaderData <- BSL.hGet handle 4096
   case runGetOrFail getObjectHeader objectHeaderData of
@@ -385,7 +445,7 @@ readNode handle readerStateRef previousPath maybeHeap e = do
             Nothing -> do
               hardLinkNodes <- resolveHardLinks handle readerStateRef (Just newPath) maybeHeap allMessages
               case hardLinkNodes of
-                [] -> fail ("dataset without datatype and without any hardlinks; all messages: " <> show allMessages)
+                [] -> fail (show newPath <> ": dataset without datatype and without any hardlinks; all messages: " <> show allMessages)
                 hardlinksNonEmpty -> do
                   pure $
                     GroupNode $
@@ -498,7 +558,13 @@ readH5 fileNameEncoded = do
       Nothing -> error "couldn't read superblock"
       Just superblock' -> do
         readerState <- newIORef (NodeReaderState mempty mempty)
-        node <- readNode handle readerState Nothing Nothing (h5steObjectHeaderAddress (h5sbSymbolTableEntry superblock'))
+        node <-
+          readNode
+            handle
+            readerState
+            Nothing
+            Nothing
+            (h5steObjectHeaderAddress (h5sbSymbolTableEntry superblock'))
         case node of
           GroupNode groupData -> pure groupData
           _ -> error "illegal h5: superblock didn't refer to a group but a dataset"
