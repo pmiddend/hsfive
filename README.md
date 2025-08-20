@@ -34,6 +34,10 @@ We're trying to implement "support" for all sample HDF5 files on the [silx.org](
 - `filters.h5`
 - `filters_jpeg.h5`
 
+**Not** supported are:
+
+- `nxnote.h5`, because this has hardlinks in it to nonexistant files
+
 ### C bits
 
 LZ4/Bitshuffle is currently still C code, look at the `cbits` directory. At some point I'd like to change this, but compiling a few C files is a good tradeoff to separately compiling, shipping and linking the bitshuffle plugin DLL.
