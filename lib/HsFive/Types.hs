@@ -4,7 +4,7 @@
 module HsFive.Types where
 
 import Control.Applicative ((<|>))
-import Control.Monad (MonadPlus, replicateM, when)
+import Control.Monad (MonadPlus, forM, join, replicateM, when)
 import Data.Binary (getWord8)
 import Data.Binary.Get (bytesRead, getInt32le, getInt64le, getWord16le, isEmpty, isolate, label, runGet, runGetOrFail, skip)
 import qualified Data.ByteString as BS
@@ -69,6 +69,7 @@ import HsFive.CoreTypes
     getGlobalHeap,
     getGroupSymbolTableNode,
     getHeapHeader,
+    getLinkMessageData,
     getMessage,
     getObjectHeader,
     getSuperblock,
@@ -213,11 +214,11 @@ resolveHardLink handle readerStateRef previousPath maybeHeap (LinkInfoMessage (L
         putStrLn $ "seeking to root block at " <> show rootBlockAddress
         hSeek handle AbsoluteSeek (fromIntegral rootBlockAddress)
         indirectHeader' <- BSL.hGet handle 8192
-        case runGetOrFail (getFractalHeapIndirectBlock fhh) indirectHeader' of
+        resolved <- case runGetOrFail (getFractalHeapIndirectBlock fhh) indirectHeader' of
           Left (_, _, e'') -> error ("parsing indirect fractal fractal heap block failed: " <> show e'')
           Right (_, _, FractalHeapIndirectBlock {fhibDirectBlocks, fhibIndirectBlocks}) -> do
             when (length fhibIndirectBlocks > 0) (error "fractal heap with actual indirect blocks found, not supported")
-            forM_ fhibDirectBlocks $ \directBlock -> do
+            forM fhibDirectBlocks $ \directBlock -> do
               putStrLn $ "seeking to direct block at " <> show (fhdbmAddress directBlock) <> ", size " <> show (fhdbmBlockSize directBlock)
               hSeek handle AbsoluteSeek (fromIntegral (fhdbmAddress directBlock))
               directBlockBytes <- BSL.hGet handle (fromIntegral (fhdbmBlockSize directBlock))
@@ -225,17 +226,12 @@ resolveHardLink handle readerStateRef previousPath maybeHeap (LinkInfoMessage (L
                 Left (_, _, e'') -> error ("parsing direct fractal fractal heap block failed: " <> show e'')
                 Right (_, _, FractalHeapDirectBlock data') -> do
                   putStrLn "read some data, decoding as link message..."
-                  case runGetOrFail () data' of {}
-            pure []
-
--- error
---   ( "indirect fractal fractal header: "
---       <> show indirectHeader''
---       <> ", starting bs "
---       <> show (fhhStartingBlockSize)
---       <> ", max heap size "
---       <> show fhhMaximumHeapSize
---   )
+                  case runGetOrFail getLinkMessageData data' of
+                    Left (_, _, e'') -> error ("parsing direct fractal fractal heap block failed: " <> show e'')
+                    Right (_, _, lm@(LinkMessageData {})) -> do
+                      putStrLn ("decoding as link message: " <> show lm)
+                      resolveHardLink handle readerStateRef previousPath maybeHeap (LinkMessage lm)
+        pure (join resolved)
 resolveHardLink handle readerStateRef previousPath maybeHeap (LinkMessage (LinkMessageData {linkInfoLinkType = HardLink linkAddress})) =
   singleton <$> readNode handle readerStateRef previousPath maybeHeap linkAddress
 -- putStrLn $ "seeking to hard link " <> show linkAddress

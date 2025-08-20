@@ -1192,6 +1192,37 @@ getAttributeContentByType type' = do
       ("attributo type: " <> show type')
     $ AttributeContentTodo type' remainder
 
+getLinkMessageData :: Get LinkMessageData
+getLinkMessageData = do
+  version <- getWord8
+  when (version /= 1) (fail ("invalid link info message version (is not 1) " <> show version))
+  flags <- getWord8
+  let firstTwoBits = flags .&. 0b11
+      getLengthOfLinkName :: Get Word64
+      getLengthOfLinkName =
+        case firstTwoBits of
+          0 -> fromIntegral <$> getWord8
+          1 -> fromIntegral <$> getWord16le
+          2 -> fromIntegral <$> getWord32le
+          _ -> getWord64le
+  linkTypeEnum <-
+    if flags .&. 0b1000 > 0
+      then getLinkTypeEnum
+      else pure HardLinkEnum
+  creationOrder <-
+    if flags .&. 0b100 > 0
+      then Just <$> getWord64le
+      else pure Nothing
+  linkNameCharacterSet <-
+    if flags .&. 0b10000 > 0
+      then Just <$> getWord8
+      else pure Nothing
+  lengthOfLinkName <- getLengthOfLinkName
+  linkName <- getByteString' lengthOfLinkName
+  linkType <- getLinkType linkTypeEnum
+  void getRemainingLazyByteString
+  pure (LinkMessageData creationOrder linkNameCharacterSet linkName linkType)
+
 getMessage :: Word16 -> Get Message
 getMessage 0x0000 = do
   void getRemainingLazyByteString
@@ -1266,35 +1297,7 @@ getMessage 0x0005 = do
           pure DataStorageFillValueMessage
     3 -> fail "version 3 of data storage fill value not supported yet (table in spec is weird)"
     n -> fail ("invalid version of data storage fill value message " <> show n)
-getMessage 0x0006 = do
-  version <- getWord8
-  when (version /= 1) (fail ("invalid link info message version (is not 1) " <> show version))
-  flags <- getWord8
-  let firstTwoBits = flags .&. 0b11
-      getLengthOfLinkName :: Get Word64
-      getLengthOfLinkName =
-        case firstTwoBits of
-          0 -> fromIntegral <$> getWord8
-          1 -> fromIntegral <$> getWord16le
-          2 -> fromIntegral <$> getWord32le
-          _ -> getWord64le
-  linkTypeEnum <-
-    if flags .&. 0b1000 > 0
-      then getLinkTypeEnum
-      else pure HardLinkEnum
-  creationOrder <-
-    if flags .&. 0b100 > 0
-      then Just <$> getWord64le
-      else pure Nothing
-  linkNameCharacterSet <-
-    if flags .&. 0b10000 > 0
-      then Just <$> getWord8
-      else pure Nothing
-  lengthOfLinkName <- getLengthOfLinkName
-  linkName <- getByteString' lengthOfLinkName
-  linkType <- getLinkType linkTypeEnum
-  void getRemainingLazyByteString
-  pure (LinkMessage (LinkMessageData creationOrder linkNameCharacterSet linkName linkType))
+getMessage 0x0006 = LinkMessage <$> getLinkMessageData
 getMessage 0x000a = do
   version <- getWord8
   when (version /= 0) (fail ("group info message has invalid version " <> show version))
