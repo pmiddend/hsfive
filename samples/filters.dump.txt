@@ -1,46 +1,46 @@
 GROUP "/" {
-  DATASET "blosc" {
-    DATATYPE  H5T_IEEE_F32LE
-    DATASPACE  SIMPLE { ( 20 ) / ( 20 ) }
-  }
-  DATASET "blosc2" {
-    DATATYPE  H5T_IEEE_F32LE
-    DATASPACE  SIMPLE { ( 20 ) / ( 20 ) }
-  }
-  DATASET "bshuf" {
-    DATATYPE  H5T_IEEE_F32LE
-    DATASPACE  SIMPLE { ( 20 ) / ( 20 ) }
-  }
-  DATASET "bzip2" {
-    DATATYPE  H5T_IEEE_F32LE
-    DATASPACE  SIMPLE { ( 20 ) / ( 20 ) }
-  }
-  DATASET "fcidecomp" {
-    DATATYPE  H5T_IEEE_F32LE
-    DATASPACE  SIMPLE { ( 20 ) / ( 20 ) }
-  }
-  DATASET "gzip" {
-    DATATYPE  H5T_IEEE_F32LE
-    DATASPACE  SIMPLE { ( 20 ) / ( 20 ) }
-  }
-  DATASET "lz4" {
-    DATATYPE  H5T_IEEE_F32LE
-    DATASPACE  SIMPLE { ( 20 ) / ( 20 ) }
-  }
-  DATASET "sz3" {
-    DATATYPE  H5T_IEEE_F32LE
-    DATASPACE  SIMPLE { ( 20 ) / ( 20 ) }
-  }
-  DATASET "szip" {
-    DATATYPE  H5T_IEEE_F32LE
-    DATASPACE  SIMPLE { ( 20 ) / ( 20 ) }
-  }
-  DATASET "zfp" {
-    DATATYPE  H5T_IEEE_F32LE
-    DATASPACE  SIMPLE { ( 20 ) / ( 20 ) }
-  }
-  DATASET "zstd" {
-    DATATYPE  H5T_IEEE_F32LE
-    DATASPACE  SIMPLE { ( 20 ) / ( 20 ) }
-  }
+   DATASET "blosc" {
+      DATATYPE  H5T_IEEE_F32LE
+      DATASPACE  SIMPLE { ( 20 ) / ( 20 ) }
+   }
+   DATASET "blosc2" {
+      DATATYPE  H5T_IEEE_F32LE
+      DATASPACE  SIMPLE { ( 20 ) / ( 20 ) }
+   }
+   DATASET "bshuf" {
+      DATATYPE  H5T_IEEE_F32LE
+      DATASPACE  SIMPLE { ( 20 ) / ( 20 ) }
+   }
+   DATASET "bzip2" {
+      DATATYPE  H5T_IEEE_F32LE
+      DATASPACE  SIMPLE { ( 20 ) / ( 20 ) }
+   }
+   DATASET "fcidecomp" {
+      DATATYPE  H5T_IEEE_F32LE
+      DATASPACE  SIMPLE { ( 20 ) / ( 20 ) }
+   }
+   DATASET "gzip" {
+      DATATYPE  H5T_IEEE_F32LE
+      DATASPACE  SIMPLE { ( 20 ) / ( 20 ) }
+   }
+   DATASET "lz4" {
+      DATATYPE  H5T_IEEE_F32LE
+      DATASPACE  SIMPLE { ( 20 ) / ( 20 ) }
+   }
+   DATASET "sz3" {
+      DATATYPE  H5T_IEEE_F32LE
+      DATASPACE  SIMPLE { ( 20 ) / ( 20 ) }
+   }
+   DATASET "szip" {
+      DATATYPE  H5T_IEEE_F32LE
+      DATASPACE  SIMPLE { ( 20 ) / ( 20 ) }
+   }
+   DATASET "zfp" {
+      DATATYPE  H5T_IEEE_F32LE
+      DATASPACE  SIMPLE { ( 20 ) / ( 20 ) }
+   }
+   DATASET "zstd" {
+      DATATYPE  H5T_IEEE_F32LE
+      DATASPACE  SIMPLE { ( 20 ) / ( 20 ) }
+   }
 }

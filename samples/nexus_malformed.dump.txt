@@ -1,53 +1,53 @@
 GROUP "/" {
-  GROUP "default_not_found" {
-    ATTRIBUTE "default" {
-      DATATYPE  H5T_STRING {
-        STRSIZE H5T_VARIABLE;
-        STRPAD H5T_STR_NULLTERM;
-        CSET H5T_CSET_UTF8;
-        CTYPE H5T_C_S1;
+   GROUP "default_not_found" {
+      ATTRIBUTE "default" {
+         DATATYPE  H5T_STRING {
+            STRSIZE H5T_VARIABLE;
+            STRPAD H5T_STR_NULLTERM;
+            CSET H5T_CSET_UTF8;
+            CTYPE H5T_C_S1;
+         }
+         DATASPACE  SCALAR
       }
-      DATASPACE  SCALAR
-    }
-  }
-  GROUP "default_not_string" {
-    ATTRIBUTE "default" {
-      DATATYPE  H5T_STD_U16BE
-      DATASPACE  SCALAR
-      DATA {
-        (0): 42
+   }
+   GROUP "default_not_string" {
+      ATTRIBUTE "default" {
+         DATATYPE  H5T_STD_U16BE
+         DATASPACE  SCALAR
+         DATA {
+            (0): 42
+         }
       }
-    }
-  }
-  GROUP "no_signal" {
-    ATTRIBUTE "NX_class" {
-      DATATYPE  H5T_STRING {
-        STRSIZE H5T_VARIABLE;
-        STRPAD H5T_STR_NULLTERM;
-        CSET H5T_CSET_UTF8;
-        CTYPE H5T_C_S1;
+   }
+   GROUP "no_signal" {
+      ATTRIBUTE "NX_class" {
+         DATATYPE  H5T_STRING {
+            STRSIZE H5T_VARIABLE;
+            STRPAD H5T_STR_NULLTERM;
+            CSET H5T_CSET_UTF8;
+            CTYPE H5T_C_S1;
+         }
+         DATASPACE  SCALAR
       }
-      DATASPACE  SCALAR
-    }
-  }
-  GROUP "signal_not_found" {
-    ATTRIBUTE "NX_class" {
-      DATATYPE  H5T_STRING {
-        STRSIZE H5T_VARIABLE;
-        STRPAD H5T_STR_NULLTERM;
-        CSET H5T_CSET_UTF8;
-        CTYPE H5T_C_S1;
+   }
+   GROUP "signal_not_found" {
+      ATTRIBUTE "NX_class" {
+         DATATYPE  H5T_STRING {
+            STRSIZE H5T_VARIABLE;
+            STRPAD H5T_STR_NULLTERM;
+            CSET H5T_CSET_UTF8;
+            CTYPE H5T_C_S1;
+         }
+         DATASPACE  SCALAR
       }
-      DATASPACE  SCALAR
-    }
-    ATTRIBUTE "signal" {
-      DATATYPE  H5T_STRING {
-        STRSIZE H5T_VARIABLE;
-        STRPAD H5T_STR_NULLTERM;
-        CSET H5T_CSET_UTF8;
-        CTYPE H5T_C_S1;
+      ATTRIBUTE "signal" {
+         DATATYPE  H5T_STRING {
+            STRSIZE H5T_VARIABLE;
+            STRPAD H5T_STR_NULLTERM;
+            CSET H5T_CSET_UTF8;
+            CTYPE H5T_C_S1;
+         }
+         DATASPACE  SCALAR
       }
-      DATASPACE  SCALAR
-    }
-  }
+   }
 }

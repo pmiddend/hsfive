@@ -1,16 +1,16 @@
 GROUP "/" {
-  GROUP "/" {
-    DATASET "simple" {
-      DATATYPE  H5T_IEEE_F64LE
-      DATASPACE  SIMPLE { ( 100, 100 ) / ( 100, 100 ) }
-    }
-    DATASET "simple_virtual" {
-      DATATYPE  H5T_IEEE_F64LE
-      DATASPACE  SIMPLE { ( 4, 50, 50 ) / ( 4, 50, 50 ) }
-    }
-  }
-  GROUP "/" {
+   GROUP "/" {
+      DATASET "simple" {
+         DATATYPE  H5T_IEEE_F64LE
+         DATASPACE  SIMPLE { ( 100, 100 ) / ( 100, 100 ) }
+      }
+      DATASET "simple_virtual" {
+         DATATYPE  H5T_IEEE_F64LE
+         DATASPACE  SIMPLE { ( 4, 50, 50 ) / ( 4, 50, 50 ) }
+      }
+   }
+   GROUP "/" {
 
-  }
-  DatatypeFloatingPoint {floatingPointByteOrder = LittleEndian, floatingPointLowBitPad = False, floatingPointHighBitPad = False, floatingPointInternalBitPad = False, floatingPointMantissaNormalization = NoNormalization, floatingPointSignLocation = 31, floatingPointBitOffset = 0, floatingPointBitPrecision = 32, floatingPointExponentLocation = 23, floatingPointExponentSize = 8, floatingPointMantissaLocation = 0, floatingPointMantissaSize = 23, floatingPointExponentBias = 127}
+   }
+   DatatypeFloatingPoint {floatingPointByteOrder = LittleEndian, floatingPointLowBitPad = False, floatingPointHighBitPad = False, floatingPointInternalBitPad = False, floatingPointMantissaNormalization = NoNormalization, floatingPointSignLocation = 31, floatingPointBitOffset = 0, floatingPointBitPrecision = 32, floatingPointExponentLocation = 23, floatingPointExponentSize = 8, floatingPointMantissaLocation = 0, floatingPointMantissaSize = 23, floatingPointExponentBias = 127}
 }

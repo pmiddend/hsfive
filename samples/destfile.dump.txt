@@ -1,8 +1,8 @@
 GROUP "/" {
-  GROUP "destgroup" {
-    DATASET "data" {
-      DATATYPE  H5T_STD_I64LE
-      DATASPACE  SIMPLE { ( 3 ) / ( 3 ) }
-    }
-  }
+   GROUP "destgroup" {
+      DATASET "data" {
+         DATATYPE  H5T_STD_I64LE
+         DATASPACE  SIMPLE { ( 3 ) / ( 3 ) }
+      }
+   }
 }

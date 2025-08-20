@@ -1,1086 +1,1086 @@
 GROUP "/" {
-  ATTRIBUTE "NX_class" {
-    DATATYPE  H5T_STRING {
-      STRSIZE H5T_VARIABLE;
-      STRPAD H5T_STR_NULLTERM;
-      CSET H5T_CSET_UTF8;
-      CTYPE H5T_C_S1;
-    }
-    DATASPACE  SCALAR
-  }
-  ATTRIBUTE "date_utc" {
-    DATATYPE  H5T_STRING {
-      STRSIZE H5T_VARIABLE;
-      STRPAD H5T_STR_NULLTERM;
-      CSET H5T_CSET_UTF8;
-      CTYPE H5T_C_S1;
-    }
-    DATASPACE  SCALAR
-  }
-  ATTRIBUTE "default" {
-    DATATYPE  H5T_STRING {
-      STRSIZE H5T_VARIABLE;
-      STRPAD H5T_STR_NULLTERM;
-      CSET H5T_CSET_UTF8;
-      CTYPE H5T_C_S1;
-    }
-    DATASPACE  SCALAR
-  }
-  ATTRIBUTE "dt" {
-    DATATYPE  H5T_STD_F64LE
-    DATASPACE  SCALAR
-    DATA {
-      (0): 2.7785495971103085e-17
-    }
-  }
-  ATTRIBUTE "dx" {
-    DATATYPE  H5T_STD_F64LE
-    DATASPACE  SCALAR
-    DATA {
-      (0): 2.5000000000000002e-8
-    }
-  }
-  ATTRIBUTE "dy" {
-    DATATYPE  H5T_STD_F64LE
-    DATASPACE  SCALAR
-    DATA {
-      (0): 2.5000000000000002e-8
-    }
-  }
-  ATTRIBUTE "dz" {
-    DATATYPE  H5T_STD_F64LE
-    DATASPACE  SCALAR
-    DATA {
-      (0): 2.5000000000000002e-8
-    }
-  }
-  ATTRIBUTE "sim_id" {
-    DATATYPE  H5T_STRING {
-      STRSIZE H5T_VARIABLE;
-      STRPAD H5T_STR_NULLTERM;
-      CSET H5T_CSET_UTF8;
-      CTYPE H5T_C_S1;
-    }
-    DATASPACE  SCALAR
-  }
-  GROUP "SParameters" {
-    ATTRIBUTE "NX_class" {
+   ATTRIBUTE "NX_class" {
       DATATYPE  H5T_STRING {
-        STRSIZE H5T_VARIABLE;
-        STRPAD H5T_STR_NULLTERM;
-        CSET H5T_CSET_UTF8;
-        CTYPE H5T_C_S1;
+         STRSIZE H5T_VARIABLE;
+         STRPAD H5T_STR_NULLTERM;
+         CSET H5T_CSET_UTF8;
+         CTYPE H5T_C_S1;
       }
       DATASPACE  SCALAR
-    }
-    ATTRIBUTE "default" {
+   }
+   ATTRIBUTE "date_utc" {
       DATATYPE  H5T_STRING {
-        STRSIZE H5T_VARIABLE;
-        STRPAD H5T_STR_NULLTERM;
-        CSET H5T_CSET_UTF8;
-        CTYPE H5T_C_S1;
+         STRSIZE H5T_VARIABLE;
+         STRPAD H5T_STR_NULLTERM;
+         CSET H5T_CSET_UTF8;
+         CTYPE H5T_C_S1;
       }
       DATASPACE  SCALAR
-    }
-    GROUP "ALL" {
+   }
+   ATTRIBUTE "default" {
+      DATATYPE  H5T_STRING {
+         STRSIZE H5T_VARIABLE;
+         STRPAD H5T_STR_NULLTERM;
+         CSET H5T_CSET_UTF8;
+         CTYPE H5T_C_S1;
+      }
+      DATASPACE  SCALAR
+   }
+   ATTRIBUTE "dt" {
+      DATATYPE  H5T_STD_F64LE
+      DATASPACE  SCALAR
+      DATA {
+         (0): 2.7785495971103085e-17
+      }
+   }
+   ATTRIBUTE "dx" {
+      DATATYPE  H5T_STD_F64LE
+      DATASPACE  SCALAR
+      DATA {
+         (0): 2.5000000000000002e-8
+      }
+   }
+   ATTRIBUTE "dy" {
+      DATATYPE  H5T_STD_F64LE
+      DATASPACE  SCALAR
+      DATA {
+         (0): 2.5000000000000002e-8
+      }
+   }
+   ATTRIBUTE "dz" {
+      DATATYPE  H5T_STD_F64LE
+      DATASPACE  SCALAR
+      DATA {
+         (0): 2.5000000000000002e-8
+      }
+   }
+   ATTRIBUTE "sim_id" {
+      DATATYPE  H5T_STRING {
+         STRSIZE H5T_VARIABLE;
+         STRPAD H5T_STR_NULLTERM;
+         CSET H5T_CSET_UTF8;
+         CTYPE H5T_C_S1;
+      }
+      DATASPACE  SCALAR
+   }
+   GROUP "SParameters" {
       ATTRIBUTE "NX_class" {
-        DATATYPE  H5T_STRING {
-          STRSIZE H5T_VARIABLE;
-          STRPAD H5T_STR_NULLTERM;
-          CSET H5T_CSET_UTF8;
-          CTYPE H5T_C_S1;
-        }
-        DATASPACE  SCALAR
-      }
-      ATTRIBUTE "auxiliary_signals" {
-        DATATYPE  H5T_STRING {
-          STRSIZE H5T_VARIABLE;
-          STRPAD H5T_STR_NULLTERM;
-          CSET H5T_CSET_UTF8;
-          CTYPE H5T_C_S1;
-        }
-        DATASPACE  SIMPLE { ( 3 ) / ( 3 ) }
-      }
-      ATTRIBUTE "axes" {
-        DATATYPE  H5T_STRING {
-          STRSIZE H5T_VARIABLE;
-          STRPAD H5T_STR_NULLTERM;
-          CSET H5T_CSET_UTF8;
-          CTYPE H5T_C_S1;
-        }
-        DATASPACE  SIMPLE { ( 1 ) / ( 1 ) }
-      }
-      ATTRIBUTE "interpretation" {
-        DATATYPE  H5T_STRING {
-          STRSIZE H5T_VARIABLE;
-          STRPAD H5T_STR_NULLTERM;
-          CSET H5T_CSET_UTF8;
-          CTYPE H5T_C_S1;
-        }
-        DATASPACE  SCALAR
-      }
-      ATTRIBUTE "signal" {
-        DATATYPE  H5T_STRING {
-          STRSIZE H5T_VARIABLE;
-          STRPAD H5T_STR_NULLTERM;
-          CSET H5T_CSET_UTF8;
-          CTYPE H5T_C_S1;
-        }
-        DATASPACE  SCALAR
-      }
-      ATTRIBUTE "title" {
-        DATATYPE  H5T_STRING {
-          STRSIZE H5T_VARIABLE;
-          STRPAD H5T_STR_NULLTERM;
-          CSET H5T_CSET_UTF8;
-          CTYPE H5T_C_S1;
-        }
-        DATASPACE  SCALAR
-      }
-    }
-    GROUP "S11" {
-      ATTRIBUTE "NX_class" {
-        DATATYPE  H5T_STRING {
-          STRSIZE H5T_VARIABLE;
-          STRPAD H5T_STR_NULLTERM;
-          CSET H5T_CSET_UTF8;
-          CTYPE H5T_C_S1;
-        }
-        DATASPACE  SCALAR
-      }
-      ATTRIBUTE "axes" {
-        DATATYPE  H5T_STRING {
-          STRSIZE H5T_VARIABLE;
-          STRPAD H5T_STR_NULLTERM;
-          CSET H5T_CSET_UTF8;
-          CTYPE H5T_C_S1;
-        }
-        DATASPACE  SIMPLE { ( 1 ) / ( 1 ) }
-      }
-      ATTRIBUTE "interpretation" {
-        DATATYPE  H5T_STRING {
-          STRSIZE H5T_VARIABLE;
-          STRPAD H5T_STR_NULLTERM;
-          CSET H5T_CSET_UTF8;
-          CTYPE H5T_C_S1;
-        }
-        DATASPACE  SCALAR
-      }
-      ATTRIBUTE "signal" {
-        DATATYPE  H5T_STRING {
-          STRSIZE H5T_VARIABLE;
-          STRPAD H5T_STR_NULLTERM;
-          CSET H5T_CSET_UTF8;
-          CTYPE H5T_C_S1;
-        }
-        DATASPACE  SCALAR
-      }
-      ATTRIBUTE "title" {
-        DATATYPE  H5T_STRING {
-          STRSIZE H5T_VARIABLE;
-          STRPAD H5T_STR_NULLTERM;
-          CSET H5T_CSET_UTF8;
-          CTYPE H5T_C_S1;
-        }
-        DATASPACE  SCALAR
-      }
-      DATASET "data" {
-        invalid datatype: DatatypeCompoundV1 [CompoundDatatypeMemberV1 {cdm1Name = "r", cdm1ByteOffset = 0, cdm1Dimensions = [], cdm1Datatype = DatatypeMessageData {datatypeMessageVersion = 1, datatypeClass = DatatypeFloatingPoint {floatingPointByteOrder = LittleEndian, floatingPointLowBitPad = False, floatingPointHighBitPad = False, floatingPointInternalBitPad = False, floatingPointMantissaNormalization = NoNormalization, floatingPointSignLocation = 63, floatingPointBitOffset = 0, floatingPointBitPrecision = 64, floatingPointExponentLocation = 52, floatingPointExponentSize = 11, floatingPointMantissaLocation = 0, floatingPointMantissaSize = 52, floatingPointExponentBias = 1023}}},CompoundDatatypeMemberV1 {cdm1Name = "i", cdm1ByteOffset = 8, cdm1Dimensions = [], cdm1Datatype = DatatypeMessageData {datatypeMessageVersion = 1, datatypeClass = DatatypeFloatingPoint {floatingPointByteOrder = LittleEndian, floatingPointLowBitPad = False, floatingPointHighBitPad = False, floatingPointInternalBitPad = False, floatingPointMantissaNormalization = NoNormalization, floatingPointSignLocation = 63, floatingPointBitOffset = 0, floatingPointBitPrecision = 64, floatingPointExponentLocation = 52, floatingPointExponentSize = 11, floatingPointMantissaLocation = 0, floatingPointMantissaSize = 52, floatingPointExponentBias = 1023}}}]
-        DATASPACE  SIMPLE { ( 21 ) / ( 21 ) }
-        ATTRIBUTE "long_name" {
-          DATATYPE  H5T_STRING {
+         DATATYPE  H5T_STRING {
             STRSIZE H5T_VARIABLE;
             STRPAD H5T_STR_NULLTERM;
             CSET H5T_CSET_UTF8;
             CTYPE H5T_C_S1;
-          }
-          DATASPACE  SCALAR
-        }
+         }
+         DATASPACE  SCALAR
       }
-    }
-    GROUP "S12" {
-      ATTRIBUTE "NX_class" {
-        DATATYPE  H5T_STRING {
-          STRSIZE H5T_VARIABLE;
-          STRPAD H5T_STR_NULLTERM;
-          CSET H5T_CSET_UTF8;
-          CTYPE H5T_C_S1;
-        }
-        DATASPACE  SCALAR
-      }
-      ATTRIBUTE "axes" {
-        DATATYPE  H5T_STRING {
-          STRSIZE H5T_VARIABLE;
-          STRPAD H5T_STR_NULLTERM;
-          CSET H5T_CSET_UTF8;
-          CTYPE H5T_C_S1;
-        }
-        DATASPACE  SIMPLE { ( 1 ) / ( 1 ) }
-      }
-      ATTRIBUTE "interpretation" {
-        DATATYPE  H5T_STRING {
-          STRSIZE H5T_VARIABLE;
-          STRPAD H5T_STR_NULLTERM;
-          CSET H5T_CSET_UTF8;
-          CTYPE H5T_C_S1;
-        }
-        DATASPACE  SCALAR
-      }
-      ATTRIBUTE "signal" {
-        DATATYPE  H5T_STRING {
-          STRSIZE H5T_VARIABLE;
-          STRPAD H5T_STR_NULLTERM;
-          CSET H5T_CSET_UTF8;
-          CTYPE H5T_C_S1;
-        }
-        DATASPACE  SCALAR
-      }
-      ATTRIBUTE "title" {
-        DATATYPE  H5T_STRING {
-          STRSIZE H5T_VARIABLE;
-          STRPAD H5T_STR_NULLTERM;
-          CSET H5T_CSET_UTF8;
-          CTYPE H5T_C_S1;
-        }
-        DATASPACE  SCALAR
-      }
-      DATASET "data" {
-        invalid datatype: DatatypeCompoundV1 [CompoundDatatypeMemberV1 {cdm1Name = "r", cdm1ByteOffset = 0, cdm1Dimensions = [], cdm1Datatype = DatatypeMessageData {datatypeMessageVersion = 1, datatypeClass = DatatypeFloatingPoint {floatingPointByteOrder = LittleEndian, floatingPointLowBitPad = False, floatingPointHighBitPad = False, floatingPointInternalBitPad = False, floatingPointMantissaNormalization = NoNormalization, floatingPointSignLocation = 63, floatingPointBitOffset = 0, floatingPointBitPrecision = 64, floatingPointExponentLocation = 52, floatingPointExponentSize = 11, floatingPointMantissaLocation = 0, floatingPointMantissaSize = 52, floatingPointExponentBias = 1023}}},CompoundDatatypeMemberV1 {cdm1Name = "i", cdm1ByteOffset = 8, cdm1Dimensions = [], cdm1Datatype = DatatypeMessageData {datatypeMessageVersion = 1, datatypeClass = DatatypeFloatingPoint {floatingPointByteOrder = LittleEndian, floatingPointLowBitPad = False, floatingPointHighBitPad = False, floatingPointInternalBitPad = False, floatingPointMantissaNormalization = NoNormalization, floatingPointSignLocation = 63, floatingPointBitOffset = 0, floatingPointBitPrecision = 64, floatingPointExponentLocation = 52, floatingPointExponentSize = 11, floatingPointMantissaLocation = 0, floatingPointMantissaSize = 52, floatingPointExponentBias = 1023}}}]
-        DATASPACE  SIMPLE { ( 21 ) / ( 21 ) }
-        ATTRIBUTE "long_name" {
-          DATATYPE  H5T_STRING {
+      ATTRIBUTE "default" {
+         DATATYPE  H5T_STRING {
             STRSIZE H5T_VARIABLE;
             STRPAD H5T_STR_NULLTERM;
             CSET H5T_CSET_UTF8;
             CTYPE H5T_C_S1;
-          }
-          DATASPACE  SCALAR
-        }
+         }
+         DATASPACE  SCALAR
       }
-    }
-    GROUP "S21" {
-      ATTRIBUTE "NX_class" {
-        DATATYPE  H5T_STRING {
-          STRSIZE H5T_VARIABLE;
-          STRPAD H5T_STR_NULLTERM;
-          CSET H5T_CSET_UTF8;
-          CTYPE H5T_C_S1;
-        }
-        DATASPACE  SCALAR
+      GROUP "ALL" {
+         ATTRIBUTE "NX_class" {
+            DATATYPE  H5T_STRING {
+               STRSIZE H5T_VARIABLE;
+               STRPAD H5T_STR_NULLTERM;
+               CSET H5T_CSET_UTF8;
+               CTYPE H5T_C_S1;
+            }
+            DATASPACE  SCALAR
+         }
+         ATTRIBUTE "auxiliary_signals" {
+            DATATYPE  H5T_STRING {
+               STRSIZE H5T_VARIABLE;
+               STRPAD H5T_STR_NULLTERM;
+               CSET H5T_CSET_UTF8;
+               CTYPE H5T_C_S1;
+            }
+            DATASPACE  SIMPLE { ( 3 ) / ( 3 ) }
+         }
+         ATTRIBUTE "axes" {
+            DATATYPE  H5T_STRING {
+               STRSIZE H5T_VARIABLE;
+               STRPAD H5T_STR_NULLTERM;
+               CSET H5T_CSET_UTF8;
+               CTYPE H5T_C_S1;
+            }
+            DATASPACE  SIMPLE { ( 1 ) / ( 1 ) }
+         }
+         ATTRIBUTE "interpretation" {
+            DATATYPE  H5T_STRING {
+               STRSIZE H5T_VARIABLE;
+               STRPAD H5T_STR_NULLTERM;
+               CSET H5T_CSET_UTF8;
+               CTYPE H5T_C_S1;
+            }
+            DATASPACE  SCALAR
+         }
+         ATTRIBUTE "signal" {
+            DATATYPE  H5T_STRING {
+               STRSIZE H5T_VARIABLE;
+               STRPAD H5T_STR_NULLTERM;
+               CSET H5T_CSET_UTF8;
+               CTYPE H5T_C_S1;
+            }
+            DATASPACE  SCALAR
+         }
+         ATTRIBUTE "title" {
+            DATATYPE  H5T_STRING {
+               STRSIZE H5T_VARIABLE;
+               STRPAD H5T_STR_NULLTERM;
+               CSET H5T_CSET_UTF8;
+               CTYPE H5T_C_S1;
+            }
+            DATASPACE  SCALAR
+         }
       }
-      ATTRIBUTE "axes" {
-        DATATYPE  H5T_STRING {
-          STRSIZE H5T_VARIABLE;
-          STRPAD H5T_STR_NULLTERM;
-          CSET H5T_CSET_UTF8;
-          CTYPE H5T_C_S1;
-        }
-        DATASPACE  SIMPLE { ( 1 ) / ( 1 ) }
+      GROUP "S11" {
+         ATTRIBUTE "NX_class" {
+            DATATYPE  H5T_STRING {
+               STRSIZE H5T_VARIABLE;
+               STRPAD H5T_STR_NULLTERM;
+               CSET H5T_CSET_UTF8;
+               CTYPE H5T_C_S1;
+            }
+            DATASPACE  SCALAR
+         }
+         ATTRIBUTE "axes" {
+            DATATYPE  H5T_STRING {
+               STRSIZE H5T_VARIABLE;
+               STRPAD H5T_STR_NULLTERM;
+               CSET H5T_CSET_UTF8;
+               CTYPE H5T_C_S1;
+            }
+            DATASPACE  SIMPLE { ( 1 ) / ( 1 ) }
+         }
+         ATTRIBUTE "interpretation" {
+            DATATYPE  H5T_STRING {
+               STRSIZE H5T_VARIABLE;
+               STRPAD H5T_STR_NULLTERM;
+               CSET H5T_CSET_UTF8;
+               CTYPE H5T_C_S1;
+            }
+            DATASPACE  SCALAR
+         }
+         ATTRIBUTE "signal" {
+            DATATYPE  H5T_STRING {
+               STRSIZE H5T_VARIABLE;
+               STRPAD H5T_STR_NULLTERM;
+               CSET H5T_CSET_UTF8;
+               CTYPE H5T_C_S1;
+            }
+            DATASPACE  SCALAR
+         }
+         ATTRIBUTE "title" {
+            DATATYPE  H5T_STRING {
+               STRSIZE H5T_VARIABLE;
+               STRPAD H5T_STR_NULLTERM;
+               CSET H5T_CSET_UTF8;
+               CTYPE H5T_C_S1;
+            }
+            DATASPACE  SCALAR
+         }
+         DATASET "data" {
+            invalid datatype: DatatypeCompoundV1 [CompoundDatatypeMemberV1 {cdm1Name = "r", cdm1ByteOffset = 0, cdm1Dimensions = [], cdm1Datatype = DatatypeMessageData {datatypeMessageVersion = 1, datatypeClass = DatatypeFloatingPoint {floatingPointByteOrder = LittleEndian, floatingPointLowBitPad = False, floatingPointHighBitPad = False, floatingPointInternalBitPad = False, floatingPointMantissaNormalization = NoNormalization, floatingPointSignLocation = 63, floatingPointBitOffset = 0, floatingPointBitPrecision = 64, floatingPointExponentLocation = 52, floatingPointExponentSize = 11, floatingPointMantissaLocation = 0, floatingPointMantissaSize = 52, floatingPointExponentBias = 1023}}},CompoundDatatypeMemberV1 {cdm1Name = "i", cdm1ByteOffset = 8, cdm1Dimensions = [], cdm1Datatype = DatatypeMessageData {datatypeMessageVersion = 1, datatypeClass = DatatypeFloatingPoint {floatingPointByteOrder = LittleEndian, floatingPointLowBitPad = False, floatingPointHighBitPad = False, floatingPointInternalBitPad = False, floatingPointMantissaNormalization = NoNormalization, floatingPointSignLocation = 63, floatingPointBitOffset = 0, floatingPointBitPrecision = 64, floatingPointExponentLocation = 52, floatingPointExponentSize = 11, floatingPointMantissaLocation = 0, floatingPointMantissaSize = 52, floatingPointExponentBias = 1023}}}]
+            DATASPACE  SIMPLE { ( 21 ) / ( 21 ) }
+            ATTRIBUTE "long_name" {
+               DATATYPE  H5T_STRING {
+                  STRSIZE H5T_VARIABLE;
+                  STRPAD H5T_STR_NULLTERM;
+                  CSET H5T_CSET_UTF8;
+                  CTYPE H5T_C_S1;
+               }
+               DATASPACE  SCALAR
+            }
+         }
       }
-      ATTRIBUTE "interpretation" {
-        DATATYPE  H5T_STRING {
-          STRSIZE H5T_VARIABLE;
-          STRPAD H5T_STR_NULLTERM;
-          CSET H5T_CSET_UTF8;
-          CTYPE H5T_C_S1;
-        }
-        DATASPACE  SCALAR
+      GROUP "S12" {
+         ATTRIBUTE "NX_class" {
+            DATATYPE  H5T_STRING {
+               STRSIZE H5T_VARIABLE;
+               STRPAD H5T_STR_NULLTERM;
+               CSET H5T_CSET_UTF8;
+               CTYPE H5T_C_S1;
+            }
+            DATASPACE  SCALAR
+         }
+         ATTRIBUTE "axes" {
+            DATATYPE  H5T_STRING {
+               STRSIZE H5T_VARIABLE;
+               STRPAD H5T_STR_NULLTERM;
+               CSET H5T_CSET_UTF8;
+               CTYPE H5T_C_S1;
+            }
+            DATASPACE  SIMPLE { ( 1 ) / ( 1 ) }
+         }
+         ATTRIBUTE "interpretation" {
+            DATATYPE  H5T_STRING {
+               STRSIZE H5T_VARIABLE;
+               STRPAD H5T_STR_NULLTERM;
+               CSET H5T_CSET_UTF8;
+               CTYPE H5T_C_S1;
+            }
+            DATASPACE  SCALAR
+         }
+         ATTRIBUTE "signal" {
+            DATATYPE  H5T_STRING {
+               STRSIZE H5T_VARIABLE;
+               STRPAD H5T_STR_NULLTERM;
+               CSET H5T_CSET_UTF8;
+               CTYPE H5T_C_S1;
+            }
+            DATASPACE  SCALAR
+         }
+         ATTRIBUTE "title" {
+            DATATYPE  H5T_STRING {
+               STRSIZE H5T_VARIABLE;
+               STRPAD H5T_STR_NULLTERM;
+               CSET H5T_CSET_UTF8;
+               CTYPE H5T_C_S1;
+            }
+            DATASPACE  SCALAR
+         }
+         DATASET "data" {
+            invalid datatype: DatatypeCompoundV1 [CompoundDatatypeMemberV1 {cdm1Name = "r", cdm1ByteOffset = 0, cdm1Dimensions = [], cdm1Datatype = DatatypeMessageData {datatypeMessageVersion = 1, datatypeClass = DatatypeFloatingPoint {floatingPointByteOrder = LittleEndian, floatingPointLowBitPad = False, floatingPointHighBitPad = False, floatingPointInternalBitPad = False, floatingPointMantissaNormalization = NoNormalization, floatingPointSignLocation = 63, floatingPointBitOffset = 0, floatingPointBitPrecision = 64, floatingPointExponentLocation = 52, floatingPointExponentSize = 11, floatingPointMantissaLocation = 0, floatingPointMantissaSize = 52, floatingPointExponentBias = 1023}}},CompoundDatatypeMemberV1 {cdm1Name = "i", cdm1ByteOffset = 8, cdm1Dimensions = [], cdm1Datatype = DatatypeMessageData {datatypeMessageVersion = 1, datatypeClass = DatatypeFloatingPoint {floatingPointByteOrder = LittleEndian, floatingPointLowBitPad = False, floatingPointHighBitPad = False, floatingPointInternalBitPad = False, floatingPointMantissaNormalization = NoNormalization, floatingPointSignLocation = 63, floatingPointBitOffset = 0, floatingPointBitPrecision = 64, floatingPointExponentLocation = 52, floatingPointExponentSize = 11, floatingPointMantissaLocation = 0, floatingPointMantissaSize = 52, floatingPointExponentBias = 1023}}}]
+            DATASPACE  SIMPLE { ( 21 ) / ( 21 ) }
+            ATTRIBUTE "long_name" {
+               DATATYPE  H5T_STRING {
+                  STRSIZE H5T_VARIABLE;
+                  STRPAD H5T_STR_NULLTERM;
+                  CSET H5T_CSET_UTF8;
+                  CTYPE H5T_C_S1;
+               }
+               DATASPACE  SCALAR
+            }
+         }
       }
-      ATTRIBUTE "signal" {
-        DATATYPE  H5T_STRING {
-          STRSIZE H5T_VARIABLE;
-          STRPAD H5T_STR_NULLTERM;
-          CSET H5T_CSET_UTF8;
-          CTYPE H5T_C_S1;
-        }
-        DATASPACE  SCALAR
+      GROUP "S21" {
+         ATTRIBUTE "NX_class" {
+            DATATYPE  H5T_STRING {
+               STRSIZE H5T_VARIABLE;
+               STRPAD H5T_STR_NULLTERM;
+               CSET H5T_CSET_UTF8;
+               CTYPE H5T_C_S1;
+            }
+            DATASPACE  SCALAR
+         }
+         ATTRIBUTE "axes" {
+            DATATYPE  H5T_STRING {
+               STRSIZE H5T_VARIABLE;
+               STRPAD H5T_STR_NULLTERM;
+               CSET H5T_CSET_UTF8;
+               CTYPE H5T_C_S1;
+            }
+            DATASPACE  SIMPLE { ( 1 ) / ( 1 ) }
+         }
+         ATTRIBUTE "interpretation" {
+            DATATYPE  H5T_STRING {
+               STRSIZE H5T_VARIABLE;
+               STRPAD H5T_STR_NULLTERM;
+               CSET H5T_CSET_UTF8;
+               CTYPE H5T_C_S1;
+            }
+            DATASPACE  SCALAR
+         }
+         ATTRIBUTE "signal" {
+            DATATYPE  H5T_STRING {
+               STRSIZE H5T_VARIABLE;
+               STRPAD H5T_STR_NULLTERM;
+               CSET H5T_CSET_UTF8;
+               CTYPE H5T_C_S1;
+            }
+            DATASPACE  SCALAR
+         }
+         ATTRIBUTE "title" {
+            DATATYPE  H5T_STRING {
+               STRSIZE H5T_VARIABLE;
+               STRPAD H5T_STR_NULLTERM;
+               CSET H5T_CSET_UTF8;
+               CTYPE H5T_C_S1;
+            }
+            DATASPACE  SCALAR
+         }
+         DATASET "data" {
+            invalid datatype: DatatypeCompoundV1 [CompoundDatatypeMemberV1 {cdm1Name = "r", cdm1ByteOffset = 0, cdm1Dimensions = [], cdm1Datatype = DatatypeMessageData {datatypeMessageVersion = 1, datatypeClass = DatatypeFloatingPoint {floatingPointByteOrder = LittleEndian, floatingPointLowBitPad = False, floatingPointHighBitPad = False, floatingPointInternalBitPad = False, floatingPointMantissaNormalization = NoNormalization, floatingPointSignLocation = 63, floatingPointBitOffset = 0, floatingPointBitPrecision = 64, floatingPointExponentLocation = 52, floatingPointExponentSize = 11, floatingPointMantissaLocation = 0, floatingPointMantissaSize = 52, floatingPointExponentBias = 1023}}},CompoundDatatypeMemberV1 {cdm1Name = "i", cdm1ByteOffset = 8, cdm1Dimensions = [], cdm1Datatype = DatatypeMessageData {datatypeMessageVersion = 1, datatypeClass = DatatypeFloatingPoint {floatingPointByteOrder = LittleEndian, floatingPointLowBitPad = False, floatingPointHighBitPad = False, floatingPointInternalBitPad = False, floatingPointMantissaNormalization = NoNormalization, floatingPointSignLocation = 63, floatingPointBitOffset = 0, floatingPointBitPrecision = 64, floatingPointExponentLocation = 52, floatingPointExponentSize = 11, floatingPointMantissaLocation = 0, floatingPointMantissaSize = 52, floatingPointExponentBias = 1023}}}]
+            DATASPACE  SIMPLE { ( 21 ) / ( 21 ) }
+            ATTRIBUTE "long_name" {
+               DATATYPE  H5T_STRING {
+                  STRSIZE H5T_VARIABLE;
+                  STRPAD H5T_STR_NULLTERM;
+                  CSET H5T_CSET_UTF8;
+                  CTYPE H5T_C_S1;
+               }
+               DATASPACE  SCALAR
+            }
+         }
       }
-      ATTRIBUTE "title" {
-        DATATYPE  H5T_STRING {
-          STRSIZE H5T_VARIABLE;
-          STRPAD H5T_STR_NULLTERM;
-          CSET H5T_CSET_UTF8;
-          CTYPE H5T_C_S1;
-        }
-        DATASPACE  SCALAR
+      GROUP "S22" {
+         ATTRIBUTE "NX_class" {
+            DATATYPE  H5T_STRING {
+               STRSIZE H5T_VARIABLE;
+               STRPAD H5T_STR_NULLTERM;
+               CSET H5T_CSET_UTF8;
+               CTYPE H5T_C_S1;
+            }
+            DATASPACE  SCALAR
+         }
+         ATTRIBUTE "axes" {
+            DATATYPE  H5T_STRING {
+               STRSIZE H5T_VARIABLE;
+               STRPAD H5T_STR_NULLTERM;
+               CSET H5T_CSET_UTF8;
+               CTYPE H5T_C_S1;
+            }
+            DATASPACE  SIMPLE { ( 1 ) / ( 1 ) }
+         }
+         ATTRIBUTE "interpretation" {
+            DATATYPE  H5T_STRING {
+               STRSIZE H5T_VARIABLE;
+               STRPAD H5T_STR_NULLTERM;
+               CSET H5T_CSET_UTF8;
+               CTYPE H5T_C_S1;
+            }
+            DATASPACE  SCALAR
+         }
+         ATTRIBUTE "signal" {
+            DATATYPE  H5T_STRING {
+               STRSIZE H5T_VARIABLE;
+               STRPAD H5T_STR_NULLTERM;
+               CSET H5T_CSET_UTF8;
+               CTYPE H5T_C_S1;
+            }
+            DATASPACE  SCALAR
+         }
+         ATTRIBUTE "title" {
+            DATATYPE  H5T_STRING {
+               STRSIZE H5T_VARIABLE;
+               STRPAD H5T_STR_NULLTERM;
+               CSET H5T_CSET_UTF8;
+               CTYPE H5T_C_S1;
+            }
+            DATASPACE  SCALAR
+         }
+         DATASET "data" {
+            invalid datatype: DatatypeCompoundV1 [CompoundDatatypeMemberV1 {cdm1Name = "r", cdm1ByteOffset = 0, cdm1Dimensions = [], cdm1Datatype = DatatypeMessageData {datatypeMessageVersion = 1, datatypeClass = DatatypeFloatingPoint {floatingPointByteOrder = LittleEndian, floatingPointLowBitPad = False, floatingPointHighBitPad = False, floatingPointInternalBitPad = False, floatingPointMantissaNormalization = NoNormalization, floatingPointSignLocation = 63, floatingPointBitOffset = 0, floatingPointBitPrecision = 64, floatingPointExponentLocation = 52, floatingPointExponentSize = 11, floatingPointMantissaLocation = 0, floatingPointMantissaSize = 52, floatingPointExponentBias = 1023}}},CompoundDatatypeMemberV1 {cdm1Name = "i", cdm1ByteOffset = 8, cdm1Dimensions = [], cdm1Datatype = DatatypeMessageData {datatypeMessageVersion = 1, datatypeClass = DatatypeFloatingPoint {floatingPointByteOrder = LittleEndian, floatingPointLowBitPad = False, floatingPointHighBitPad = False, floatingPointInternalBitPad = False, floatingPointMantissaNormalization = NoNormalization, floatingPointSignLocation = 63, floatingPointBitOffset = 0, floatingPointBitPrecision = 64, floatingPointExponentLocation = 52, floatingPointExponentSize = 11, floatingPointMantissaLocation = 0, floatingPointMantissaSize = 52, floatingPointExponentBias = 1023}}}]
+            DATASPACE  SIMPLE { ( 21 ) / ( 21 ) }
+            ATTRIBUTE "long_name" {
+               DATATYPE  H5T_STRING {
+                  STRSIZE H5T_VARIABLE;
+                  STRPAD H5T_STR_NULLTERM;
+                  CSET H5T_CSET_UTF8;
+                  CTYPE H5T_C_S1;
+               }
+               DATASPACE  SCALAR
+            }
+         }
       }
-      DATASET "data" {
-        invalid datatype: DatatypeCompoundV1 [CompoundDatatypeMemberV1 {cdm1Name = "r", cdm1ByteOffset = 0, cdm1Dimensions = [], cdm1Datatype = DatatypeMessageData {datatypeMessageVersion = 1, datatypeClass = DatatypeFloatingPoint {floatingPointByteOrder = LittleEndian, floatingPointLowBitPad = False, floatingPointHighBitPad = False, floatingPointInternalBitPad = False, floatingPointMantissaNormalization = NoNormalization, floatingPointSignLocation = 63, floatingPointBitOffset = 0, floatingPointBitPrecision = 64, floatingPointExponentLocation = 52, floatingPointExponentSize = 11, floatingPointMantissaLocation = 0, floatingPointMantissaSize = 52, floatingPointExponentBias = 1023}}},CompoundDatatypeMemberV1 {cdm1Name = "i", cdm1ByteOffset = 8, cdm1Dimensions = [], cdm1Datatype = DatatypeMessageData {datatypeMessageVersion = 1, datatypeClass = DatatypeFloatingPoint {floatingPointByteOrder = LittleEndian, floatingPointLowBitPad = False, floatingPointHighBitPad = False, floatingPointInternalBitPad = False, floatingPointMantissaNormalization = NoNormalization, floatingPointSignLocation = 63, floatingPointBitOffset = 0, floatingPointBitPrecision = 64, floatingPointExponentLocation = 52, floatingPointExponentSize = 11, floatingPointMantissaLocation = 0, floatingPointMantissaSize = 52, floatingPointExponentBias = 1023}}}]
-        DATASPACE  SIMPLE { ( 21 ) / ( 21 ) }
-        ATTRIBUTE "long_name" {
-          DATATYPE  H5T_STRING {
+      DATASET "frequency" {
+         DATATYPE  H5T_IEEE_F64LE
+         DATASPACE  SIMPLE { ( 21 ) / ( 21 ) }
+         ATTRIBUTE "long_name" {
+            DATATYPE  H5T_STRING {
+               STRSIZE H5T_VARIABLE;
+               STRPAD H5T_STR_NULLTERM;
+               CSET H5T_CSET_UTF8;
+               CTYPE H5T_C_S1;
+            }
+            DATASPACE  SCALAR
+         }
+         ATTRIBUTE "units" {
+            DATATYPE  H5T_STRING {
+               STRSIZE H5T_VARIABLE;
+               STRPAD H5T_STR_NULLTERM;
+               CSET H5T_CSET_UTF8;
+               CTYPE H5T_C_S1;
+            }
+            DATASPACE  SCALAR
+         }
+      }
+      DATASET "wavelength" {
+         DATATYPE  H5T_IEEE_F64LE
+         DATASPACE  SIMPLE { ( 21 ) / ( 21 ) }
+         ATTRIBUTE "long_name" {
+            DATATYPE  H5T_STRING {
+               STRSIZE H5T_VARIABLE;
+               STRPAD H5T_STR_NULLTERM;
+               CSET H5T_CSET_UTF8;
+               CTYPE H5T_C_S1;
+            }
+            DATASPACE  SCALAR
+         }
+         ATTRIBUTE "units" {
+            DATATYPE  H5T_STRING {
+               STRSIZE H5T_VARIABLE;
+               STRPAD H5T_STR_NULLTERM;
+               CSET H5T_CSET_UTF8;
+               CTYPE H5T_C_S1;
+            }
+            DATASPACE  SCALAR
+         }
+      }
+   }
+   GROUP "run_1" {
+      ATTRIBUTE "date_utc" {
+         DATATYPE  H5T_STRING {
             STRSIZE H5T_VARIABLE;
             STRPAD H5T_STR_NULLTERM;
             CSET H5T_CSET_UTF8;
             CTYPE H5T_C_S1;
-          }
-          DATASPACE  SCALAR
-        }
+         }
+         DATASPACE  SCALAR
       }
-    }
-    GROUP "S22" {
-      ATTRIBUTE "NX_class" {
-        DATATYPE  H5T_STRING {
-          STRSIZE H5T_VARIABLE;
-          STRPAD H5T_STR_NULLTERM;
-          CSET H5T_CSET_UTF8;
-          CTYPE H5T_C_S1;
-        }
-        DATASPACE  SCALAR
-      }
-      ATTRIBUTE "axes" {
-        DATATYPE  H5T_STRING {
-          STRSIZE H5T_VARIABLE;
-          STRPAD H5T_STR_NULLTERM;
-          CSET H5T_CSET_UTF8;
-          CTYPE H5T_C_S1;
-        }
-        DATASPACE  SIMPLE { ( 1 ) / ( 1 ) }
-      }
-      ATTRIBUTE "interpretation" {
-        DATATYPE  H5T_STRING {
-          STRSIZE H5T_VARIABLE;
-          STRPAD H5T_STR_NULLTERM;
-          CSET H5T_CSET_UTF8;
-          CTYPE H5T_C_S1;
-        }
-        DATASPACE  SCALAR
-      }
-      ATTRIBUTE "signal" {
-        DATATYPE  H5T_STRING {
-          STRSIZE H5T_VARIABLE;
-          STRPAD H5T_STR_NULLTERM;
-          CSET H5T_CSET_UTF8;
-          CTYPE H5T_C_S1;
-        }
-        DATASPACE  SCALAR
-      }
-      ATTRIBUTE "title" {
-        DATATYPE  H5T_STRING {
-          STRSIZE H5T_VARIABLE;
-          STRPAD H5T_STR_NULLTERM;
-          CSET H5T_CSET_UTF8;
-          CTYPE H5T_C_S1;
-        }
-        DATASPACE  SCALAR
-      }
-      DATASET "data" {
-        invalid datatype: DatatypeCompoundV1 [CompoundDatatypeMemberV1 {cdm1Name = "r", cdm1ByteOffset = 0, cdm1Dimensions = [], cdm1Datatype = DatatypeMessageData {datatypeMessageVersion = 1, datatypeClass = DatatypeFloatingPoint {floatingPointByteOrder = LittleEndian, floatingPointLowBitPad = False, floatingPointHighBitPad = False, floatingPointInternalBitPad = False, floatingPointMantissaNormalization = NoNormalization, floatingPointSignLocation = 63, floatingPointBitOffset = 0, floatingPointBitPrecision = 64, floatingPointExponentLocation = 52, floatingPointExponentSize = 11, floatingPointMantissaLocation = 0, floatingPointMantissaSize = 52, floatingPointExponentBias = 1023}}},CompoundDatatypeMemberV1 {cdm1Name = "i", cdm1ByteOffset = 8, cdm1Dimensions = [], cdm1Datatype = DatatypeMessageData {datatypeMessageVersion = 1, datatypeClass = DatatypeFloatingPoint {floatingPointByteOrder = LittleEndian, floatingPointLowBitPad = False, floatingPointHighBitPad = False, floatingPointInternalBitPad = False, floatingPointMantissaNormalization = NoNormalization, floatingPointSignLocation = 63, floatingPointBitOffset = 0, floatingPointBitPrecision = 64, floatingPointExponentLocation = 52, floatingPointExponentSize = 11, floatingPointMantissaLocation = 0, floatingPointMantissaSize = 52, floatingPointExponentBias = 1023}}}]
-        DATASPACE  SIMPLE { ( 21 ) / ( 21 ) }
-        ATTRIBUTE "long_name" {
-          DATATYPE  H5T_STRING {
+      ATTRIBUTE "run_id" {
+         DATATYPE  H5T_STRING {
             STRSIZE H5T_VARIABLE;
             STRPAD H5T_STR_NULLTERM;
             CSET H5T_CSET_UTF8;
             CTYPE H5T_C_S1;
-          }
-          DATASPACE  SCALAR
-        }
-      }
-    }
-    DATASET "frequency" {
-      DATATYPE  H5T_IEEE_F64LE
-      DATASPACE  SIMPLE { ( 21 ) / ( 21 ) }
-      ATTRIBUTE "long_name" {
-        DATATYPE  H5T_STRING {
-          STRSIZE H5T_VARIABLE;
-          STRPAD H5T_STR_NULLTERM;
-          CSET H5T_CSET_UTF8;
-          CTYPE H5T_C_S1;
-        }
-        DATASPACE  SCALAR
-      }
-      ATTRIBUTE "units" {
-        DATATYPE  H5T_STRING {
-          STRSIZE H5T_VARIABLE;
-          STRPAD H5T_STR_NULLTERM;
-          CSET H5T_CSET_UTF8;
-          CTYPE H5T_C_S1;
-        }
-        DATASPACE  SCALAR
-      }
-    }
-    DATASET "wavelength" {
-      DATATYPE  H5T_IEEE_F64LE
-      DATASPACE  SIMPLE { ( 21 ) / ( 21 ) }
-      ATTRIBUTE "long_name" {
-        DATATYPE  H5T_STRING {
-          STRSIZE H5T_VARIABLE;
-          STRPAD H5T_STR_NULLTERM;
-          CSET H5T_CSET_UTF8;
-          CTYPE H5T_C_S1;
-        }
-        DATASPACE  SCALAR
-      }
-      ATTRIBUTE "units" {
-        DATATYPE  H5T_STRING {
-          STRSIZE H5T_VARIABLE;
-          STRPAD H5T_STR_NULLTERM;
-          CSET H5T_CSET_UTF8;
-          CTYPE H5T_C_S1;
-        }
-        DATASPACE  SCALAR
-      }
-    }
-  }
-  GROUP "run_1" {
-    ATTRIBUTE "date_utc" {
-      DATATYPE  H5T_STRING {
-        STRSIZE H5T_VARIABLE;
-        STRPAD H5T_STR_NULLTERM;
-        CSET H5T_CSET_UTF8;
-        CTYPE H5T_C_S1;
-      }
-      DATASPACE  SCALAR
-    }
-    ATTRIBUTE "run_id" {
-      DATATYPE  H5T_STRING {
-        STRSIZE H5T_VARIABLE;
-        STRPAD H5T_STR_NULLTERM;
-        CSET H5T_CSET_UTF8;
-        CTYPE H5T_C_S1;
-      }
-      DATASPACE  SCALAR
-    }
-    GROUP "mode monitor 1" {
-      ATTRIBUTE "freq_max" {
-        DATATYPE  H5T_STD_F64LE
-        DATASPACE  SCALAR
-        DATA {
-          (0): 1.998616387210709e14
-        }
-      }
-      ATTRIBUTE "freq_min" {
-        DATATYPE  H5T_STD_F64LE
-        DATASPACE  SCALAR
-        DATA {
-          (0): 1.87370286301004e14
-        }
-      }
-      ATTRIBUTE "freq_npts" {
-        DATATYPE  H5T_STD_U16BE
-        DATASPACE  SCALAR
-        DATA {
-          (0): 21
-        }
-      }
-      ATTRIBUTE "kind" {
-        DATATYPE  H5T_STRING {
-          STRSIZE H5T_VARIABLE;
-          STRPAD H5T_STR_NULLTERM;
-          CSET H5T_CSET_UTF8;
-          CTYPE H5T_C_S1;
-        }
-        DATASPACE  SCALAR
-      }
-      ATTRIBUTE "lambda_max" {
-        DATATYPE  H5T_STD_F64LE
-        DATASPACE  SCALAR
-        DATA {
-          (0): 1.6e-6
-        }
-      }
-      ATTRIBUTE "lambda_min" {
-        DATATYPE  H5T_STD_F64LE
-        DATASPACE  SCALAR
-        DATA {
-          (0): 1.5e-6
-        }
-      }
-      ATTRIBUTE "save_ex" {
-        DATATYPE  ENUM
-        DATASPACE  SCALAR
-        DATA {
-          (0): 0
-        }
-      }
-      ATTRIBUTE "save_ey" {
-        DATATYPE  ENUM
-        DATASPACE  SCALAR
-        DATA {
-          (0): 1
-        }
-      }
-      ATTRIBUTE "save_ez" {
-        DATATYPE  ENUM
-        DATASPACE  SCALAR
-        DATA {
-          (0): 1
-        }
-      }
-      ATTRIBUTE "save_hx" {
-        DATATYPE  ENUM
-        DATASPACE  SCALAR
-        DATA {
-          (0): 0
-        }
-      }
-      ATTRIBUTE "save_hy" {
-        DATATYPE  ENUM
-        DATASPACE  SCALAR
-        DATA {
-          (0): 1
-        }
-      }
-      ATTRIBUTE "save_hz" {
-        DATATYPE  ENUM
-        DATASPACE  SCALAR
-        DATA {
-          (0): 1
-        }
-      }
-      ATTRIBUTE "type" {
-        DATATYPE  H5T_STRING {
-          STRSIZE H5T_VARIABLE;
-          STRPAD H5T_STR_NULLTERM;
-          CSET H5T_CSET_UTF8;
-          CTYPE H5T_C_S1;
-        }
-        DATASPACE  SCALAR
-      }
-      ATTRIBUTE "y_max" {
-        DATATYPE  H5T_STD_F64LE
-        DATASPACE  SCALAR
-        DATA {
-          (0): 1.5e-6
-        }
-      }
-      ATTRIBUTE "y_min" {
-        DATATYPE  H5T_STD_F64LE
-        DATASPACE  SCALAR
-        DATA {
-          (0): -7.500000000000001e-8
-        }
-      }
-      ATTRIBUTE "y_subsampling" {
-        DATATYPE  H5T_STD_U16BE
-        DATASPACE  SCALAR
-        DATA {
-          (0): 1
-        }
-      }
-      ATTRIBUTE "z_max" {
-        DATATYPE  H5T_STD_F64LE
-        DATASPACE  SCALAR
-        DATA {
-          (0): 1.3750000000000002e-6
-        }
-      }
-      ATTRIBUTE "z_min" {
-        DATATYPE  H5T_STD_F64LE
-        DATASPACE  SCALAR
-        DATA {
-          (0): -1.5000000000000002e-7
-        }
-      }
-      ATTRIBUTE "z_subsampling" {
-        DATATYPE  H5T_STD_U16BE
-        DATASPACE  SCALAR
-        DATA {
-          (0): 1
-        }
-      }
-      DATASET "ey_f" {
-        invalid datatype: DatatypeCompoundV1 [CompoundDatatypeMemberV1 {cdm1Name = "r", cdm1ByteOffset = 0, cdm1Dimensions = [], cdm1Datatype = DatatypeMessageData {datatypeMessageVersion = 1, datatypeClass = DatatypeFloatingPoint {floatingPointByteOrder = LittleEndian, floatingPointLowBitPad = False, floatingPointHighBitPad = False, floatingPointInternalBitPad = False, floatingPointMantissaNormalization = NoNormalization, floatingPointSignLocation = 63, floatingPointBitOffset = 0, floatingPointBitPrecision = 64, floatingPointExponentLocation = 52, floatingPointExponentSize = 11, floatingPointMantissaLocation = 0, floatingPointMantissaSize = 52, floatingPointExponentBias = 1023}}},CompoundDatatypeMemberV1 {cdm1Name = "i", cdm1ByteOffset = 8, cdm1Dimensions = [], cdm1Datatype = DatatypeMessageData {datatypeMessageVersion = 1, datatypeClass = DatatypeFloatingPoint {floatingPointByteOrder = LittleEndian, floatingPointLowBitPad = False, floatingPointHighBitPad = False, floatingPointInternalBitPad = False, floatingPointMantissaNormalization = NoNormalization, floatingPointSignLocation = 63, floatingPointBitOffset = 0, floatingPointBitPrecision = 64, floatingPointExponentLocation = 52, floatingPointExponentSize = 11, floatingPointMantissaLocation = 0, floatingPointMantissaSize = 52, floatingPointExponentBias = 1023}}}]
-        DATASPACE  SIMPLE { ( 21, 1, 64, 62 ) / ( 21, 1, 64, 62 ) }
-      }
-      DATASET "ez_f" {
-        invalid datatype: DatatypeCompoundV1 [CompoundDatatypeMemberV1 {cdm1Name = "r", cdm1ByteOffset = 0, cdm1Dimensions = [], cdm1Datatype = DatatypeMessageData {datatypeMessageVersion = 1, datatypeClass = DatatypeFloatingPoint {floatingPointByteOrder = LittleEndian, floatingPointLowBitPad = False, floatingPointHighBitPad = False, floatingPointInternalBitPad = False, floatingPointMantissaNormalization = NoNormalization, floatingPointSignLocation = 63, floatingPointBitOffset = 0, floatingPointBitPrecision = 64, floatingPointExponentLocation = 52, floatingPointExponentSize = 11, floatingPointMantissaLocation = 0, floatingPointMantissaSize = 52, floatingPointExponentBias = 1023}}},CompoundDatatypeMemberV1 {cdm1Name = "i", cdm1ByteOffset = 8, cdm1Dimensions = [], cdm1Datatype = DatatypeMessageData {datatypeMessageVersion = 1, datatypeClass = DatatypeFloatingPoint {floatingPointByteOrder = LittleEndian, floatingPointLowBitPad = False, floatingPointHighBitPad = False, floatingPointInternalBitPad = False, floatingPointMantissaNormalization = NoNormalization, floatingPointSignLocation = 63, floatingPointBitOffset = 0, floatingPointBitPrecision = 64, floatingPointExponentLocation = 52, floatingPointExponentSize = 11, floatingPointMantissaLocation = 0, floatingPointMantissaSize = 52, floatingPointExponentBias = 1023}}}]
-        DATASPACE  SIMPLE { ( 21, 1, 64, 62 ) / ( 21, 1, 64, 62 ) }
-      }
-      DATASET "hy_f" {
-        invalid datatype: DatatypeCompoundV1 [CompoundDatatypeMemberV1 {cdm1Name = "r", cdm1ByteOffset = 0, cdm1Dimensions = [], cdm1Datatype = DatatypeMessageData {datatypeMessageVersion = 1, datatypeClass = DatatypeFloatingPoint {floatingPointByteOrder = LittleEndian, floatingPointLowBitPad = False, floatingPointHighBitPad = False, floatingPointInternalBitPad = False, floatingPointMantissaNormalization = NoNormalization, floatingPointSignLocation = 63, floatingPointBitOffset = 0, floatingPointBitPrecision = 64, floatingPointExponentLocation = 52, floatingPointExponentSize = 11, floatingPointMantissaLocation = 0, floatingPointMantissaSize = 52, floatingPointExponentBias = 1023}}},CompoundDatatypeMemberV1 {cdm1Name = "i", cdm1ByteOffset = 8, cdm1Dimensions = [], cdm1Datatype = DatatypeMessageData {datatypeMessageVersion = 1, datatypeClass = DatatypeFloatingPoint {floatingPointByteOrder = LittleEndian, floatingPointLowBitPad = False, floatingPointHighBitPad = False, floatingPointInternalBitPad = False, floatingPointMantissaNormalization = NoNormalization, floatingPointSignLocation = 63, floatingPointBitOffset = 0, floatingPointBitPrecision = 64, floatingPointExponentLocation = 52, floatingPointExponentSize = 11, floatingPointMantissaLocation = 0, floatingPointMantissaSize = 52, floatingPointExponentBias = 1023}}}]
-        DATASPACE  SIMPLE { ( 21, 1, 64, 62 ) / ( 21, 1, 64, 62 ) }
-      }
-      DATASET "hz_f" {
-        invalid datatype: DatatypeCompoundV1 [CompoundDatatypeMemberV1 {cdm1Name = "r", cdm1ByteOffset = 0, cdm1Dimensions = [], cdm1Datatype = DatatypeMessageData {datatypeMessageVersion = 1, datatypeClass = DatatypeFloatingPoint {floatingPointByteOrder = LittleEndian, floatingPointLowBitPad = False, floatingPointHighBitPad = False, floatingPointInternalBitPad = False, floatingPointMantissaNormalization = NoNormalization, floatingPointSignLocation = 63, floatingPointBitOffset = 0, floatingPointBitPrecision = 64, floatingPointExponentLocation = 52, floatingPointExponentSize = 11, floatingPointMantissaLocation = 0, floatingPointMantissaSize = 52, floatingPointExponentBias = 1023}}},CompoundDatatypeMemberV1 {cdm1Name = "i", cdm1ByteOffset = 8, cdm1Dimensions = [], cdm1Datatype = DatatypeMessageData {datatypeMessageVersion = 1, datatypeClass = DatatypeFloatingPoint {floatingPointByteOrder = LittleEndian, floatingPointLowBitPad = False, floatingPointHighBitPad = False, floatingPointInternalBitPad = False, floatingPointMantissaNormalization = NoNormalization, floatingPointSignLocation = 63, floatingPointBitOffset = 0, floatingPointBitPrecision = 64, floatingPointExponentLocation = 52, floatingPointExponentSize = 11, floatingPointMantissaLocation = 0, floatingPointMantissaSize = 52, floatingPointExponentBias = 1023}}}]
-        DATASPACE  SIMPLE { ( 21, 1, 64, 62 ) / ( 21, 1, 64, 62 ) }
-      }
-    }
-    GROUP "mode monitor 2" {
-      ATTRIBUTE "freq_max" {
-        DATATYPE  H5T_STD_F64LE
-        DATASPACE  SCALAR
-        DATA {
-          (0): 1.998616387210709e14
-        }
-      }
-      ATTRIBUTE "freq_min" {
-        DATATYPE  H5T_STD_F64LE
-        DATASPACE  SCALAR
-        DATA {
-          (0): 1.87370286301004e14
-        }
-      }
-      ATTRIBUTE "freq_npts" {
-        DATATYPE  H5T_STD_U16BE
-        DATASPACE  SCALAR
-        DATA {
-          (0): 21
-        }
-      }
-      ATTRIBUTE "kind" {
-        DATATYPE  H5T_STRING {
-          STRSIZE H5T_VARIABLE;
-          STRPAD H5T_STR_NULLTERM;
-          CSET H5T_CSET_UTF8;
-          CTYPE H5T_C_S1;
-        }
-        DATASPACE  SCALAR
-      }
-      ATTRIBUTE "lambda_max" {
-        DATATYPE  H5T_STD_F64LE
-        DATASPACE  SCALAR
-        DATA {
-          (0): 1.6e-6
-        }
-      }
-      ATTRIBUTE "lambda_min" {
-        DATATYPE  H5T_STD_F64LE
-        DATASPACE  SCALAR
-        DATA {
-          (0): 1.5e-6
-        }
-      }
-      ATTRIBUTE "save_ex" {
-        DATATYPE  ENUM
-        DATASPACE  SCALAR
-        DATA {
-          (0): 0
-        }
-      }
-      ATTRIBUTE "save_ey" {
-        DATATYPE  ENUM
-        DATASPACE  SCALAR
-        DATA {
-          (0): 1
-        }
-      }
-      ATTRIBUTE "save_ez" {
-        DATATYPE  ENUM
-        DATASPACE  SCALAR
-        DATA {
-          (0): 1
-        }
-      }
-      ATTRIBUTE "save_hx" {
-        DATATYPE  ENUM
-        DATASPACE  SCALAR
-        DATA {
-          (0): 0
-        }
-      }
-      ATTRIBUTE "save_hy" {
-        DATATYPE  ENUM
-        DATASPACE  SCALAR
-        DATA {
-          (0): 1
-        }
-      }
-      ATTRIBUTE "save_hz" {
-        DATATYPE  ENUM
-        DATASPACE  SCALAR
-        DATA {
-          (0): 1
-        }
-      }
-      ATTRIBUTE "type" {
-        DATATYPE  H5T_STRING {
-          STRSIZE H5T_VARIABLE;
-          STRPAD H5T_STR_NULLTERM;
-          CSET H5T_CSET_UTF8;
-          CTYPE H5T_C_S1;
-        }
-        DATASPACE  SCALAR
-      }
-      ATTRIBUTE "y_max" {
-        DATATYPE  H5T_STD_F64LE
-        DATASPACE  SCALAR
-        DATA {
-          (0): 1.5e-6
-        }
-      }
-      ATTRIBUTE "y_min" {
-        DATATYPE  H5T_STD_F64LE
-        DATASPACE  SCALAR
-        DATA {
-          (0): -7.500000000000001e-8
-        }
-      }
-      ATTRIBUTE "y_subsampling" {
-        DATATYPE  H5T_STD_U16BE
-        DATASPACE  SCALAR
-        DATA {
-          (0): 1
-        }
-      }
-      ATTRIBUTE "z_max" {
-        DATATYPE  H5T_STD_F64LE
-        DATASPACE  SCALAR
-        DATA {
-          (0): 1.3750000000000002e-6
-        }
-      }
-      ATTRIBUTE "z_min" {
-        DATATYPE  H5T_STD_F64LE
-        DATASPACE  SCALAR
-        DATA {
-          (0): -1.5000000000000002e-7
-        }
-      }
-      ATTRIBUTE "z_subsampling" {
-        DATATYPE  H5T_STD_U16BE
-        DATASPACE  SCALAR
-        DATA {
-          (0): 1
-        }
-      }
-      DATASET "ey_f" {
-        invalid datatype: DatatypeCompoundV1 [CompoundDatatypeMemberV1 {cdm1Name = "r", cdm1ByteOffset = 0, cdm1Dimensions = [], cdm1Datatype = DatatypeMessageData {datatypeMessageVersion = 1, datatypeClass = DatatypeFloatingPoint {floatingPointByteOrder = LittleEndian, floatingPointLowBitPad = False, floatingPointHighBitPad = False, floatingPointInternalBitPad = False, floatingPointMantissaNormalization = NoNormalization, floatingPointSignLocation = 63, floatingPointBitOffset = 0, floatingPointBitPrecision = 64, floatingPointExponentLocation = 52, floatingPointExponentSize = 11, floatingPointMantissaLocation = 0, floatingPointMantissaSize = 52, floatingPointExponentBias = 1023}}},CompoundDatatypeMemberV1 {cdm1Name = "i", cdm1ByteOffset = 8, cdm1Dimensions = [], cdm1Datatype = DatatypeMessageData {datatypeMessageVersion = 1, datatypeClass = DatatypeFloatingPoint {floatingPointByteOrder = LittleEndian, floatingPointLowBitPad = False, floatingPointHighBitPad = False, floatingPointInternalBitPad = False, floatingPointMantissaNormalization = NoNormalization, floatingPointSignLocation = 63, floatingPointBitOffset = 0, floatingPointBitPrecision = 64, floatingPointExponentLocation = 52, floatingPointExponentSize = 11, floatingPointMantissaLocation = 0, floatingPointMantissaSize = 52, floatingPointExponentBias = 1023}}}]
-        DATASPACE  SIMPLE { ( 21, 1, 64, 62 ) / ( 21, 1, 64, 62 ) }
-      }
-      DATASET "ez_f" {
-        invalid datatype: DatatypeCompoundV1 [CompoundDatatypeMemberV1 {cdm1Name = "r", cdm1ByteOffset = 0, cdm1Dimensions = [], cdm1Datatype = DatatypeMessageData {datatypeMessageVersion = 1, datatypeClass = DatatypeFloatingPoint {floatingPointByteOrder = LittleEndian, floatingPointLowBitPad = False, floatingPointHighBitPad = False, floatingPointInternalBitPad = False, floatingPointMantissaNormalization = NoNormalization, floatingPointSignLocation = 63, floatingPointBitOffset = 0, floatingPointBitPrecision = 64, floatingPointExponentLocation = 52, floatingPointExponentSize = 11, floatingPointMantissaLocation = 0, floatingPointMantissaSize = 52, floatingPointExponentBias = 1023}}},CompoundDatatypeMemberV1 {cdm1Name = "i", cdm1ByteOffset = 8, cdm1Dimensions = [], cdm1Datatype = DatatypeMessageData {datatypeMessageVersion = 1, datatypeClass = DatatypeFloatingPoint {floatingPointByteOrder = LittleEndian, floatingPointLowBitPad = False, floatingPointHighBitPad = False, floatingPointInternalBitPad = False, floatingPointMantissaNormalization = NoNormalization, floatingPointSignLocation = 63, floatingPointBitOffset = 0, floatingPointBitPrecision = 64, floatingPointExponentLocation = 52, floatingPointExponentSize = 11, floatingPointMantissaLocation = 0, floatingPointMantissaSize = 52, floatingPointExponentBias = 1023}}}]
-        DATASPACE  SIMPLE { ( 21, 1, 64, 62 ) / ( 21, 1, 64, 62 ) }
-      }
-      DATASET "hy_f" {
-        invalid datatype: DatatypeCompoundV1 [CompoundDatatypeMemberV1 {cdm1Name = "r", cdm1ByteOffset = 0, cdm1Dimensions = [], cdm1Datatype = DatatypeMessageData {datatypeMessageVersion = 1, datatypeClass = DatatypeFloatingPoint {floatingPointByteOrder = LittleEndian, floatingPointLowBitPad = False, floatingPointHighBitPad = False, floatingPointInternalBitPad = False, floatingPointMantissaNormalization = NoNormalization, floatingPointSignLocation = 63, floatingPointBitOffset = 0, floatingPointBitPrecision = 64, floatingPointExponentLocation = 52, floatingPointExponentSize = 11, floatingPointMantissaLocation = 0, floatingPointMantissaSize = 52, floatingPointExponentBias = 1023}}},CompoundDatatypeMemberV1 {cdm1Name = "i", cdm1ByteOffset = 8, cdm1Dimensions = [], cdm1Datatype = DatatypeMessageData {datatypeMessageVersion = 1, datatypeClass = DatatypeFloatingPoint {floatingPointByteOrder = LittleEndian, floatingPointLowBitPad = False, floatingPointHighBitPad = False, floatingPointInternalBitPad = False, floatingPointMantissaNormalization = NoNormalization, floatingPointSignLocation = 63, floatingPointBitOffset = 0, floatingPointBitPrecision = 64, floatingPointExponentLocation = 52, floatingPointExponentSize = 11, floatingPointMantissaLocation = 0, floatingPointMantissaSize = 52, floatingPointExponentBias = 1023}}}]
-        DATASPACE  SIMPLE { ( 21, 1, 64, 62 ) / ( 21, 1, 64, 62 ) }
-      }
-      DATASET "hz_f" {
-        invalid datatype: DatatypeCompoundV1 [CompoundDatatypeMemberV1 {cdm1Name = "r", cdm1ByteOffset = 0, cdm1Dimensions = [], cdm1Datatype = DatatypeMessageData {datatypeMessageVersion = 1, datatypeClass = DatatypeFloatingPoint {floatingPointByteOrder = LittleEndian, floatingPointLowBitPad = False, floatingPointHighBitPad = False, floatingPointInternalBitPad = False, floatingPointMantissaNormalization = NoNormalization, floatingPointSignLocation = 63, floatingPointBitOffset = 0, floatingPointBitPrecision = 64, floatingPointExponentLocation = 52, floatingPointExponentSize = 11, floatingPointMantissaLocation = 0, floatingPointMantissaSize = 52, floatingPointExponentBias = 1023}}},CompoundDatatypeMemberV1 {cdm1Name = "i", cdm1ByteOffset = 8, cdm1Dimensions = [], cdm1Datatype = DatatypeMessageData {datatypeMessageVersion = 1, datatypeClass = DatatypeFloatingPoint {floatingPointByteOrder = LittleEndian, floatingPointLowBitPad = False, floatingPointHighBitPad = False, floatingPointInternalBitPad = False, floatingPointMantissaNormalization = NoNormalization, floatingPointSignLocation = 63, floatingPointBitOffset = 0, floatingPointBitPrecision = 64, floatingPointExponentLocation = 52, floatingPointExponentSize = 11, floatingPointMantissaLocation = 0, floatingPointMantissaSize = 52, floatingPointExponentBias = 1023}}}]
-        DATASPACE  SIMPLE { ( 21, 1, 64, 62 ) / ( 21, 1, 64, 62 ) }
-      }
-    }
-  }
-  GROUP "run_2" {
-    ATTRIBUTE "date_utc" {
-      DATATYPE  H5T_STRING {
-        STRSIZE H5T_VARIABLE;
-        STRPAD H5T_STR_NULLTERM;
-        CSET H5T_CSET_UTF8;
-        CTYPE H5T_C_S1;
-      }
-      DATASPACE  SCALAR
-    }
-    ATTRIBUTE "run_id" {
-      DATATYPE  H5T_STRING {
-        STRSIZE H5T_VARIABLE;
-        STRPAD H5T_STR_NULLTERM;
-        CSET H5T_CSET_UTF8;
-        CTYPE H5T_C_S1;
-      }
-      DATASPACE  SCALAR
-    }
-    GROUP "mode monitor 1" {
-      ATTRIBUTE "freq_max" {
-        DATATYPE  H5T_STD_F64LE
-        DATASPACE  SCALAR
-        DATA {
-          (0): 1.998616387210709e14
-        }
-      }
-      ATTRIBUTE "freq_min" {
-        DATATYPE  H5T_STD_F64LE
-        DATASPACE  SCALAR
-        DATA {
-          (0): 1.87370286301004e14
-        }
-      }
-      ATTRIBUTE "freq_npts" {
-        DATATYPE  H5T_STD_U16BE
-        DATASPACE  SCALAR
-        DATA {
-          (0): 21
-        }
-      }
-      ATTRIBUTE "kind" {
-        DATATYPE  H5T_STRING {
-          STRSIZE H5T_VARIABLE;
-          STRPAD H5T_STR_NULLTERM;
-          CSET H5T_CSET_UTF8;
-          CTYPE H5T_C_S1;
-        }
-        DATASPACE  SCALAR
-      }
-      ATTRIBUTE "lambda_max" {
-        DATATYPE  H5T_STD_F64LE
-        DATASPACE  SCALAR
-        DATA {
-          (0): 1.6e-6
-        }
-      }
-      ATTRIBUTE "lambda_min" {
-        DATATYPE  H5T_STD_F64LE
-        DATASPACE  SCALAR
-        DATA {
-          (0): 1.5e-6
-        }
-      }
-      ATTRIBUTE "save_ex" {
-        DATATYPE  ENUM
-        DATASPACE  SCALAR
-        DATA {
-          (0): 0
-        }
-      }
-      ATTRIBUTE "save_ey" {
-        DATATYPE  ENUM
-        DATASPACE  SCALAR
-        DATA {
-          (0): 1
-        }
-      }
-      ATTRIBUTE "save_ez" {
-        DATATYPE  ENUM
-        DATASPACE  SCALAR
-        DATA {
-          (0): 1
-        }
-      }
-      ATTRIBUTE "save_hx" {
-        DATATYPE  ENUM
-        DATASPACE  SCALAR
-        DATA {
-          (0): 0
-        }
-      }
-      ATTRIBUTE "save_hy" {
-        DATATYPE  ENUM
-        DATASPACE  SCALAR
-        DATA {
-          (0): 1
-        }
-      }
-      ATTRIBUTE "save_hz" {
-        DATATYPE  ENUM
-        DATASPACE  SCALAR
-        DATA {
-          (0): 1
-        }
-      }
-      ATTRIBUTE "type" {
-        DATATYPE  H5T_STRING {
-          STRSIZE H5T_VARIABLE;
-          STRPAD H5T_STR_NULLTERM;
-          CSET H5T_CSET_UTF8;
-          CTYPE H5T_C_S1;
-        }
-        DATASPACE  SCALAR
-      }
-      ATTRIBUTE "y_max" {
-        DATATYPE  H5T_STD_F64LE
-        DATASPACE  SCALAR
-        DATA {
-          (0): 1.5e-6
-        }
-      }
-      ATTRIBUTE "y_min" {
-        DATATYPE  H5T_STD_F64LE
-        DATASPACE  SCALAR
-        DATA {
-          (0): -7.500000000000001e-8
-        }
-      }
-      ATTRIBUTE "y_subsampling" {
-        DATATYPE  H5T_STD_U16BE
-        DATASPACE  SCALAR
-        DATA {
-          (0): 1
-        }
-      }
-      ATTRIBUTE "z_max" {
-        DATATYPE  H5T_STD_F64LE
-        DATASPACE  SCALAR
-        DATA {
-          (0): 1.3750000000000002e-6
-        }
-      }
-      ATTRIBUTE "z_min" {
-        DATATYPE  H5T_STD_F64LE
-        DATASPACE  SCALAR
-        DATA {
-          (0): -1.5000000000000002e-7
-        }
-      }
-      ATTRIBUTE "z_subsampling" {
-        DATATYPE  H5T_STD_U16BE
-        DATASPACE  SCALAR
-        DATA {
-          (0): 1
-        }
-      }
-      DATASET "ey_f" {
-        invalid datatype: DatatypeCompoundV1 [CompoundDatatypeMemberV1 {cdm1Name = "r", cdm1ByteOffset = 0, cdm1Dimensions = [], cdm1Datatype = DatatypeMessageData {datatypeMessageVersion = 1, datatypeClass = DatatypeFloatingPoint {floatingPointByteOrder = LittleEndian, floatingPointLowBitPad = False, floatingPointHighBitPad = False, floatingPointInternalBitPad = False, floatingPointMantissaNormalization = NoNormalization, floatingPointSignLocation = 63, floatingPointBitOffset = 0, floatingPointBitPrecision = 64, floatingPointExponentLocation = 52, floatingPointExponentSize = 11, floatingPointMantissaLocation = 0, floatingPointMantissaSize = 52, floatingPointExponentBias = 1023}}},CompoundDatatypeMemberV1 {cdm1Name = "i", cdm1ByteOffset = 8, cdm1Dimensions = [], cdm1Datatype = DatatypeMessageData {datatypeMessageVersion = 1, datatypeClass = DatatypeFloatingPoint {floatingPointByteOrder = LittleEndian, floatingPointLowBitPad = False, floatingPointHighBitPad = False, floatingPointInternalBitPad = False, floatingPointMantissaNormalization = NoNormalization, floatingPointSignLocation = 63, floatingPointBitOffset = 0, floatingPointBitPrecision = 64, floatingPointExponentLocation = 52, floatingPointExponentSize = 11, floatingPointMantissaLocation = 0, floatingPointMantissaSize = 52, floatingPointExponentBias = 1023}}}]
-        DATASPACE  SIMPLE { ( 21, 1, 64, 62 ) / ( 21, 1, 64, 62 ) }
-      }
-      DATASET "ez_f" {
-        invalid datatype: DatatypeCompoundV1 [CompoundDatatypeMemberV1 {cdm1Name = "r", cdm1ByteOffset = 0, cdm1Dimensions = [], cdm1Datatype = DatatypeMessageData {datatypeMessageVersion = 1, datatypeClass = DatatypeFloatingPoint {floatingPointByteOrder = LittleEndian, floatingPointLowBitPad = False, floatingPointHighBitPad = False, floatingPointInternalBitPad = False, floatingPointMantissaNormalization = NoNormalization, floatingPointSignLocation = 63, floatingPointBitOffset = 0, floatingPointBitPrecision = 64, floatingPointExponentLocation = 52, floatingPointExponentSize = 11, floatingPointMantissaLocation = 0, floatingPointMantissaSize = 52, floatingPointExponentBias = 1023}}},CompoundDatatypeMemberV1 {cdm1Name = "i", cdm1ByteOffset = 8, cdm1Dimensions = [], cdm1Datatype = DatatypeMessageData {datatypeMessageVersion = 1, datatypeClass = DatatypeFloatingPoint {floatingPointByteOrder = LittleEndian, floatingPointLowBitPad = False, floatingPointHighBitPad = False, floatingPointInternalBitPad = False, floatingPointMantissaNormalization = NoNormalization, floatingPointSignLocation = 63, floatingPointBitOffset = 0, floatingPointBitPrecision = 64, floatingPointExponentLocation = 52, floatingPointExponentSize = 11, floatingPointMantissaLocation = 0, floatingPointMantissaSize = 52, floatingPointExponentBias = 1023}}}]
-        DATASPACE  SIMPLE { ( 21, 1, 64, 62 ) / ( 21, 1, 64, 62 ) }
-      }
-      DATASET "hy_f" {
-        invalid datatype: DatatypeCompoundV1 [CompoundDatatypeMemberV1 {cdm1Name = "r", cdm1ByteOffset = 0, cdm1Dimensions = [], cdm1Datatype = DatatypeMessageData {datatypeMessageVersion = 1, datatypeClass = DatatypeFloatingPoint {floatingPointByteOrder = LittleEndian, floatingPointLowBitPad = False, floatingPointHighBitPad = False, floatingPointInternalBitPad = False, floatingPointMantissaNormalization = NoNormalization, floatingPointSignLocation = 63, floatingPointBitOffset = 0, floatingPointBitPrecision = 64, floatingPointExponentLocation = 52, floatingPointExponentSize = 11, floatingPointMantissaLocation = 0, floatingPointMantissaSize = 52, floatingPointExponentBias = 1023}}},CompoundDatatypeMemberV1 {cdm1Name = "i", cdm1ByteOffset = 8, cdm1Dimensions = [], cdm1Datatype = DatatypeMessageData {datatypeMessageVersion = 1, datatypeClass = DatatypeFloatingPoint {floatingPointByteOrder = LittleEndian, floatingPointLowBitPad = False, floatingPointHighBitPad = False, floatingPointInternalBitPad = False, floatingPointMantissaNormalization = NoNormalization, floatingPointSignLocation = 63, floatingPointBitOffset = 0, floatingPointBitPrecision = 64, floatingPointExponentLocation = 52, floatingPointExponentSize = 11, floatingPointMantissaLocation = 0, floatingPointMantissaSize = 52, floatingPointExponentBias = 1023}}}]
-        DATASPACE  SIMPLE { ( 21, 1, 64, 62 ) / ( 21, 1, 64, 62 ) }
-      }
-      DATASET "hz_f" {
-        invalid datatype: DatatypeCompoundV1 [CompoundDatatypeMemberV1 {cdm1Name = "r", cdm1ByteOffset = 0, cdm1Dimensions = [], cdm1Datatype = DatatypeMessageData {datatypeMessageVersion = 1, datatypeClass = DatatypeFloatingPoint {floatingPointByteOrder = LittleEndian, floatingPointLowBitPad = False, floatingPointHighBitPad = False, floatingPointInternalBitPad = False, floatingPointMantissaNormalization = NoNormalization, floatingPointSignLocation = 63, floatingPointBitOffset = 0, floatingPointBitPrecision = 64, floatingPointExponentLocation = 52, floatingPointExponentSize = 11, floatingPointMantissaLocation = 0, floatingPointMantissaSize = 52, floatingPointExponentBias = 1023}}},CompoundDatatypeMemberV1 {cdm1Name = "i", cdm1ByteOffset = 8, cdm1Dimensions = [], cdm1Datatype = DatatypeMessageData {datatypeMessageVersion = 1, datatypeClass = DatatypeFloatingPoint {floatingPointByteOrder = LittleEndian, floatingPointLowBitPad = False, floatingPointHighBitPad = False, floatingPointInternalBitPad = False, floatingPointMantissaNormalization = NoNormalization, floatingPointSignLocation = 63, floatingPointBitOffset = 0, floatingPointBitPrecision = 64, floatingPointExponentLocation = 52, floatingPointExponentSize = 11, floatingPointMantissaLocation = 0, floatingPointMantissaSize = 52, floatingPointExponentBias = 1023}}}]
-        DATASPACE  SIMPLE { ( 21, 1, 64, 62 ) / ( 21, 1, 64, 62 ) }
-      }
-    }
-    GROUP "mode monitor 2" {
-      ATTRIBUTE "freq_max" {
-        DATATYPE  H5T_STD_F64LE
-        DATASPACE  SCALAR
-        DATA {
-          (0): 1.998616387210709e14
-        }
-      }
-      ATTRIBUTE "freq_min" {
-        DATATYPE  H5T_STD_F64LE
-        DATASPACE  SCALAR
-        DATA {
-          (0): 1.87370286301004e14
-        }
-      }
-      ATTRIBUTE "freq_npts" {
-        DATATYPE  H5T_STD_U16BE
-        DATASPACE  SCALAR
-        DATA {
-          (0): 21
-        }
-      }
-      ATTRIBUTE "kind" {
-        DATATYPE  H5T_STRING {
-          STRSIZE H5T_VARIABLE;
-          STRPAD H5T_STR_NULLTERM;
-          CSET H5T_CSET_UTF8;
-          CTYPE H5T_C_S1;
-        }
-        DATASPACE  SCALAR
-      }
-      ATTRIBUTE "lambda_max" {
-        DATATYPE  H5T_STD_F64LE
-        DATASPACE  SCALAR
-        DATA {
-          (0): 1.6e-6
-        }
-      }
-      ATTRIBUTE "lambda_min" {
-        DATATYPE  H5T_STD_F64LE
-        DATASPACE  SCALAR
-        DATA {
-          (0): 1.5e-6
-        }
-      }
-      ATTRIBUTE "save_ex" {
-        DATATYPE  ENUM
-        DATASPACE  SCALAR
-        DATA {
-          (0): 0
-        }
-      }
-      ATTRIBUTE "save_ey" {
-        DATATYPE  ENUM
-        DATASPACE  SCALAR
-        DATA {
-          (0): 1
-        }
-      }
-      ATTRIBUTE "save_ez" {
-        DATATYPE  ENUM
-        DATASPACE  SCALAR
-        DATA {
-          (0): 1
-        }
-      }
-      ATTRIBUTE "save_hx" {
-        DATATYPE  ENUM
-        DATASPACE  SCALAR
-        DATA {
-          (0): 0
-        }
-      }
-      ATTRIBUTE "save_hy" {
-        DATATYPE  ENUM
-        DATASPACE  SCALAR
-        DATA {
-          (0): 1
-        }
-      }
-      ATTRIBUTE "save_hz" {
-        DATATYPE  ENUM
-        DATASPACE  SCALAR
-        DATA {
-          (0): 1
-        }
-      }
-      ATTRIBUTE "type" {
-        DATATYPE  H5T_STRING {
-          STRSIZE H5T_VARIABLE;
-          STRPAD H5T_STR_NULLTERM;
-          CSET H5T_CSET_UTF8;
-          CTYPE H5T_C_S1;
-        }
-        DATASPACE  SCALAR
-      }
-      ATTRIBUTE "y_max" {
-        DATATYPE  H5T_STD_F64LE
-        DATASPACE  SCALAR
-        DATA {
-          (0): 1.5e-6
-        }
-      }
-      ATTRIBUTE "y_min" {
-        DATATYPE  H5T_STD_F64LE
-        DATASPACE  SCALAR
-        DATA {
-          (0): -7.500000000000001e-8
-        }
-      }
-      ATTRIBUTE "y_subsampling" {
-        DATATYPE  H5T_STD_U16BE
-        DATASPACE  SCALAR
-        DATA {
-          (0): 1
-        }
-      }
-      ATTRIBUTE "z_max" {
-        DATATYPE  H5T_STD_F64LE
-        DATASPACE  SCALAR
-        DATA {
-          (0): 1.3750000000000002e-6
-        }
-      }
-      ATTRIBUTE "z_min" {
-        DATATYPE  H5T_STD_F64LE
-        DATASPACE  SCALAR
-        DATA {
-          (0): -1.5000000000000002e-7
-        }
-      }
-      ATTRIBUTE "z_subsampling" {
-        DATATYPE  H5T_STD_U16BE
-        DATASPACE  SCALAR
-        DATA {
-          (0): 1
-        }
-      }
-      DATASET "ey_f" {
-        invalid datatype: DatatypeCompoundV1 [CompoundDatatypeMemberV1 {cdm1Name = "r", cdm1ByteOffset = 0, cdm1Dimensions = [], cdm1Datatype = DatatypeMessageData {datatypeMessageVersion = 1, datatypeClass = DatatypeFloatingPoint {floatingPointByteOrder = LittleEndian, floatingPointLowBitPad = False, floatingPointHighBitPad = False, floatingPointInternalBitPad = False, floatingPointMantissaNormalization = NoNormalization, floatingPointSignLocation = 63, floatingPointBitOffset = 0, floatingPointBitPrecision = 64, floatingPointExponentLocation = 52, floatingPointExponentSize = 11, floatingPointMantissaLocation = 0, floatingPointMantissaSize = 52, floatingPointExponentBias = 1023}}},CompoundDatatypeMemberV1 {cdm1Name = "i", cdm1ByteOffset = 8, cdm1Dimensions = [], cdm1Datatype = DatatypeMessageData {datatypeMessageVersion = 1, datatypeClass = DatatypeFloatingPoint {floatingPointByteOrder = LittleEndian, floatingPointLowBitPad = False, floatingPointHighBitPad = False, floatingPointInternalBitPad = False, floatingPointMantissaNormalization = NoNormalization, floatingPointSignLocation = 63, floatingPointBitOffset = 0, floatingPointBitPrecision = 64, floatingPointExponentLocation = 52, floatingPointExponentSize = 11, floatingPointMantissaLocation = 0, floatingPointMantissaSize = 52, floatingPointExponentBias = 1023}}}]
-        DATASPACE  SIMPLE { ( 21, 1, 64, 62 ) / ( 21, 1, 64, 62 ) }
-      }
-      DATASET "ez_f" {
-        invalid datatype: DatatypeCompoundV1 [CompoundDatatypeMemberV1 {cdm1Name = "r", cdm1ByteOffset = 0, cdm1Dimensions = [], cdm1Datatype = DatatypeMessageData {datatypeMessageVersion = 1, datatypeClass = DatatypeFloatingPoint {floatingPointByteOrder = LittleEndian, floatingPointLowBitPad = False, floatingPointHighBitPad = False, floatingPointInternalBitPad = False, floatingPointMantissaNormalization = NoNormalization, floatingPointSignLocation = 63, floatingPointBitOffset = 0, floatingPointBitPrecision = 64, floatingPointExponentLocation = 52, floatingPointExponentSize = 11, floatingPointMantissaLocation = 0, floatingPointMantissaSize = 52, floatingPointExponentBias = 1023}}},CompoundDatatypeMemberV1 {cdm1Name = "i", cdm1ByteOffset = 8, cdm1Dimensions = [], cdm1Datatype = DatatypeMessageData {datatypeMessageVersion = 1, datatypeClass = DatatypeFloatingPoint {floatingPointByteOrder = LittleEndian, floatingPointLowBitPad = False, floatingPointHighBitPad = False, floatingPointInternalBitPad = False, floatingPointMantissaNormalization = NoNormalization, floatingPointSignLocation = 63, floatingPointBitOffset = 0, floatingPointBitPrecision = 64, floatingPointExponentLocation = 52, floatingPointExponentSize = 11, floatingPointMantissaLocation = 0, floatingPointMantissaSize = 52, floatingPointExponentBias = 1023}}}]
-        DATASPACE  SIMPLE { ( 21, 1, 64, 62 ) / ( 21, 1, 64, 62 ) }
-      }
-      DATASET "hy_f" {
-        invalid datatype: DatatypeCompoundV1 [CompoundDatatypeMemberV1 {cdm1Name = "r", cdm1ByteOffset = 0, cdm1Dimensions = [], cdm1Datatype = DatatypeMessageData {datatypeMessageVersion = 1, datatypeClass = DatatypeFloatingPoint {floatingPointByteOrder = LittleEndian, floatingPointLowBitPad = False, floatingPointHighBitPad = False, floatingPointInternalBitPad = False, floatingPointMantissaNormalization = NoNormalization, floatingPointSignLocation = 63, floatingPointBitOffset = 0, floatingPointBitPrecision = 64, floatingPointExponentLocation = 52, floatingPointExponentSize = 11, floatingPointMantissaLocation = 0, floatingPointMantissaSize = 52, floatingPointExponentBias = 1023}}},CompoundDatatypeMemberV1 {cdm1Name = "i", cdm1ByteOffset = 8, cdm1Dimensions = [], cdm1Datatype = DatatypeMessageData {datatypeMessageVersion = 1, datatypeClass = DatatypeFloatingPoint {floatingPointByteOrder = LittleEndian, floatingPointLowBitPad = False, floatingPointHighBitPad = False, floatingPointInternalBitPad = False, floatingPointMantissaNormalization = NoNormalization, floatingPointSignLocation = 63, floatingPointBitOffset = 0, floatingPointBitPrecision = 64, floatingPointExponentLocation = 52, floatingPointExponentSize = 11, floatingPointMantissaLocation = 0, floatingPointMantissaSize = 52, floatingPointExponentBias = 1023}}}]
-        DATASPACE  SIMPLE { ( 21, 1, 64, 62 ) / ( 21, 1, 64, 62 ) }
-      }
-      DATASET "hz_f" {
-        invalid datatype: DatatypeCompoundV1 [CompoundDatatypeMemberV1 {cdm1Name = "r", cdm1ByteOffset = 0, cdm1Dimensions = [], cdm1Datatype = DatatypeMessageData {datatypeMessageVersion = 1, datatypeClass = DatatypeFloatingPoint {floatingPointByteOrder = LittleEndian, floatingPointLowBitPad = False, floatingPointHighBitPad = False, floatingPointInternalBitPad = False, floatingPointMantissaNormalization = NoNormalization, floatingPointSignLocation = 63, floatingPointBitOffset = 0, floatingPointBitPrecision = 64, floatingPointExponentLocation = 52, floatingPointExponentSize = 11, floatingPointMantissaLocation = 0, floatingPointMantissaSize = 52, floatingPointExponentBias = 1023}}},CompoundDatatypeMemberV1 {cdm1Name = "i", cdm1ByteOffset = 8, cdm1Dimensions = [], cdm1Datatype = DatatypeMessageData {datatypeMessageVersion = 1, datatypeClass = DatatypeFloatingPoint {floatingPointByteOrder = LittleEndian, floatingPointLowBitPad = False, floatingPointHighBitPad = False, floatingPointInternalBitPad = False, floatingPointMantissaNormalization = NoNormalization, floatingPointSignLocation = 63, floatingPointBitOffset = 0, floatingPointBitPrecision = 64, floatingPointExponentLocation = 52, floatingPointExponentSize = 11, floatingPointMantissaLocation = 0, floatingPointMantissaSize = 52, floatingPointExponentBias = 1023}}}]
-        DATASPACE  SIMPLE { ( 21, 1, 64, 62 ) / ( 21, 1, 64, 62 ) }
-      }
-    }
-  }
+         }
+         DATASPACE  SCALAR
+      }
+      GROUP "mode monitor 1" {
+         ATTRIBUTE "freq_max" {
+            DATATYPE  H5T_STD_F64LE
+            DATASPACE  SCALAR
+            DATA {
+               (0): 1.998616387210709e14
+            }
+         }
+         ATTRIBUTE "freq_min" {
+            DATATYPE  H5T_STD_F64LE
+            DATASPACE  SCALAR
+            DATA {
+               (0): 1.87370286301004e14
+            }
+         }
+         ATTRIBUTE "freq_npts" {
+            DATATYPE  H5T_STD_U16BE
+            DATASPACE  SCALAR
+            DATA {
+               (0): 21
+            }
+         }
+         ATTRIBUTE "kind" {
+            DATATYPE  H5T_STRING {
+               STRSIZE H5T_VARIABLE;
+               STRPAD H5T_STR_NULLTERM;
+               CSET H5T_CSET_UTF8;
+               CTYPE H5T_C_S1;
+            }
+            DATASPACE  SCALAR
+         }
+         ATTRIBUTE "lambda_max" {
+            DATATYPE  H5T_STD_F64LE
+            DATASPACE  SCALAR
+            DATA {
+               (0): 1.6e-6
+            }
+         }
+         ATTRIBUTE "lambda_min" {
+            DATATYPE  H5T_STD_F64LE
+            DATASPACE  SCALAR
+            DATA {
+               (0): 1.5e-6
+            }
+         }
+         ATTRIBUTE "save_ex" {
+            DATATYPE  ENUM
+            DATASPACE  SCALAR
+            DATA {
+               (0): 0
+            }
+         }
+         ATTRIBUTE "save_ey" {
+            DATATYPE  ENUM
+            DATASPACE  SCALAR
+            DATA {
+               (0): 1
+            }
+         }
+         ATTRIBUTE "save_ez" {
+            DATATYPE  ENUM
+            DATASPACE  SCALAR
+            DATA {
+               (0): 1
+            }
+         }
+         ATTRIBUTE "save_hx" {
+            DATATYPE  ENUM
+            DATASPACE  SCALAR
+            DATA {
+               (0): 0
+            }
+         }
+         ATTRIBUTE "save_hy" {
+            DATATYPE  ENUM
+            DATASPACE  SCALAR
+            DATA {
+               (0): 1
+            }
+         }
+         ATTRIBUTE "save_hz" {
+            DATATYPE  ENUM
+            DATASPACE  SCALAR
+            DATA {
+               (0): 1
+            }
+         }
+         ATTRIBUTE "type" {
+            DATATYPE  H5T_STRING {
+               STRSIZE H5T_VARIABLE;
+               STRPAD H5T_STR_NULLTERM;
+               CSET H5T_CSET_UTF8;
+               CTYPE H5T_C_S1;
+            }
+            DATASPACE  SCALAR
+         }
+         ATTRIBUTE "y_max" {
+            DATATYPE  H5T_STD_F64LE
+            DATASPACE  SCALAR
+            DATA {
+               (0): 1.5e-6
+            }
+         }
+         ATTRIBUTE "y_min" {
+            DATATYPE  H5T_STD_F64LE
+            DATASPACE  SCALAR
+            DATA {
+               (0): -7.500000000000001e-8
+            }
+         }
+         ATTRIBUTE "y_subsampling" {
+            DATATYPE  H5T_STD_U16BE
+            DATASPACE  SCALAR
+            DATA {
+               (0): 1
+            }
+         }
+         ATTRIBUTE "z_max" {
+            DATATYPE  H5T_STD_F64LE
+            DATASPACE  SCALAR
+            DATA {
+               (0): 1.3750000000000002e-6
+            }
+         }
+         ATTRIBUTE "z_min" {
+            DATATYPE  H5T_STD_F64LE
+            DATASPACE  SCALAR
+            DATA {
+               (0): -1.5000000000000002e-7
+            }
+         }
+         ATTRIBUTE "z_subsampling" {
+            DATATYPE  H5T_STD_U16BE
+            DATASPACE  SCALAR
+            DATA {
+               (0): 1
+            }
+         }
+         DATASET "ey_f" {
+            invalid datatype: DatatypeCompoundV1 [CompoundDatatypeMemberV1 {cdm1Name = "r", cdm1ByteOffset = 0, cdm1Dimensions = [], cdm1Datatype = DatatypeMessageData {datatypeMessageVersion = 1, datatypeClass = DatatypeFloatingPoint {floatingPointByteOrder = LittleEndian, floatingPointLowBitPad = False, floatingPointHighBitPad = False, floatingPointInternalBitPad = False, floatingPointMantissaNormalization = NoNormalization, floatingPointSignLocation = 63, floatingPointBitOffset = 0, floatingPointBitPrecision = 64, floatingPointExponentLocation = 52, floatingPointExponentSize = 11, floatingPointMantissaLocation = 0, floatingPointMantissaSize = 52, floatingPointExponentBias = 1023}}},CompoundDatatypeMemberV1 {cdm1Name = "i", cdm1ByteOffset = 8, cdm1Dimensions = [], cdm1Datatype = DatatypeMessageData {datatypeMessageVersion = 1, datatypeClass = DatatypeFloatingPoint {floatingPointByteOrder = LittleEndian, floatingPointLowBitPad = False, floatingPointHighBitPad = False, floatingPointInternalBitPad = False, floatingPointMantissaNormalization = NoNormalization, floatingPointSignLocation = 63, floatingPointBitOffset = 0, floatingPointBitPrecision = 64, floatingPointExponentLocation = 52, floatingPointExponentSize = 11, floatingPointMantissaLocation = 0, floatingPointMantissaSize = 52, floatingPointExponentBias = 1023}}}]
+            DATASPACE  SIMPLE { ( 21, 1, 64, 62 ) / ( 21, 1, 64, 62 ) }
+         }
+         DATASET "ez_f" {
+            invalid datatype: DatatypeCompoundV1 [CompoundDatatypeMemberV1 {cdm1Name = "r", cdm1ByteOffset = 0, cdm1Dimensions = [], cdm1Datatype = DatatypeMessageData {datatypeMessageVersion = 1, datatypeClass = DatatypeFloatingPoint {floatingPointByteOrder = LittleEndian, floatingPointLowBitPad = False, floatingPointHighBitPad = False, floatingPointInternalBitPad = False, floatingPointMantissaNormalization = NoNormalization, floatingPointSignLocation = 63, floatingPointBitOffset = 0, floatingPointBitPrecision = 64, floatingPointExponentLocation = 52, floatingPointExponentSize = 11, floatingPointMantissaLocation = 0, floatingPointMantissaSize = 52, floatingPointExponentBias = 1023}}},CompoundDatatypeMemberV1 {cdm1Name = "i", cdm1ByteOffset = 8, cdm1Dimensions = [], cdm1Datatype = DatatypeMessageData {datatypeMessageVersion = 1, datatypeClass = DatatypeFloatingPoint {floatingPointByteOrder = LittleEndian, floatingPointLowBitPad = False, floatingPointHighBitPad = False, floatingPointInternalBitPad = False, floatingPointMantissaNormalization = NoNormalization, floatingPointSignLocation = 63, floatingPointBitOffset = 0, floatingPointBitPrecision = 64, floatingPointExponentLocation = 52, floatingPointExponentSize = 11, floatingPointMantissaLocation = 0, floatingPointMantissaSize = 52, floatingPointExponentBias = 1023}}}]
+            DATASPACE  SIMPLE { ( 21, 1, 64, 62 ) / ( 21, 1, 64, 62 ) }
+         }
+         DATASET "hy_f" {
+            invalid datatype: DatatypeCompoundV1 [CompoundDatatypeMemberV1 {cdm1Name = "r", cdm1ByteOffset = 0, cdm1Dimensions = [], cdm1Datatype = DatatypeMessageData {datatypeMessageVersion = 1, datatypeClass = DatatypeFloatingPoint {floatingPointByteOrder = LittleEndian, floatingPointLowBitPad = False, floatingPointHighBitPad = False, floatingPointInternalBitPad = False, floatingPointMantissaNormalization = NoNormalization, floatingPointSignLocation = 63, floatingPointBitOffset = 0, floatingPointBitPrecision = 64, floatingPointExponentLocation = 52, floatingPointExponentSize = 11, floatingPointMantissaLocation = 0, floatingPointMantissaSize = 52, floatingPointExponentBias = 1023}}},CompoundDatatypeMemberV1 {cdm1Name = "i", cdm1ByteOffset = 8, cdm1Dimensions = [], cdm1Datatype = DatatypeMessageData {datatypeMessageVersion = 1, datatypeClass = DatatypeFloatingPoint {floatingPointByteOrder = LittleEndian, floatingPointLowBitPad = False, floatingPointHighBitPad = False, floatingPointInternalBitPad = False, floatingPointMantissaNormalization = NoNormalization, floatingPointSignLocation = 63, floatingPointBitOffset = 0, floatingPointBitPrecision = 64, floatingPointExponentLocation = 52, floatingPointExponentSize = 11, floatingPointMantissaLocation = 0, floatingPointMantissaSize = 52, floatingPointExponentBias = 1023}}}]
+            DATASPACE  SIMPLE { ( 21, 1, 64, 62 ) / ( 21, 1, 64, 62 ) }
+         }
+         DATASET "hz_f" {
+            invalid datatype: DatatypeCompoundV1 [CompoundDatatypeMemberV1 {cdm1Name = "r", cdm1ByteOffset = 0, cdm1Dimensions = [], cdm1Datatype = DatatypeMessageData {datatypeMessageVersion = 1, datatypeClass = DatatypeFloatingPoint {floatingPointByteOrder = LittleEndian, floatingPointLowBitPad = False, floatingPointHighBitPad = False, floatingPointInternalBitPad = False, floatingPointMantissaNormalization = NoNormalization, floatingPointSignLocation = 63, floatingPointBitOffset = 0, floatingPointBitPrecision = 64, floatingPointExponentLocation = 52, floatingPointExponentSize = 11, floatingPointMantissaLocation = 0, floatingPointMantissaSize = 52, floatingPointExponentBias = 1023}}},CompoundDatatypeMemberV1 {cdm1Name = "i", cdm1ByteOffset = 8, cdm1Dimensions = [], cdm1Datatype = DatatypeMessageData {datatypeMessageVersion = 1, datatypeClass = DatatypeFloatingPoint {floatingPointByteOrder = LittleEndian, floatingPointLowBitPad = False, floatingPointHighBitPad = False, floatingPointInternalBitPad = False, floatingPointMantissaNormalization = NoNormalization, floatingPointSignLocation = 63, floatingPointBitOffset = 0, floatingPointBitPrecision = 64, floatingPointExponentLocation = 52, floatingPointExponentSize = 11, floatingPointMantissaLocation = 0, floatingPointMantissaSize = 52, floatingPointExponentBias = 1023}}}]
+            DATASPACE  SIMPLE { ( 21, 1, 64, 62 ) / ( 21, 1, 64, 62 ) }
+         }
+      }
+      GROUP "mode monitor 2" {
+         ATTRIBUTE "freq_max" {
+            DATATYPE  H5T_STD_F64LE
+            DATASPACE  SCALAR
+            DATA {
+               (0): 1.998616387210709e14
+            }
+         }
+         ATTRIBUTE "freq_min" {
+            DATATYPE  H5T_STD_F64LE
+            DATASPACE  SCALAR
+            DATA {
+               (0): 1.87370286301004e14
+            }
+         }
+         ATTRIBUTE "freq_npts" {
+            DATATYPE  H5T_STD_U16BE
+            DATASPACE  SCALAR
+            DATA {
+               (0): 21
+            }
+         }
+         ATTRIBUTE "kind" {
+            DATATYPE  H5T_STRING {
+               STRSIZE H5T_VARIABLE;
+               STRPAD H5T_STR_NULLTERM;
+               CSET H5T_CSET_UTF8;
+               CTYPE H5T_C_S1;
+            }
+            DATASPACE  SCALAR
+         }
+         ATTRIBUTE "lambda_max" {
+            DATATYPE  H5T_STD_F64LE
+            DATASPACE  SCALAR
+            DATA {
+               (0): 1.6e-6
+            }
+         }
+         ATTRIBUTE "lambda_min" {
+            DATATYPE  H5T_STD_F64LE
+            DATASPACE  SCALAR
+            DATA {
+               (0): 1.5e-6
+            }
+         }
+         ATTRIBUTE "save_ex" {
+            DATATYPE  ENUM
+            DATASPACE  SCALAR
+            DATA {
+               (0): 0
+            }
+         }
+         ATTRIBUTE "save_ey" {
+            DATATYPE  ENUM
+            DATASPACE  SCALAR
+            DATA {
+               (0): 1
+            }
+         }
+         ATTRIBUTE "save_ez" {
+            DATATYPE  ENUM
+            DATASPACE  SCALAR
+            DATA {
+               (0): 1
+            }
+         }
+         ATTRIBUTE "save_hx" {
+            DATATYPE  ENUM
+            DATASPACE  SCALAR
+            DATA {
+               (0): 0
+            }
+         }
+         ATTRIBUTE "save_hy" {
+            DATATYPE  ENUM
+            DATASPACE  SCALAR
+            DATA {
+               (0): 1
+            }
+         }
+         ATTRIBUTE "save_hz" {
+            DATATYPE  ENUM
+            DATASPACE  SCALAR
+            DATA {
+               (0): 1
+            }
+         }
+         ATTRIBUTE "type" {
+            DATATYPE  H5T_STRING {
+               STRSIZE H5T_VARIABLE;
+               STRPAD H5T_STR_NULLTERM;
+               CSET H5T_CSET_UTF8;
+               CTYPE H5T_C_S1;
+            }
+            DATASPACE  SCALAR
+         }
+         ATTRIBUTE "y_max" {
+            DATATYPE  H5T_STD_F64LE
+            DATASPACE  SCALAR
+            DATA {
+               (0): 1.5e-6
+            }
+         }
+         ATTRIBUTE "y_min" {
+            DATATYPE  H5T_STD_F64LE
+            DATASPACE  SCALAR
+            DATA {
+               (0): -7.500000000000001e-8
+            }
+         }
+         ATTRIBUTE "y_subsampling" {
+            DATATYPE  H5T_STD_U16BE
+            DATASPACE  SCALAR
+            DATA {
+               (0): 1
+            }
+         }
+         ATTRIBUTE "z_max" {
+            DATATYPE  H5T_STD_F64LE
+            DATASPACE  SCALAR
+            DATA {
+               (0): 1.3750000000000002e-6
+            }
+         }
+         ATTRIBUTE "z_min" {
+            DATATYPE  H5T_STD_F64LE
+            DATASPACE  SCALAR
+            DATA {
+               (0): -1.5000000000000002e-7
+            }
+         }
+         ATTRIBUTE "z_subsampling" {
+            DATATYPE  H5T_STD_U16BE
+            DATASPACE  SCALAR
+            DATA {
+               (0): 1
+            }
+         }
+         DATASET "ey_f" {
+            invalid datatype: DatatypeCompoundV1 [CompoundDatatypeMemberV1 {cdm1Name = "r", cdm1ByteOffset = 0, cdm1Dimensions = [], cdm1Datatype = DatatypeMessageData {datatypeMessageVersion = 1, datatypeClass = DatatypeFloatingPoint {floatingPointByteOrder = LittleEndian, floatingPointLowBitPad = False, floatingPointHighBitPad = False, floatingPointInternalBitPad = False, floatingPointMantissaNormalization = NoNormalization, floatingPointSignLocation = 63, floatingPointBitOffset = 0, floatingPointBitPrecision = 64, floatingPointExponentLocation = 52, floatingPointExponentSize = 11, floatingPointMantissaLocation = 0, floatingPointMantissaSize = 52, floatingPointExponentBias = 1023}}},CompoundDatatypeMemberV1 {cdm1Name = "i", cdm1ByteOffset = 8, cdm1Dimensions = [], cdm1Datatype = DatatypeMessageData {datatypeMessageVersion = 1, datatypeClass = DatatypeFloatingPoint {floatingPointByteOrder = LittleEndian, floatingPointLowBitPad = False, floatingPointHighBitPad = False, floatingPointInternalBitPad = False, floatingPointMantissaNormalization = NoNormalization, floatingPointSignLocation = 63, floatingPointBitOffset = 0, floatingPointBitPrecision = 64, floatingPointExponentLocation = 52, floatingPointExponentSize = 11, floatingPointMantissaLocation = 0, floatingPointMantissaSize = 52, floatingPointExponentBias = 1023}}}]
+            DATASPACE  SIMPLE { ( 21, 1, 64, 62 ) / ( 21, 1, 64, 62 ) }
+         }
+         DATASET "ez_f" {
+            invalid datatype: DatatypeCompoundV1 [CompoundDatatypeMemberV1 {cdm1Name = "r", cdm1ByteOffset = 0, cdm1Dimensions = [], cdm1Datatype = DatatypeMessageData {datatypeMessageVersion = 1, datatypeClass = DatatypeFloatingPoint {floatingPointByteOrder = LittleEndian, floatingPointLowBitPad = False, floatingPointHighBitPad = False, floatingPointInternalBitPad = False, floatingPointMantissaNormalization = NoNormalization, floatingPointSignLocation = 63, floatingPointBitOffset = 0, floatingPointBitPrecision = 64, floatingPointExponentLocation = 52, floatingPointExponentSize = 11, floatingPointMantissaLocation = 0, floatingPointMantissaSize = 52, floatingPointExponentBias = 1023}}},CompoundDatatypeMemberV1 {cdm1Name = "i", cdm1ByteOffset = 8, cdm1Dimensions = [], cdm1Datatype = DatatypeMessageData {datatypeMessageVersion = 1, datatypeClass = DatatypeFloatingPoint {floatingPointByteOrder = LittleEndian, floatingPointLowBitPad = False, floatingPointHighBitPad = False, floatingPointInternalBitPad = False, floatingPointMantissaNormalization = NoNormalization, floatingPointSignLocation = 63, floatingPointBitOffset = 0, floatingPointBitPrecision = 64, floatingPointExponentLocation = 52, floatingPointExponentSize = 11, floatingPointMantissaLocation = 0, floatingPointMantissaSize = 52, floatingPointExponentBias = 1023}}}]
+            DATASPACE  SIMPLE { ( 21, 1, 64, 62 ) / ( 21, 1, 64, 62 ) }
+         }
+         DATASET "hy_f" {
+            invalid datatype: DatatypeCompoundV1 [CompoundDatatypeMemberV1 {cdm1Name = "r", cdm1ByteOffset = 0, cdm1Dimensions = [], cdm1Datatype = DatatypeMessageData {datatypeMessageVersion = 1, datatypeClass = DatatypeFloatingPoint {floatingPointByteOrder = LittleEndian, floatingPointLowBitPad = False, floatingPointHighBitPad = False, floatingPointInternalBitPad = False, floatingPointMantissaNormalization = NoNormalization, floatingPointSignLocation = 63, floatingPointBitOffset = 0, floatingPointBitPrecision = 64, floatingPointExponentLocation = 52, floatingPointExponentSize = 11, floatingPointMantissaLocation = 0, floatingPointMantissaSize = 52, floatingPointExponentBias = 1023}}},CompoundDatatypeMemberV1 {cdm1Name = "i", cdm1ByteOffset = 8, cdm1Dimensions = [], cdm1Datatype = DatatypeMessageData {datatypeMessageVersion = 1, datatypeClass = DatatypeFloatingPoint {floatingPointByteOrder = LittleEndian, floatingPointLowBitPad = False, floatingPointHighBitPad = False, floatingPointInternalBitPad = False, floatingPointMantissaNormalization = NoNormalization, floatingPointSignLocation = 63, floatingPointBitOffset = 0, floatingPointBitPrecision = 64, floatingPointExponentLocation = 52, floatingPointExponentSize = 11, floatingPointMantissaLocation = 0, floatingPointMantissaSize = 52, floatingPointExponentBias = 1023}}}]
+            DATASPACE  SIMPLE { ( 21, 1, 64, 62 ) / ( 21, 1, 64, 62 ) }
+         }
+         DATASET "hz_f" {
+            invalid datatype: DatatypeCompoundV1 [CompoundDatatypeMemberV1 {cdm1Name = "r", cdm1ByteOffset = 0, cdm1Dimensions = [], cdm1Datatype = DatatypeMessageData {datatypeMessageVersion = 1, datatypeClass = DatatypeFloatingPoint {floatingPointByteOrder = LittleEndian, floatingPointLowBitPad = False, floatingPointHighBitPad = False, floatingPointInternalBitPad = False, floatingPointMantissaNormalization = NoNormalization, floatingPointSignLocation = 63, floatingPointBitOffset = 0, floatingPointBitPrecision = 64, floatingPointExponentLocation = 52, floatingPointExponentSize = 11, floatingPointMantissaLocation = 0, floatingPointMantissaSize = 52, floatingPointExponentBias = 1023}}},CompoundDatatypeMemberV1 {cdm1Name = "i", cdm1ByteOffset = 8, cdm1Dimensions = [], cdm1Datatype = DatatypeMessageData {datatypeMessageVersion = 1, datatypeClass = DatatypeFloatingPoint {floatingPointByteOrder = LittleEndian, floatingPointLowBitPad = False, floatingPointHighBitPad = False, floatingPointInternalBitPad = False, floatingPointMantissaNormalization = NoNormalization, floatingPointSignLocation = 63, floatingPointBitOffset = 0, floatingPointBitPrecision = 64, floatingPointExponentLocation = 52, floatingPointExponentSize = 11, floatingPointMantissaLocation = 0, floatingPointMantissaSize = 52, floatingPointExponentBias = 1023}}}]
+            DATASPACE  SIMPLE { ( 21, 1, 64, 62 ) / ( 21, 1, 64, 62 ) }
+         }
+      }
+   }
+   GROUP "run_2" {
+      ATTRIBUTE "date_utc" {
+         DATATYPE  H5T_STRING {
+            STRSIZE H5T_VARIABLE;
+            STRPAD H5T_STR_NULLTERM;
+            CSET H5T_CSET_UTF8;
+            CTYPE H5T_C_S1;
+         }
+         DATASPACE  SCALAR
+      }
+      ATTRIBUTE "run_id" {
+         DATATYPE  H5T_STRING {
+            STRSIZE H5T_VARIABLE;
+            STRPAD H5T_STR_NULLTERM;
+            CSET H5T_CSET_UTF8;
+            CTYPE H5T_C_S1;
+         }
+         DATASPACE  SCALAR
+      }
+      GROUP "mode monitor 1" {
+         ATTRIBUTE "freq_max" {
+            DATATYPE  H5T_STD_F64LE
+            DATASPACE  SCALAR
+            DATA {
+               (0): 1.998616387210709e14
+            }
+         }
+         ATTRIBUTE "freq_min" {
+            DATATYPE  H5T_STD_F64LE
+            DATASPACE  SCALAR
+            DATA {
+               (0): 1.87370286301004e14
+            }
+         }
+         ATTRIBUTE "freq_npts" {
+            DATATYPE  H5T_STD_U16BE
+            DATASPACE  SCALAR
+            DATA {
+               (0): 21
+            }
+         }
+         ATTRIBUTE "kind" {
+            DATATYPE  H5T_STRING {
+               STRSIZE H5T_VARIABLE;
+               STRPAD H5T_STR_NULLTERM;
+               CSET H5T_CSET_UTF8;
+               CTYPE H5T_C_S1;
+            }
+            DATASPACE  SCALAR
+         }
+         ATTRIBUTE "lambda_max" {
+            DATATYPE  H5T_STD_F64LE
+            DATASPACE  SCALAR
+            DATA {
+               (0): 1.6e-6
+            }
+         }
+         ATTRIBUTE "lambda_min" {
+            DATATYPE  H5T_STD_F64LE
+            DATASPACE  SCALAR
+            DATA {
+               (0): 1.5e-6
+            }
+         }
+         ATTRIBUTE "save_ex" {
+            DATATYPE  ENUM
+            DATASPACE  SCALAR
+            DATA {
+               (0): 0
+            }
+         }
+         ATTRIBUTE "save_ey" {
+            DATATYPE  ENUM
+            DATASPACE  SCALAR
+            DATA {
+               (0): 1
+            }
+         }
+         ATTRIBUTE "save_ez" {
+            DATATYPE  ENUM
+            DATASPACE  SCALAR
+            DATA {
+               (0): 1
+            }
+         }
+         ATTRIBUTE "save_hx" {
+            DATATYPE  ENUM
+            DATASPACE  SCALAR
+            DATA {
+               (0): 0
+            }
+         }
+         ATTRIBUTE "save_hy" {
+            DATATYPE  ENUM
+            DATASPACE  SCALAR
+            DATA {
+               (0): 1
+            }
+         }
+         ATTRIBUTE "save_hz" {
+            DATATYPE  ENUM
+            DATASPACE  SCALAR
+            DATA {
+               (0): 1
+            }
+         }
+         ATTRIBUTE "type" {
+            DATATYPE  H5T_STRING {
+               STRSIZE H5T_VARIABLE;
+               STRPAD H5T_STR_NULLTERM;
+               CSET H5T_CSET_UTF8;
+               CTYPE H5T_C_S1;
+            }
+            DATASPACE  SCALAR
+         }
+         ATTRIBUTE "y_max" {
+            DATATYPE  H5T_STD_F64LE
+            DATASPACE  SCALAR
+            DATA {
+               (0): 1.5e-6
+            }
+         }
+         ATTRIBUTE "y_min" {
+            DATATYPE  H5T_STD_F64LE
+            DATASPACE  SCALAR
+            DATA {
+               (0): -7.500000000000001e-8
+            }
+         }
+         ATTRIBUTE "y_subsampling" {
+            DATATYPE  H5T_STD_U16BE
+            DATASPACE  SCALAR
+            DATA {
+               (0): 1
+            }
+         }
+         ATTRIBUTE "z_max" {
+            DATATYPE  H5T_STD_F64LE
+            DATASPACE  SCALAR
+            DATA {
+               (0): 1.3750000000000002e-6
+            }
+         }
+         ATTRIBUTE "z_min" {
+            DATATYPE  H5T_STD_F64LE
+            DATASPACE  SCALAR
+            DATA {
+               (0): -1.5000000000000002e-7
+            }
+         }
+         ATTRIBUTE "z_subsampling" {
+            DATATYPE  H5T_STD_U16BE
+            DATASPACE  SCALAR
+            DATA {
+               (0): 1
+            }
+         }
+         DATASET "ey_f" {
+            invalid datatype: DatatypeCompoundV1 [CompoundDatatypeMemberV1 {cdm1Name = "r", cdm1ByteOffset = 0, cdm1Dimensions = [], cdm1Datatype = DatatypeMessageData {datatypeMessageVersion = 1, datatypeClass = DatatypeFloatingPoint {floatingPointByteOrder = LittleEndian, floatingPointLowBitPad = False, floatingPointHighBitPad = False, floatingPointInternalBitPad = False, floatingPointMantissaNormalization = NoNormalization, floatingPointSignLocation = 63, floatingPointBitOffset = 0, floatingPointBitPrecision = 64, floatingPointExponentLocation = 52, floatingPointExponentSize = 11, floatingPointMantissaLocation = 0, floatingPointMantissaSize = 52, floatingPointExponentBias = 1023}}},CompoundDatatypeMemberV1 {cdm1Name = "i", cdm1ByteOffset = 8, cdm1Dimensions = [], cdm1Datatype = DatatypeMessageData {datatypeMessageVersion = 1, datatypeClass = DatatypeFloatingPoint {floatingPointByteOrder = LittleEndian, floatingPointLowBitPad = False, floatingPointHighBitPad = False, floatingPointInternalBitPad = False, floatingPointMantissaNormalization = NoNormalization, floatingPointSignLocation = 63, floatingPointBitOffset = 0, floatingPointBitPrecision = 64, floatingPointExponentLocation = 52, floatingPointExponentSize = 11, floatingPointMantissaLocation = 0, floatingPointMantissaSize = 52, floatingPointExponentBias = 1023}}}]
+            DATASPACE  SIMPLE { ( 21, 1, 64, 62 ) / ( 21, 1, 64, 62 ) }
+         }
+         DATASET "ez_f" {
+            invalid datatype: DatatypeCompoundV1 [CompoundDatatypeMemberV1 {cdm1Name = "r", cdm1ByteOffset = 0, cdm1Dimensions = [], cdm1Datatype = DatatypeMessageData {datatypeMessageVersion = 1, datatypeClass = DatatypeFloatingPoint {floatingPointByteOrder = LittleEndian, floatingPointLowBitPad = False, floatingPointHighBitPad = False, floatingPointInternalBitPad = False, floatingPointMantissaNormalization = NoNormalization, floatingPointSignLocation = 63, floatingPointBitOffset = 0, floatingPointBitPrecision = 64, floatingPointExponentLocation = 52, floatingPointExponentSize = 11, floatingPointMantissaLocation = 0, floatingPointMantissaSize = 52, floatingPointExponentBias = 1023}}},CompoundDatatypeMemberV1 {cdm1Name = "i", cdm1ByteOffset = 8, cdm1Dimensions = [], cdm1Datatype = DatatypeMessageData {datatypeMessageVersion = 1, datatypeClass = DatatypeFloatingPoint {floatingPointByteOrder = LittleEndian, floatingPointLowBitPad = False, floatingPointHighBitPad = False, floatingPointInternalBitPad = False, floatingPointMantissaNormalization = NoNormalization, floatingPointSignLocation = 63, floatingPointBitOffset = 0, floatingPointBitPrecision = 64, floatingPointExponentLocation = 52, floatingPointExponentSize = 11, floatingPointMantissaLocation = 0, floatingPointMantissaSize = 52, floatingPointExponentBias = 1023}}}]
+            DATASPACE  SIMPLE { ( 21, 1, 64, 62 ) / ( 21, 1, 64, 62 ) }
+         }
+         DATASET "hy_f" {
+            invalid datatype: DatatypeCompoundV1 [CompoundDatatypeMemberV1 {cdm1Name = "r", cdm1ByteOffset = 0, cdm1Dimensions = [], cdm1Datatype = DatatypeMessageData {datatypeMessageVersion = 1, datatypeClass = DatatypeFloatingPoint {floatingPointByteOrder = LittleEndian, floatingPointLowBitPad = False, floatingPointHighBitPad = False, floatingPointInternalBitPad = False, floatingPointMantissaNormalization = NoNormalization, floatingPointSignLocation = 63, floatingPointBitOffset = 0, floatingPointBitPrecision = 64, floatingPointExponentLocation = 52, floatingPointExponentSize = 11, floatingPointMantissaLocation = 0, floatingPointMantissaSize = 52, floatingPointExponentBias = 1023}}},CompoundDatatypeMemberV1 {cdm1Name = "i", cdm1ByteOffset = 8, cdm1Dimensions = [], cdm1Datatype = DatatypeMessageData {datatypeMessageVersion = 1, datatypeClass = DatatypeFloatingPoint {floatingPointByteOrder = LittleEndian, floatingPointLowBitPad = False, floatingPointHighBitPad = False, floatingPointInternalBitPad = False, floatingPointMantissaNormalization = NoNormalization, floatingPointSignLocation = 63, floatingPointBitOffset = 0, floatingPointBitPrecision = 64, floatingPointExponentLocation = 52, floatingPointExponentSize = 11, floatingPointMantissaLocation = 0, floatingPointMantissaSize = 52, floatingPointExponentBias = 1023}}}]
+            DATASPACE  SIMPLE { ( 21, 1, 64, 62 ) / ( 21, 1, 64, 62 ) }
+         }
+         DATASET "hz_f" {
+            invalid datatype: DatatypeCompoundV1 [CompoundDatatypeMemberV1 {cdm1Name = "r", cdm1ByteOffset = 0, cdm1Dimensions = [], cdm1Datatype = DatatypeMessageData {datatypeMessageVersion = 1, datatypeClass = DatatypeFloatingPoint {floatingPointByteOrder = LittleEndian, floatingPointLowBitPad = False, floatingPointHighBitPad = False, floatingPointInternalBitPad = False, floatingPointMantissaNormalization = NoNormalization, floatingPointSignLocation = 63, floatingPointBitOffset = 0, floatingPointBitPrecision = 64, floatingPointExponentLocation = 52, floatingPointExponentSize = 11, floatingPointMantissaLocation = 0, floatingPointMantissaSize = 52, floatingPointExponentBias = 1023}}},CompoundDatatypeMemberV1 {cdm1Name = "i", cdm1ByteOffset = 8, cdm1Dimensions = [], cdm1Datatype = DatatypeMessageData {datatypeMessageVersion = 1, datatypeClass = DatatypeFloatingPoint {floatingPointByteOrder = LittleEndian, floatingPointLowBitPad = False, floatingPointHighBitPad = False, floatingPointInternalBitPad = False, floatingPointMantissaNormalization = NoNormalization, floatingPointSignLocation = 63, floatingPointBitOffset = 0, floatingPointBitPrecision = 64, floatingPointExponentLocation = 52, floatingPointExponentSize = 11, floatingPointMantissaLocation = 0, floatingPointMantissaSize = 52, floatingPointExponentBias = 1023}}}]
+            DATASPACE  SIMPLE { ( 21, 1, 64, 62 ) / ( 21, 1, 64, 62 ) }
+         }
+      }
+      GROUP "mode monitor 2" {
+         ATTRIBUTE "freq_max" {
+            DATATYPE  H5T_STD_F64LE
+            DATASPACE  SCALAR
+            DATA {
+               (0): 1.998616387210709e14
+            }
+         }
+         ATTRIBUTE "freq_min" {
+            DATATYPE  H5T_STD_F64LE
+            DATASPACE  SCALAR
+            DATA {
+               (0): 1.87370286301004e14
+            }
+         }
+         ATTRIBUTE "freq_npts" {
+            DATATYPE  H5T_STD_U16BE
+            DATASPACE  SCALAR
+            DATA {
+               (0): 21
+            }
+         }
+         ATTRIBUTE "kind" {
+            DATATYPE  H5T_STRING {
+               STRSIZE H5T_VARIABLE;
+               STRPAD H5T_STR_NULLTERM;
+               CSET H5T_CSET_UTF8;
+               CTYPE H5T_C_S1;
+            }
+            DATASPACE  SCALAR
+         }
+         ATTRIBUTE "lambda_max" {
+            DATATYPE  H5T_STD_F64LE
+            DATASPACE  SCALAR
+            DATA {
+               (0): 1.6e-6
+            }
+         }
+         ATTRIBUTE "lambda_min" {
+            DATATYPE  H5T_STD_F64LE
+            DATASPACE  SCALAR
+            DATA {
+               (0): 1.5e-6
+            }
+         }
+         ATTRIBUTE "save_ex" {
+            DATATYPE  ENUM
+            DATASPACE  SCALAR
+            DATA {
+               (0): 0
+            }
+         }
+         ATTRIBUTE "save_ey" {
+            DATATYPE  ENUM
+            DATASPACE  SCALAR
+            DATA {
+               (0): 1
+            }
+         }
+         ATTRIBUTE "save_ez" {
+            DATATYPE  ENUM
+            DATASPACE  SCALAR
+            DATA {
+               (0): 1
+            }
+         }
+         ATTRIBUTE "save_hx" {
+            DATATYPE  ENUM
+            DATASPACE  SCALAR
+            DATA {
+               (0): 0
+            }
+         }
+         ATTRIBUTE "save_hy" {
+            DATATYPE  ENUM
+            DATASPACE  SCALAR
+            DATA {
+               (0): 1
+            }
+         }
+         ATTRIBUTE "save_hz" {
+            DATATYPE  ENUM
+            DATASPACE  SCALAR
+            DATA {
+               (0): 1
+            }
+         }
+         ATTRIBUTE "type" {
+            DATATYPE  H5T_STRING {
+               STRSIZE H5T_VARIABLE;
+               STRPAD H5T_STR_NULLTERM;
+               CSET H5T_CSET_UTF8;
+               CTYPE H5T_C_S1;
+            }
+            DATASPACE  SCALAR
+         }
+         ATTRIBUTE "y_max" {
+            DATATYPE  H5T_STD_F64LE
+            DATASPACE  SCALAR
+            DATA {
+               (0): 1.5e-6
+            }
+         }
+         ATTRIBUTE "y_min" {
+            DATATYPE  H5T_STD_F64LE
+            DATASPACE  SCALAR
+            DATA {
+               (0): -7.500000000000001e-8
+            }
+         }
+         ATTRIBUTE "y_subsampling" {
+            DATATYPE  H5T_STD_U16BE
+            DATASPACE  SCALAR
+            DATA {
+               (0): 1
+            }
+         }
+         ATTRIBUTE "z_max" {
+            DATATYPE  H5T_STD_F64LE
+            DATASPACE  SCALAR
+            DATA {
+               (0): 1.3750000000000002e-6
+            }
+         }
+         ATTRIBUTE "z_min" {
+            DATATYPE  H5T_STD_F64LE
+            DATASPACE  SCALAR
+            DATA {
+               (0): -1.5000000000000002e-7
+            }
+         }
+         ATTRIBUTE "z_subsampling" {
+            DATATYPE  H5T_STD_U16BE
+            DATASPACE  SCALAR
+            DATA {
+               (0): 1
+            }
+         }
+         DATASET "ey_f" {
+            invalid datatype: DatatypeCompoundV1 [CompoundDatatypeMemberV1 {cdm1Name = "r", cdm1ByteOffset = 0, cdm1Dimensions = [], cdm1Datatype = DatatypeMessageData {datatypeMessageVersion = 1, datatypeClass = DatatypeFloatingPoint {floatingPointByteOrder = LittleEndian, floatingPointLowBitPad = False, floatingPointHighBitPad = False, floatingPointInternalBitPad = False, floatingPointMantissaNormalization = NoNormalization, floatingPointSignLocation = 63, floatingPointBitOffset = 0, floatingPointBitPrecision = 64, floatingPointExponentLocation = 52, floatingPointExponentSize = 11, floatingPointMantissaLocation = 0, floatingPointMantissaSize = 52, floatingPointExponentBias = 1023}}},CompoundDatatypeMemberV1 {cdm1Name = "i", cdm1ByteOffset = 8, cdm1Dimensions = [], cdm1Datatype = DatatypeMessageData {datatypeMessageVersion = 1, datatypeClass = DatatypeFloatingPoint {floatingPointByteOrder = LittleEndian, floatingPointLowBitPad = False, floatingPointHighBitPad = False, floatingPointInternalBitPad = False, floatingPointMantissaNormalization = NoNormalization, floatingPointSignLocation = 63, floatingPointBitOffset = 0, floatingPointBitPrecision = 64, floatingPointExponentLocation = 52, floatingPointExponentSize = 11, floatingPointMantissaLocation = 0, floatingPointMantissaSize = 52, floatingPointExponentBias = 1023}}}]
+            DATASPACE  SIMPLE { ( 21, 1, 64, 62 ) / ( 21, 1, 64, 62 ) }
+         }
+         DATASET "ez_f" {
+            invalid datatype: DatatypeCompoundV1 [CompoundDatatypeMemberV1 {cdm1Name = "r", cdm1ByteOffset = 0, cdm1Dimensions = [], cdm1Datatype = DatatypeMessageData {datatypeMessageVersion = 1, datatypeClass = DatatypeFloatingPoint {floatingPointByteOrder = LittleEndian, floatingPointLowBitPad = False, floatingPointHighBitPad = False, floatingPointInternalBitPad = False, floatingPointMantissaNormalization = NoNormalization, floatingPointSignLocation = 63, floatingPointBitOffset = 0, floatingPointBitPrecision = 64, floatingPointExponentLocation = 52, floatingPointExponentSize = 11, floatingPointMantissaLocation = 0, floatingPointMantissaSize = 52, floatingPointExponentBias = 1023}}},CompoundDatatypeMemberV1 {cdm1Name = "i", cdm1ByteOffset = 8, cdm1Dimensions = [], cdm1Datatype = DatatypeMessageData {datatypeMessageVersion = 1, datatypeClass = DatatypeFloatingPoint {floatingPointByteOrder = LittleEndian, floatingPointLowBitPad = False, floatingPointHighBitPad = False, floatingPointInternalBitPad = False, floatingPointMantissaNormalization = NoNormalization, floatingPointSignLocation = 63, floatingPointBitOffset = 0, floatingPointBitPrecision = 64, floatingPointExponentLocation = 52, floatingPointExponentSize = 11, floatingPointMantissaLocation = 0, floatingPointMantissaSize = 52, floatingPointExponentBias = 1023}}}]
+            DATASPACE  SIMPLE { ( 21, 1, 64, 62 ) / ( 21, 1, 64, 62 ) }
+         }
+         DATASET "hy_f" {
+            invalid datatype: DatatypeCompoundV1 [CompoundDatatypeMemberV1 {cdm1Name = "r", cdm1ByteOffset = 0, cdm1Dimensions = [], cdm1Datatype = DatatypeMessageData {datatypeMessageVersion = 1, datatypeClass = DatatypeFloatingPoint {floatingPointByteOrder = LittleEndian, floatingPointLowBitPad = False, floatingPointHighBitPad = False, floatingPointInternalBitPad = False, floatingPointMantissaNormalization = NoNormalization, floatingPointSignLocation = 63, floatingPointBitOffset = 0, floatingPointBitPrecision = 64, floatingPointExponentLocation = 52, floatingPointExponentSize = 11, floatingPointMantissaLocation = 0, floatingPointMantissaSize = 52, floatingPointExponentBias = 1023}}},CompoundDatatypeMemberV1 {cdm1Name = "i", cdm1ByteOffset = 8, cdm1Dimensions = [], cdm1Datatype = DatatypeMessageData {datatypeMessageVersion = 1, datatypeClass = DatatypeFloatingPoint {floatingPointByteOrder = LittleEndian, floatingPointLowBitPad = False, floatingPointHighBitPad = False, floatingPointInternalBitPad = False, floatingPointMantissaNormalization = NoNormalization, floatingPointSignLocation = 63, floatingPointBitOffset = 0, floatingPointBitPrecision = 64, floatingPointExponentLocation = 52, floatingPointExponentSize = 11, floatingPointMantissaLocation = 0, floatingPointMantissaSize = 52, floatingPointExponentBias = 1023}}}]
+            DATASPACE  SIMPLE { ( 21, 1, 64, 62 ) / ( 21, 1, 64, 62 ) }
+         }
+         DATASET "hz_f" {
+            invalid datatype: DatatypeCompoundV1 [CompoundDatatypeMemberV1 {cdm1Name = "r", cdm1ByteOffset = 0, cdm1Dimensions = [], cdm1Datatype = DatatypeMessageData {datatypeMessageVersion = 1, datatypeClass = DatatypeFloatingPoint {floatingPointByteOrder = LittleEndian, floatingPointLowBitPad = False, floatingPointHighBitPad = False, floatingPointInternalBitPad = False, floatingPointMantissaNormalization = NoNormalization, floatingPointSignLocation = 63, floatingPointBitOffset = 0, floatingPointBitPrecision = 64, floatingPointExponentLocation = 52, floatingPointExponentSize = 11, floatingPointMantissaLocation = 0, floatingPointMantissaSize = 52, floatingPointExponentBias = 1023}}},CompoundDatatypeMemberV1 {cdm1Name = "i", cdm1ByteOffset = 8, cdm1Dimensions = [], cdm1Datatype = DatatypeMessageData {datatypeMessageVersion = 1, datatypeClass = DatatypeFloatingPoint {floatingPointByteOrder = LittleEndian, floatingPointLowBitPad = False, floatingPointHighBitPad = False, floatingPointInternalBitPad = False, floatingPointMantissaNormalization = NoNormalization, floatingPointSignLocation = 63, floatingPointBitOffset = 0, floatingPointBitPrecision = 64, floatingPointExponentLocation = 52, floatingPointExponentSize = 11, floatingPointMantissaLocation = 0, floatingPointMantissaSize = 52, floatingPointExponentBias = 1023}}}]
+            DATASPACE  SIMPLE { ( 21, 1, 64, 62 ) / ( 21, 1, 64, 62 ) }
+         }
+      }
+   }
 }

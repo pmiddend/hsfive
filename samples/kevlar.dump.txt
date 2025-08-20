@@ -1,10 +1,10 @@
 GROUP "/" {
-  GROUP "entry" {
-    GROUP "data" {
-      DATASET "data" {
-        DATATYPE  H5T_STD_U16LE
-        DATASPACE  SIMPLE { ( 1000, 2167, 2070 ) / ( 1000, 2167, 2070 ) }
+   GROUP "entry" {
+      GROUP "data" {
+         DATASET "data" {
+            DATATYPE  H5T_STD_U16LE
+            DATASPACE  SIMPLE { ( 1000, 2167, 2070 ) / ( 1000, 2167, 2070 ) }
+         }
       }
-    }
-  }
+   }
 }

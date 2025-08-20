@@ -12,6 +12,7 @@ import HsFive.CoreTypes
 import HsFive.H5Dump (h5dump)
 import HsFive.Types (readH5)
 import System.Environment (getArgs)
+import System.FilePath (takeFileName)
 import System.IO (Handle, SeekMode (AbsoluteSeek, SeekFromEnd), hSeek, hTell)
 import System.OsPath (encodeUtf)
 
@@ -59,7 +60,7 @@ main = do
       rootGroup <- readH5 fileNameEncoded
       putStrLn $ "root node: " <> show rootGroup
 
-      TIO.writeFile dumpFile (h5dump rootGroup)
+      TIO.writeFile dumpFile (h5dump (takeFileName inputFile) rootGroup)
 
     -- let imageNode = goToNode rootGroup (singletonPath "entry_0000" </ "0_measurement" </ "images")
     -- putStrLn $ "node: " <> show imageNode

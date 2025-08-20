@@ -7,6 +7,7 @@ import qualified Data.ByteString.Lazy as BSL
 import Data.Int (Int64)
 import Data.List (sortOn)
 import qualified Data.List.NonEmpty as NE
+import Data.String (IsString (fromString))
 import Data.Text (Text, intercalate, length, pack)
 import Data.Text.Encoding (decodeUtf8Lenient)
 import HsFive.CoreTypes
@@ -123,7 +124,7 @@ datasetToDoc (DatasetData {datasetPath, datasetDimensions, datasetDatatype, data
     )
 
 prefixAndBodyToDoc :: Doc ann -> [Doc ann] -> Doc ann
-prefixAndBodyToDoc prefix bodyValues = prefix <> " {" <> nest 2 (line <> vsep bodyValues) <> line <> "}"
+prefixAndBodyToDoc prefix bodyValues = prefix <> " {" <> nest 3 (line <> vsep bodyValues) <> line <> "}"
 
 paddingToDoc :: StringPadding -> Doc ann
 paddingToDoc PaddingNullTerminate = "H5T_STR_NULLTERM"
@@ -207,5 +208,5 @@ groupToDoc (GroupData {groupPath, groupAttributes, groupChildren}) =
     (namedPrefix "GROUP" (pretty (unwrapPath groupPath "/" NE.last)))
     ((attributeToDoc <$> sortOn attributeName groupAttributes) <> (nodeToDoc <$> groupChildren))
 
-h5dump :: GroupData -> Text
-h5dump g = renderStrict $ layoutPretty defaultLayoutOptions $ groupToDoc g
+h5dump :: FilePath -> GroupData -> Text
+h5dump fileName g = renderStrict $ layoutPretty defaultLayoutOptions $ ("HDF5 \"" <> pretty fileName <> "\" {" <> line <> groupToDoc g <> line <> "}")
