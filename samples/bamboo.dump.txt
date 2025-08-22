@@ -932,10 +932,10 @@ GROUP "/" {
                DATASPACE  SCALAR
             }
             DATASET "dark_images_in_accumulation" {
-               DATATYPE  H5T_ENUM { {
+               DATATYPE  H5T_ENUM {
                   H5T_STD_I8LE;
-                  "FALSE"            0
-                  "TRUE"            1
+                  "FALSE"            0;
+                  "TRUE"             1;
                }
                DATASPACE  SCALAR
             }
@@ -963,10 +963,10 @@ GROUP "/" {
                DATASPACE  SCALAR
             }
             DATASET "flipping" {
-               DATATYPE  H5T_ENUM { {
+               DATATYPE  H5T_ENUM {
                   H5T_STD_I8LE;
-                  "FALSE"            0
-                  "TRUE"            1
+                  "FALSE"            0;
+                  "TRUE"             1;
                }
                DATASPACE  SIMPLE { ( 2 ) / ( 2 ) }
             }
@@ -1256,82 +1256,82 @@ GROUP "/" {
                DATASPACE  SCALAR
             }
             DATASET "dark_images_at_end" {
-               DATATYPE  H5T_ENUM { {
+               DATATYPE  H5T_ENUM {
                   H5T_STD_I8LE;
-                  "FALSE"            0
-                  "TRUE"            1
+                  "FALSE"            0;
+                  "TRUE"             1;
                }
                DATASPACE  SCALAR
             }
             DATASET "dark_images_at_start" {
-               DATATYPE  H5T_ENUM { {
+               DATATYPE  H5T_ENUM {
                   H5T_STD_I8LE;
-                  "FALSE"            0
-                  "TRUE"            1
+                  "FALSE"            0;
+                  "TRUE"             1;
                }
                DATASPACE  SCALAR
             }
             DATASET "dark_images_in_accumulation" {
-               DATATYPE  H5T_ENUM { {
+               DATATYPE  H5T_ENUM {
                   H5T_STD_I8LE;
-                  "FALSE"            0
-                  "TRUE"            1
+                  "FALSE"            0;
+                  "TRUE"             1;
                }
                DATASPACE  SCALAR
             }
             DATASET "half_acquisition" {
-               DATATYPE  H5T_ENUM { {
+               DATATYPE  H5T_ENUM {
                   H5T_STD_I8LE;
-                  "FALSE"            0
-                  "TRUE"            1
+                  "FALSE"            0;
+                  "TRUE"             1;
                }
                DATASPACE  SCALAR
             }
             DATASET "no_reference_groups" {
-               DATATYPE  H5T_ENUM { {
+               DATATYPE  H5T_ENUM {
                   H5T_STD_I8LE;
-                  "FALSE"            0
-                  "TRUE"            1
+                  "FALSE"            0;
+                  "TRUE"             1;
                }
                DATASPACE  SCALAR
             }
             DATASET "no_return_images" {
-               DATATYPE  H5T_ENUM { {
+               DATATYPE  H5T_ENUM {
                   H5T_STD_I8LE;
-                  "FALSE"            0
-                  "TRUE"            1
+                  "FALSE"            0;
+                  "TRUE"             1;
                }
                DATASPACE  SCALAR
             }
             DATASET "ref_images_at_end" {
-               DATATYPE  H5T_ENUM { {
+               DATATYPE  H5T_ENUM {
                   H5T_STD_I8LE;
-                  "FALSE"            0
-                  "TRUE"            1
+                  "FALSE"            0;
+                  "TRUE"             1;
                }
                DATASPACE  SCALAR
             }
             DATASET "ref_images_at_start" {
-               DATATYPE  H5T_ENUM { {
+               DATATYPE  H5T_ENUM {
                   H5T_STD_I8LE;
-                  "FALSE"            0
-                  "TRUE"            1
+                  "FALSE"            0;
+                  "TRUE"             1;
                }
                DATASPACE  SCALAR
             }
             DATASET "return_images_aligned_to_refs" {
-               DATATYPE  H5T_ENUM { {
+               DATATYPE  H5T_ENUM {
                   H5T_STD_I8LE;
-                  "FALSE"            0
-                  "TRUE"            1
+                  "FALSE"            0;
+                  "TRUE"             1;
                }
                DATASPACE  SCALAR
             }
             DATASET "return_to_start_pos" {
-               DATATYPE  H5T_ENUM { {
+               DATATYPE  H5T_ENUM {
                   H5T_STD_I8LE;
-                  "FALSE"            0
-                  "TRUE"            1
+                  "FALSE"            0;
+                  "TRUE"             1;
                }
                DATASPACE  SCALAR
             }
@@ -1490,10 +1490,10 @@ GROUP "/" {
                   DATASPACE  SCALAR
                }
                DATASET "prepare_once" {
-                  DATATYPE  H5T_ENUM { {
+                  DATATYPE  H5T_ENUM {
                      H5T_STD_I8LE;
-                     "FALSE"            0
-                     "TRUE"            1
+                     "FALSE"            0;
+                     "TRUE"             1;
                   }
                   DATASPACE  SCALAR
                }
@@ -1525,10 +1525,10 @@ GROUP "/" {
                   DATASPACE  SCALAR
                }
                DATASET "start_once" {
-                  DATATYPE  H5T_ENUM { {
+                  DATATYPE  H5T_ENUM {
                      H5T_STD_I8LE;
-                     "FALSE"            0
-                     "TRUE"            1
+                     "FALSE"            0;
+                     "TRUE"             1;
                   }
                   DATASPACE  SCALAR
                }
@@ -1548,10 +1548,10 @@ GROUP "/" {
                   DATASPACE  SCALAR
                }
                DATASET "image_flip" {
-                  DATATYPE  H5T_ENUM { {
+                  DATATYPE  H5T_ENUM {
                      H5T_STD_I8LE;
-                     "FALSE"            0
-                     "TRUE"            1
+                     "FALSE"            0;
+                     "TRUE"             1;
                   }
                   DATASPACE  SIMPLE { ( 2 ) / ( 2 ) }
                }
@@ -2615,10 +2615,10 @@ GROUP "/" {
                   DATASPACE  SCALAR
                }
                DATASET "prepare_once" {
-                  DATATYPE  H5T_ENUM { {
+                  DATATYPE  H5T_ENUM {
                      H5T_STD_I8LE;
-                     "FALSE"            0
-                     "TRUE"            1
+                     "FALSE"            0;
+                     "TRUE"             1;
                   }
                   DATASPACE  SCALAR
                }
@@ -2650,10 +2650,10 @@ GROUP "/" {
                   DATASPACE  SCALAR
                }
                DATASET "start_once" {
-                  DATATYPE  H5T_ENUM { {
+                  DATATYPE  H5T_ENUM {
                      H5T_STD_I8LE;
-                     "FALSE"            0
-                     "TRUE"            1
+                     "FALSE"            0;
+                     "TRUE"             1;
                   }
                   DATASPACE  SCALAR
                }
@@ -2673,10 +2673,10 @@ GROUP "/" {
                   DATASPACE  SCALAR
                }
                DATASET "image_flip" {
-                  DATATYPE  H5T_ENUM { {
+                  DATATYPE  H5T_ENUM {
                      H5T_STD_I8LE;
-                     "FALSE"            0
-                     "TRUE"            1
+                     "FALSE"            0;
+                     "TRUE"             1;
                   }
                   DATASPACE  SIMPLE { ( 2 ) / ( 2 ) }
                }
@@ -3740,10 +3740,10 @@ GROUP "/" {
                   DATASPACE  SCALAR
                }
                DATASET "prepare_once" {
-                  DATATYPE  H5T_ENUM { {
+                  DATATYPE  H5T_ENUM {
                      H5T_STD_I8LE;
-                     "FALSE"            0
-                     "TRUE"            1
+                     "FALSE"            0;
+                     "TRUE"             1;
                   }
                   DATASPACE  SCALAR
                }
@@ -3775,10 +3775,10 @@ GROUP "/" {
                   DATASPACE  SCALAR
                }
                DATASET "start_once" {
-                  DATATYPE  H5T_ENUM { {
+                  DATATYPE  H5T_ENUM {
                      H5T_STD_I8LE;
-                     "FALSE"            0
-                     "TRUE"            1
+                     "FALSE"            0;
+                     "TRUE"             1;
                   }
                   DATASPACE  SCALAR
                }
@@ -3798,10 +3798,10 @@ GROUP "/" {
                   DATASPACE  SCALAR
                }
                DATASET "image_flip" {
-                  DATATYPE  H5T_ENUM { {
+                  DATATYPE  H5T_ENUM {
                      H5T_STD_I8LE;
-                     "FALSE"            0
-                     "TRUE"            1
+                     "FALSE"            0;
+                     "TRUE"             1;
                   }
                   DATASPACE  SIMPLE { ( 2 ) / ( 2 ) }
                }
@@ -4815,10 +4815,10 @@ GROUP "/" {
                   DATASPACE  SCALAR
                }
                DATASET "prepare_once" {
-                  DATATYPE  H5T_ENUM { {
+                  DATATYPE  H5T_ENUM {
                      H5T_STD_I8LE;
-                     "FALSE"            0
-                     "TRUE"            1
+                     "FALSE"            0;
+                     "TRUE"             1;
                   }
                   DATASPACE  SCALAR
                }
@@ -4850,10 +4850,10 @@ GROUP "/" {
                   DATASPACE  SCALAR
                }
                DATASET "start_once" {
-                  DATATYPE  H5T_ENUM { {
+                  DATATYPE  H5T_ENUM {
                      H5T_STD_I8LE;
-                     "FALSE"            0
-                     "TRUE"            1
+                     "FALSE"            0;
+                     "TRUE"             1;
                   }
                   DATASPACE  SCALAR
                }
@@ -4873,10 +4873,10 @@ GROUP "/" {
                   DATASPACE  SCALAR
                }
                DATASET "image_flip" {
-                  DATATYPE  H5T_ENUM { {
+                  DATATYPE  H5T_ENUM {
                      H5T_STD_I8LE;
-                     "FALSE"            0
-                     "TRUE"            1
+                     "FALSE"            0;
+                     "TRUE"             1;
                   }
                   DATASPACE  SIMPLE { ( 2 ) / ( 2 ) }
                }
@@ -5772,10 +5772,10 @@ GROUP "/" {
                DATASPACE  SCALAR
             }
             DATASET "dark_images_in_accumulation" {
-               DATATYPE  H5T_ENUM { {
+               DATATYPE  H5T_ENUM {
                   H5T_STD_I8LE;
-                  "FALSE"            0
-                  "TRUE"            1
+                  "FALSE"            0;
+                  "TRUE"             1;
                }
                DATASPACE  SCALAR
             }
@@ -5803,10 +5803,10 @@ GROUP "/" {
                DATASPACE  SCALAR
             }
             DATASET "flipping" {
-               DATATYPE  H5T_ENUM { {
+               DATATYPE  H5T_ENUM {
                   H5T_STD_I8LE;
-                  "FALSE"            0
-                  "TRUE"            1
+                  "FALSE"            0;
+                  "TRUE"             1;
                }
                DATASPACE  SIMPLE { ( 2 ) / ( 2 ) }
             }
@@ -5923,10 +5923,10 @@ GROUP "/" {
                   DATASPACE  SCALAR
                }
                DATASET "prepare_once" {
-                  DATATYPE  H5T_ENUM { {
+                  DATATYPE  H5T_ENUM {
                      H5T_STD_I8LE;
-                     "FALSE"            0
-                     "TRUE"            1
+                     "FALSE"            0;
+                     "TRUE"             1;
                   }
                   DATASPACE  SCALAR
                }
@@ -5958,10 +5958,10 @@ GROUP "/" {
                   DATASPACE  SCALAR
                }
                DATASET "start_once" {
-                  DATATYPE  H5T_ENUM { {
+                  DATATYPE  H5T_ENUM {
                      H5T_STD_I8LE;
-                     "FALSE"            0
-                     "TRUE"            1
+                     "FALSE"            0;
+                     "TRUE"             1;
                   }
                   DATASPACE  SCALAR
                }
@@ -5981,10 +5981,10 @@ GROUP "/" {
                   DATASPACE  SCALAR
                }
                DATASET "image_flip" {
-                  DATATYPE  H5T_ENUM { {
+                  DATATYPE  H5T_ENUM {
                      H5T_STD_I8LE;
-                     "FALSE"            0
-                     "TRUE"            1
+                     "FALSE"            0;
+                     "TRUE"             1;
                   }
                   DATASPACE  SIMPLE { ( 2 ) / ( 2 ) }
                }
@@ -6884,10 +6884,10 @@ GROUP "/" {
                DATASPACE  SCALAR
             }
             DATASET "flipping" {
-               DATATYPE  H5T_ENUM { {
+               DATATYPE  H5T_ENUM {
                   H5T_STD_I8LE;
-                  "FALSE"            0
-                  "TRUE"            1
+                  "FALSE"            0;
+                  "TRUE"             1;
                }
                DATASPACE  SIMPLE { ( 2 ) / ( 2 ) }
             }
@@ -7114,10 +7114,10 @@ GROUP "/" {
                   DATASPACE  SCALAR
                }
                DATASET "prepare_once" {
-                  DATATYPE  H5T_ENUM { {
+                  DATATYPE  H5T_ENUM {
                      H5T_STD_I8LE;
-                     "FALSE"            0
-                     "TRUE"            1
+                     "FALSE"            0;
+                     "TRUE"             1;
                   }
                   DATASPACE  SCALAR
                }
@@ -7149,10 +7149,10 @@ GROUP "/" {
                   DATASPACE  SCALAR
                }
                DATASET "start_once" {
-                  DATATYPE  H5T_ENUM { {
+                  DATATYPE  H5T_ENUM {
                      H5T_STD_I8LE;
-                     "FALSE"            0
-                     "TRUE"            1
+                     "FALSE"            0;
+                     "TRUE"             1;
                   }
                   DATASPACE  SCALAR
                }
@@ -7172,10 +7172,10 @@ GROUP "/" {
                   DATASPACE  SCALAR
                }
                DATASET "image_flip" {
-                  DATATYPE  H5T_ENUM { {
+                  DATATYPE  H5T_ENUM {
                      H5T_STD_I8LE;
-                     "FALSE"            0
-                     "TRUE"            1
+                     "FALSE"            0;
+                     "TRUE"             1;
                   }
                   DATASPACE  SIMPLE { ( 2 ) / ( 2 ) }
                }
@@ -8105,10 +8105,10 @@ GROUP "/" {
                DATASPACE  SCALAR
             }
             DATASET "flipping" {
-               DATATYPE  H5T_ENUM { {
+               DATATYPE  H5T_ENUM {
                   H5T_STD_I8LE;
-                  "FALSE"            0
-                  "TRUE"            1
+                  "FALSE"            0;
+                  "TRUE"             1;
                }
                DATASPACE  SIMPLE { ( 2 ) / ( 2 ) }
             }
@@ -9258,10 +9258,10 @@ GROUP "/" {
                DATASPACE  SCALAR
             }
             DATASET "flipping" {
-               DATATYPE  H5T_ENUM { {
+               DATATYPE  H5T_ENUM {
                   H5T_STD_I8LE;
-                  "FALSE"            0
-                  "TRUE"            1
+                  "FALSE"            0;
+                  "TRUE"             1;
                }
                DATASPACE  SIMPLE { ( 2 ) / ( 2 ) }
             }
@@ -9515,10 +9515,10 @@ GROUP "/" {
                   DATASPACE  SCALAR
                }
                DATASET "prepare_once" {
-                  DATATYPE  H5T_ENUM { {
+                  DATATYPE  H5T_ENUM {
                      H5T_STD_I8LE;
-                     "FALSE"            0
-                     "TRUE"            1
+                     "FALSE"            0;
+                     "TRUE"             1;
                   }
                   DATASPACE  SCALAR
                }
@@ -9550,10 +9550,10 @@ GROUP "/" {
                   DATASPACE  SCALAR
                }
                DATASET "start_once" {
-                  DATATYPE  H5T_ENUM { {
+                  DATATYPE  H5T_ENUM {
                      H5T_STD_I8LE;
-                     "FALSE"            0
-                     "TRUE"            1
+                     "FALSE"            0;
+                     "TRUE"             1;
                   }
                   DATASPACE  SCALAR
                }
@@ -9573,10 +9573,10 @@ GROUP "/" {
                   DATASPACE  SCALAR
                }
                DATASET "image_flip" {
-                  DATATYPE  H5T_ENUM { {
+                  DATATYPE  H5T_ENUM {
                      H5T_STD_I8LE;
-                     "FALSE"            0
-                     "TRUE"            1
+                     "FALSE"            0;
+                     "TRUE"             1;
                   }
                   DATASPACE  SIMPLE { ( 2 ) / ( 2 ) }
                }
@@ -10476,10 +10476,10 @@ GROUP "/" {
                DATASPACE  SCALAR
             }
             DATASET "flipping" {
-               DATATYPE  H5T_ENUM { {
+               DATATYPE  H5T_ENUM {
                   H5T_STD_I8LE;
-                  "FALSE"            0
-                  "TRUE"            1
+                  "FALSE"            0;
+                  "TRUE"             1;
                }
                DATASPACE  SIMPLE { ( 2 ) / ( 2 ) }
             }
@@ -10706,10 +10706,10 @@ GROUP "/" {
                   DATASPACE  SCALAR
                }
                DATASET "prepare_once" {
-                  DATATYPE  H5T_ENUM { {
+                  DATATYPE  H5T_ENUM {
                      H5T_STD_I8LE;
-                     "FALSE"            0
-                     "TRUE"            1
+                     "FALSE"            0;
+                     "TRUE"             1;
                   }
                   DATASPACE  SCALAR
                }
@@ -10741,10 +10741,10 @@ GROUP "/" {
                   DATASPACE  SCALAR
                }
                DATASET "start_once" {
-                  DATATYPE  H5T_ENUM { {
+                  DATATYPE  H5T_ENUM {
                      H5T_STD_I8LE;
-                     "FALSE"            0
-                     "TRUE"            1
+                     "FALSE"            0;
+                     "TRUE"             1;
                   }
                   DATASPACE  SCALAR
                }
@@ -10764,10 +10764,10 @@ GROUP "/" {
                   DATASPACE  SCALAR
                }
                DATASET "image_flip" {
-                  DATATYPE  H5T_ENUM { {
+                  DATATYPE  H5T_ENUM {
                      H5T_STD_I8LE;
-                     "FALSE"            0
-                     "TRUE"            1
+                     "FALSE"            0;
+                     "TRUE"             1;
                   }
                   DATASPACE  SIMPLE { ( 2 ) / ( 2 ) }
                }
@@ -11697,10 +11697,10 @@ GROUP "/" {
                DATASPACE  SCALAR
             }
             DATASET "flipping" {
-               DATATYPE  H5T_ENUM { {
+               DATATYPE  H5T_ENUM {
                   H5T_STD_I8LE;
-                  "FALSE"            0
-                  "TRUE"            1
+                  "FALSE"            0;
+                  "TRUE"             1;
                }
                DATASPACE  SIMPLE { ( 2 ) / ( 2 ) }
             }
@@ -12850,10 +12850,10 @@ GROUP "/" {
                DATASPACE  SCALAR
             }
             DATASET "flipping" {
-               DATATYPE  H5T_ENUM { {
+               DATATYPE  H5T_ENUM {
                   H5T_STD_I8LE;
-                  "FALSE"            0
-                  "TRUE"            1
+                  "FALSE"            0;
+                  "TRUE"             1;
                }
                DATASPACE  SIMPLE { ( 2 ) / ( 2 ) }
             }
@@ -13179,10 +13179,10 @@ GROUP "/" {
                   DATASPACE  SCALAR
                }
                DATASET "prepare_once" {
-                  DATATYPE  H5T_ENUM { {
+                  DATATYPE  H5T_ENUM {
                      H5T_STD_I8LE;
-                     "FALSE"            0
-                     "TRUE"            1
+                     "FALSE"            0;
+                     "TRUE"             1;
                   }
                   DATASPACE  SCALAR
                }
@@ -13214,10 +13214,10 @@ GROUP "/" {
                   DATASPACE  SCALAR
                }
                DATASET "start_once" {
-                  DATATYPE  H5T_ENUM { {
+                  DATATYPE  H5T_ENUM {
                      H5T_STD_I8LE;
-                     "FALSE"            0
-                     "TRUE"            1
+                     "FALSE"            0;
+                     "TRUE"             1;
                   }
                   DATASPACE  SCALAR
                }
@@ -13237,10 +13237,10 @@ GROUP "/" {
                   DATASPACE  SCALAR
                }
                DATASET "image_flip" {
-                  DATATYPE  H5T_ENUM { {
+                  DATATYPE  H5T_ENUM {
                      H5T_STD_I8LE;
-                     "FALSE"            0
-                     "TRUE"            1
+                     "FALSE"            0;
+                     "TRUE"             1;
                   }
                   DATASPACE  SIMPLE { ( 2 ) / ( 2 ) }
                }
@@ -14140,10 +14140,10 @@ GROUP "/" {
                DATASPACE  SCALAR
             }
             DATASET "flipping" {
-               DATATYPE  H5T_ENUM { {
+               DATATYPE  H5T_ENUM {
                   H5T_STD_I8LE;
-                  "FALSE"            0
-                  "TRUE"            1
+                  "FALSE"            0;
+                  "TRUE"             1;
                }
                DATASPACE  SIMPLE { ( 2 ) / ( 2 ) }
             }
@@ -14323,10 +14323,10 @@ GROUP "/" {
                   DATASPACE  SCALAR
                }
                DATASET "prepare_once" {
-                  DATATYPE  H5T_ENUM { {
+                  DATATYPE  H5T_ENUM {
                      H5T_STD_I8LE;
-                     "FALSE"            0
-                     "TRUE"            1
+                     "FALSE"            0;
+                     "TRUE"             1;
                   }
                   DATASPACE  SCALAR
                }
@@ -14358,10 +14358,10 @@ GROUP "/" {
                   DATASPACE  SCALAR
                }
                DATASET "start_once" {
-                  DATATYPE  H5T_ENUM { {
+                  DATATYPE  H5T_ENUM {
                      H5T_STD_I8LE;
-                     "FALSE"            0
-                     "TRUE"            1
+                     "FALSE"            0;
+                     "TRUE"             1;
                   }
                   DATASPACE  SCALAR
                }
@@ -14381,10 +14381,10 @@ GROUP "/" {
                   DATASPACE  SCALAR
                }
                DATASET "image_flip" {
-                  DATATYPE  H5T_ENUM { {
+                  DATATYPE  H5T_ENUM {
                      H5T_STD_I8LE;
-                     "FALSE"            0
-                     "TRUE"            1
+                     "FALSE"            0;
+                     "TRUE"             1;
                   }
                   DATASPACE  SIMPLE { ( 2 ) / ( 2 ) }
                }
@@ -15459,10 +15459,10 @@ GROUP "/" {
                   DATASPACE  SCALAR
                }
                DATASET "prepare_once" {
-                  DATATYPE  H5T_ENUM { {
+                  DATATYPE  H5T_ENUM {
                      H5T_STD_I8LE;
-                     "FALSE"            0
-                     "TRUE"            1
+                     "FALSE"            0;
+                     "TRUE"             1;
                   }
                   DATASPACE  SCALAR
                }
@@ -15494,10 +15494,10 @@ GROUP "/" {
                   DATASPACE  SCALAR
                }
                DATASET "start_once" {
-                  DATATYPE  H5T_ENUM { {
+                  DATATYPE  H5T_ENUM {
                      H5T_STD_I8LE;
-                     "FALSE"            0
-                     "TRUE"            1
+                     "FALSE"            0;
+                     "TRUE"             1;
                   }
                   DATASPACE  SCALAR
                }
@@ -15517,10 +15517,10 @@ GROUP "/" {
                   DATASPACE  SCALAR
                }
                DATASET "image_flip" {
-                  DATATYPE  H5T_ENUM { {
+                  DATATYPE  H5T_ENUM {
                      H5T_STD_I8LE;
-                     "FALSE"            0
-                     "TRUE"            1
+                     "FALSE"            0;
+                     "TRUE"             1;
                   }
                   DATASPACE  SIMPLE { ( 2 ) / ( 2 ) }
                }
@@ -17079,10 +17079,10 @@ GROUP "/" {
                   DATASPACE  SCALAR
                }
                DATASET "prepare_once" {
-                  DATATYPE  H5T_ENUM { {
+                  DATATYPE  H5T_ENUM {
                      H5T_STD_I8LE;
-                     "FALSE"            0
-                     "TRUE"            1
+                     "FALSE"            0;
+                     "TRUE"             1;
                   }
                   DATASPACE  SCALAR
                }
@@ -17114,10 +17114,10 @@ GROUP "/" {
                   DATASPACE  SCALAR
                }
                DATASET "start_once" {
-                  DATATYPE  H5T_ENUM { {
+                  DATATYPE  H5T_ENUM {
                      H5T_STD_I8LE;
-                     "FALSE"            0
-                     "TRUE"            1
+                     "FALSE"            0;
+                     "TRUE"             1;
                   }
                   DATASPACE  SCALAR
                }
@@ -17137,10 +17137,10 @@ GROUP "/" {
                   DATASPACE  SCALAR
                }
                DATASET "image_flip" {
-                  DATATYPE  H5T_ENUM { {
+                  DATATYPE  H5T_ENUM {
                      H5T_STD_I8LE;
-                     "FALSE"            0
-                     "TRUE"            1
+                     "FALSE"            0;
+                     "TRUE"             1;
                   }
                   DATASPACE  SIMPLE { ( 2 ) / ( 2 ) }
                }
@@ -18204,10 +18204,10 @@ GROUP "/" {
                   DATASPACE  SCALAR
                }
                DATASET "prepare_once" {
-                  DATATYPE  H5T_ENUM { {
+                  DATATYPE  H5T_ENUM {
                      H5T_STD_I8LE;
-                     "FALSE"            0
-                     "TRUE"            1
+                     "FALSE"            0;
+                     "TRUE"             1;
                   }
                   DATASPACE  SCALAR
                }
@@ -18239,10 +18239,10 @@ GROUP "/" {
                   DATASPACE  SCALAR
                }
                DATASET "start_once" {
-                  DATATYPE  H5T_ENUM { {
+                  DATATYPE  H5T_ENUM {
                      H5T_STD_I8LE;
-                     "FALSE"            0
-                     "TRUE"            1
+                     "FALSE"            0;
+                     "TRUE"             1;
                   }
                   DATASPACE  SCALAR
                }
@@ -18262,10 +18262,10 @@ GROUP "/" {
                   DATASPACE  SCALAR
                }
                DATASET "image_flip" {
-                  DATATYPE  H5T_ENUM { {
+                  DATATYPE  H5T_ENUM {
                      H5T_STD_I8LE;
-                     "FALSE"            0
-                     "TRUE"            1
+                     "FALSE"            0;
+                     "TRUE"             1;
                   }
                   DATASPACE  SIMPLE { ( 2 ) / ( 2 ) }
                }

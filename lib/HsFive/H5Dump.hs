@@ -8,7 +8,7 @@ import Data.Int (Int64)
 import Data.List (sortOn)
 import qualified Data.List.NonEmpty as NE
 import Data.String (IsString (fromString))
-import Data.Text (Text, intercalate, length, pack)
+import Data.Text (Text, intercalate, length, pack, replicate)
 import Data.Text.Encoding (decodeUtf8Lenient)
 import HsFive.CoreTypes
   ( ByteOrder (BigEndian, LittleEndian),
@@ -49,6 +49,13 @@ nodeToDoc :: Node -> Doc ()
 nodeToDoc (GroupNode g) = groupToDoc g
 nodeToDoc (DatasetNode g) = datasetToDoc g
 nodeToDoc (DatatypeNode g) = pretty (show g)
+
+rightPad :: Text -> Int -> Text -> Text
+rightPad c l t =
+  let remainder = l - length t
+   in if l < 0
+        then t
+        else t <> replicate remainder c
 
 datatypeToDoc :: Datatype -> Maybe DataStorageLayout -> Doc ann
 datatypeToDoc (DatatypeVariableLengthString padding charset _word) _layout =
@@ -95,14 +102,21 @@ datatypeToDoc (DatatypeFixedPoint {fixedPointByteOrder = LittleEndian, fixedPoin
 datatypeToDoc (DatatypeFixedPoint {fixedPointByteOrder = LittleEndian, fixedPointBitPrecision = 16, fixedPointSigned = False}) _layout = "DATATYPE  H5T_STD_U16LE"
 datatypeToDoc (DatatypeEnumeration _baseType enumValues) _layout =
   prefixAndBodyToDoc
-    "DATATYPE  H5T_ENUM {"
+    "DATATYPE  H5T_ENUM"
     ( [ "H5T_STD_I8LE;"
       ]
         <> ( ( \(enumName, enumValue) ->
-                 "\""
-                   <> pretty (decodeUtf8Lenient (BSL.toStrict enumName))
-                   <> "\"            "
+                 pretty
+                   ( rightPad
+                       " "
+                       19
+                       ( "\""
+                           <> decodeUtf8Lenient (BSL.toStrict enumName)
+                           <> "\""
+                       )
+                   )
                    <> pretty enumValue
+                   <> ";"
              )
                <$> enumValues
            )
