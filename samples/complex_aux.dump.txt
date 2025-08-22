@@ -28,19 +28,19 @@ GROUP "/" {
       DATASPACE  SCALAR
    }
    ATTRIBUTE "dt" {
-      DATATYPE  H5T_STD_F64LE
+      DATATYPE  H5T_IEEE_F64LE
       DATASPACE  SCALAR
    }
    ATTRIBUTE "dx" {
-      DATATYPE  H5T_STD_F64LE
+      DATATYPE  H5T_IEEE_F64LE
       DATASPACE  SCALAR
    }
    ATTRIBUTE "dy" {
-      DATATYPE  H5T_STD_F64LE
+      DATATYPE  H5T_IEEE_F64LE
       DATASPACE  SCALAR
    }
    ATTRIBUTE "dz" {
-      DATATYPE  H5T_STD_F64LE
+      DATATYPE  H5T_IEEE_F64LE
       DATASPACE  SCALAR
    }
    ATTRIBUTE "sim_id" {
@@ -433,11 +433,11 @@ GROUP "/" {
       }
       GROUP "mode monitor 1" {
          ATTRIBUTE "freq_max" {
-            DATATYPE  H5T_STD_F64LE
+            DATATYPE  H5T_IEEE_F64LE
             DATASPACE  SCALAR
          }
          ATTRIBUTE "freq_min" {
-            DATATYPE  H5T_STD_F64LE
+            DATATYPE  H5T_IEEE_F64LE
             DATASPACE  SCALAR
          }
          ATTRIBUTE "freq_npts" {
@@ -454,11 +454,11 @@ GROUP "/" {
             DATASPACE  SCALAR
          }
          ATTRIBUTE "lambda_max" {
-            DATATYPE  H5T_STD_F64LE
+            DATATYPE  H5T_IEEE_F64LE
             DATASPACE  SCALAR
          }
          ATTRIBUTE "lambda_min" {
-            DATATYPE  H5T_STD_F64LE
+            DATATYPE  H5T_IEEE_F64LE
             DATASPACE  SCALAR
          }
          ATTRIBUTE "save_ex" {
@@ -495,11 +495,11 @@ GROUP "/" {
             DATASPACE  SCALAR
          }
          ATTRIBUTE "y_max" {
-            DATATYPE  H5T_STD_F64LE
+            DATATYPE  H5T_IEEE_F64LE
             DATASPACE  SCALAR
          }
          ATTRIBUTE "y_min" {
-            DATATYPE  H5T_STD_F64LE
+            DATATYPE  H5T_IEEE_F64LE
             DATASPACE  SCALAR
          }
          ATTRIBUTE "y_subsampling" {
@@ -507,11 +507,11 @@ GROUP "/" {
             DATASPACE  SCALAR
          }
          ATTRIBUTE "z_max" {
-            DATATYPE  H5T_STD_F64LE
+            DATATYPE  H5T_IEEE_F64LE
             DATASPACE  SCALAR
          }
          ATTRIBUTE "z_min" {
-            DATATYPE  H5T_STD_F64LE
+            DATATYPE  H5T_IEEE_F64LE
             DATASPACE  SCALAR
          }
          ATTRIBUTE "z_subsampling" {
@@ -537,11 +537,11 @@ GROUP "/" {
       }
       GROUP "mode monitor 2" {
          ATTRIBUTE "freq_max" {
-            DATATYPE  H5T_STD_F64LE
+            DATATYPE  H5T_IEEE_F64LE
             DATASPACE  SCALAR
          }
          ATTRIBUTE "freq_min" {
-            DATATYPE  H5T_STD_F64LE
+            DATATYPE  H5T_IEEE_F64LE
             DATASPACE  SCALAR
          }
          ATTRIBUTE "freq_npts" {
@@ -558,11 +558,11 @@ GROUP "/" {
             DATASPACE  SCALAR
          }
          ATTRIBUTE "lambda_max" {
-            DATATYPE  H5T_STD_F64LE
+            DATATYPE  H5T_IEEE_F64LE
             DATASPACE  SCALAR
          }
          ATTRIBUTE "lambda_min" {
-            DATATYPE  H5T_STD_F64LE
+            DATATYPE  H5T_IEEE_F64LE
             DATASPACE  SCALAR
          }
          ATTRIBUTE "save_ex" {
@@ -599,11 +599,11 @@ GROUP "/" {
             DATASPACE  SCALAR
          }
          ATTRIBUTE "y_max" {
-            DATATYPE  H5T_STD_F64LE
+            DATATYPE  H5T_IEEE_F64LE
             DATASPACE  SCALAR
          }
          ATTRIBUTE "y_min" {
-            DATATYPE  H5T_STD_F64LE
+            DATATYPE  H5T_IEEE_F64LE
             DATASPACE  SCALAR
          }
          ATTRIBUTE "y_subsampling" {
@@ -611,11 +611,11 @@ GROUP "/" {
             DATASPACE  SCALAR
          }
          ATTRIBUTE "z_max" {
-            DATATYPE  H5T_STD_F64LE
+            DATATYPE  H5T_IEEE_F64LE
             DATASPACE  SCALAR
          }
          ATTRIBUTE "z_min" {
-            DATATYPE  H5T_STD_F64LE
+            DATATYPE  H5T_IEEE_F64LE
             DATASPACE  SCALAR
          }
          ATTRIBUTE "z_subsampling" {
@@ -661,11 +661,11 @@ GROUP "/" {
       }
       GROUP "mode monitor 1" {
          ATTRIBUTE "freq_max" {
-            DATATYPE  H5T_STD_F64LE
+            DATATYPE  H5T_IEEE_F64LE
             DATASPACE  SCALAR
          }
          ATTRIBUTE "freq_min" {
-            DATATYPE  H5T_STD_F64LE
+            DATATYPE  H5T_IEEE_F64LE
             DATASPACE  SCALAR
          }
          ATTRIBUTE "freq_npts" {
@@ -682,11 +682,11 @@ GROUP "/" {
             DATASPACE  SCALAR
          }
          ATTRIBUTE "lambda_max" {
-            DATATYPE  H5T_STD_F64LE
+            DATATYPE  H5T_IEEE_F64LE
             DATASPACE  SCALAR
          }
          ATTRIBUTE "lambda_min" {
-            DATATYPE  H5T_STD_F64LE
+            DATATYPE  H5T_IEEE_F64LE
             DATASPACE  SCALAR
          }
          ATTRIBUTE "save_ex" {
@@ -723,11 +723,11 @@ GROUP "/" {
             DATASPACE  SCALAR
          }
          ATTRIBUTE "y_max" {
-            DATATYPE  H5T_STD_F64LE
+            DATATYPE  H5T_IEEE_F64LE
             DATASPACE  SCALAR
          }
          ATTRIBUTE "y_min" {
-            DATATYPE  H5T_STD_F64LE
+            DATATYPE  H5T_IEEE_F64LE
             DATASPACE  SCALAR
          }
          ATTRIBUTE "y_subsampling" {
@@ -735,11 +735,11 @@ GROUP "/" {
             DATASPACE  SCALAR
          }
          ATTRIBUTE "z_max" {
-            DATATYPE  H5T_STD_F64LE
+            DATATYPE  H5T_IEEE_F64LE
             DATASPACE  SCALAR
          }
          ATTRIBUTE "z_min" {
-            DATATYPE  H5T_STD_F64LE
+            DATATYPE  H5T_IEEE_F64LE
             DATASPACE  SCALAR
          }
          ATTRIBUTE "z_subsampling" {
@@ -765,11 +765,11 @@ GROUP "/" {
       }
       GROUP "mode monitor 2" {
          ATTRIBUTE "freq_max" {
-            DATATYPE  H5T_STD_F64LE
+            DATATYPE  H5T_IEEE_F64LE
             DATASPACE  SCALAR
          }
          ATTRIBUTE "freq_min" {
-            DATATYPE  H5T_STD_F64LE
+            DATATYPE  H5T_IEEE_F64LE
             DATASPACE  SCALAR
          }
          ATTRIBUTE "freq_npts" {
@@ -786,11 +786,11 @@ GROUP "/" {
             DATASPACE  SCALAR
          }
          ATTRIBUTE "lambda_max" {
-            DATATYPE  H5T_STD_F64LE
+            DATATYPE  H5T_IEEE_F64LE
             DATASPACE  SCALAR
          }
          ATTRIBUTE "lambda_min" {
-            DATATYPE  H5T_STD_F64LE
+            DATATYPE  H5T_IEEE_F64LE
             DATASPACE  SCALAR
          }
          ATTRIBUTE "save_ex" {
@@ -827,11 +827,11 @@ GROUP "/" {
             DATASPACE  SCALAR
          }
          ATTRIBUTE "y_max" {
-            DATATYPE  H5T_STD_F64LE
+            DATATYPE  H5T_IEEE_F64LE
             DATASPACE  SCALAR
          }
          ATTRIBUTE "y_min" {
-            DATATYPE  H5T_STD_F64LE
+            DATATYPE  H5T_IEEE_F64LE
             DATASPACE  SCALAR
          }
          ATTRIBUTE "y_subsampling" {
@@ -839,11 +839,11 @@ GROUP "/" {
             DATASPACE  SCALAR
          }
          ATTRIBUTE "z_max" {
-            DATATYPE  H5T_STD_F64LE
+            DATATYPE  H5T_IEEE_F64LE
             DATASPACE  SCALAR
          }
          ATTRIBUTE "z_min" {
-            DATATYPE  H5T_STD_F64LE
+            DATATYPE  H5T_IEEE_F64LE
             DATASPACE  SCALAR
          }
          ATTRIBUTE "z_subsampling" {

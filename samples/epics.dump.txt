@@ -112,7 +112,7 @@ GROUP "/" {
             DATASPACE  SIMPLE { ( 1 ) / ( H5S_UNLIMITED ) }
          }
          ATTRIBUTE "IMAGE_VERSION" {
-            DATATYPE  H5T_STD_F32BE
+            DATATYPE  H5T_IEEE_F32BE
             DATASPACE  SIMPLE { ( 1 ) / ( H5S_UNLIMITED ) }
          }
          DATATYPE  H5T_REFERENCE { H5T_STD_REF_OBJECT }
@@ -152,7 +152,7 @@ GROUP "/" {
             DATASPACE  SIMPLE { ( 1 ) / ( H5S_UNLIMITED ) }
          }
          ATTRIBUTE "PAL_VERSION" {
-            DATATYPE  H5T_STD_F32BE
+            DATATYPE  H5T_IEEE_F32BE
             DATASPACE  SIMPLE { ( 1 ) / ( H5S_UNLIMITED ) }
          }
       }
@@ -191,7 +191,7 @@ GROUP "/" {
             DATASPACE  SIMPLE { ( 1 ) / ( H5S_UNLIMITED ) }
          }
          ATTRIBUTE "IMAGE_VERSION" {
-            DATATYPE  H5T_STD_F32BE
+            DATATYPE  H5T_IEEE_F32BE
             DATASPACE  SIMPLE { ( 1 ) / ( H5S_UNLIMITED ) }
          }
          DATATYPE  H5T_REFERENCE { H5T_STD_REF_OBJECT }
@@ -231,7 +231,7 @@ GROUP "/" {
             DATASPACE  SIMPLE { ( 1 ) / ( H5S_UNLIMITED ) }
          }
          ATTRIBUTE "PAL_VERSION" {
-            DATATYPE  H5T_STD_F32BE
+            DATATYPE  H5T_IEEE_F32BE
             DATASPACE  SIMPLE { ( 1 ) / ( H5S_UNLIMITED ) }
          }
       }
@@ -277,7 +277,7 @@ GROUP "/" {
                DATASPACE  SIMPLE { ( 1 ) / ( H5S_UNLIMITED ) }
             }
             ATTRIBUTE "IMAGE_VERSION" {
-               DATATYPE  H5T_STD_F32BE
+               DATATYPE  H5T_IEEE_F32BE
                DATASPACE  SIMPLE { ( 1 ) / ( H5S_UNLIMITED ) }
             }
             DATATYPE  H5T_REFERENCE { H5T_STD_REF_OBJECT }

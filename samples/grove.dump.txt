@@ -2,7 +2,7 @@ HDF5 "grove.h5" {
 GROUP "/" {
    GROUP "-inf" {
       ATTRIBUTE "as_attr" {
-         DATATYPE  H5T_STD_F64LE
+         DATATYPE  H5T_IEEE_F64LE
          DATASPACE  SCALAR
       }
       DATASET "fillValue" {
@@ -150,7 +150,7 @@ GROUP "/" {
    }
    GROUP "inf" {
       ATTRIBUTE "as_attr" {
-         DATATYPE  H5T_STD_F64LE
+         DATATYPE  H5T_IEEE_F64LE
          DATASPACE  SCALAR
       }
       DATASET "fillValue" {
@@ -180,7 +180,7 @@ GROUP "/" {
    }
    GROUP "nan" {
       ATTRIBUTE "as_attr" {
-         DATATYPE  H5T_STD_F64LE
+         DATATYPE  H5T_IEEE_F64LE
          DATASPACE  SCALAR
       }
       DATASET "fillValue" {
