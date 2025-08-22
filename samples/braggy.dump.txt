@@ -24,14 +24,14 @@ GROUP "/" {
             DATATYPE  H5T_STD_U16LE
             DATASPACE  SIMPLE { ( 100, 2167, 2070 ) / ( H5S_UNLIMITED, 2167, 2070 ) }
             ATTRIBUTE "image_nr_high" {
-               DATATYPE  H5T_STD_U16BE
+               DATATYPE  H5T_STD_I32LE
                DATASPACE  SCALAR
                DATA {
                   (0): 100
                }
             }
             ATTRIBUTE "image_nr_low" {
-               DATATYPE  H5T_STD_U16BE
+               DATATYPE  H5T_STD_I32LE
                DATASPACE  SCALAR
                DATA {
                   (0): 1

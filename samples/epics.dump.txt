@@ -62,7 +62,7 @@ GROUP "/" {
             DATASPACE  SCALAR
          }
          ATTRIBUTE "HDF4_REF_NUM" {
-            DATATYPE  H5T_STD_U16BE
+            invalid datatype: DatatypeFixedPoint {fixedPointDataElementSize = 2, fixedPointByteOrder = BigEndian, fixedPointLoPadBit = False, fixedPointHiPadBit = False, fixedPointSigned = False, fixedPointBitOffset = 0, fixedPointBitPrecision = 16}
             DATASPACE  SCALAR
             DATA {
                (0): 46
@@ -98,7 +98,7 @@ GROUP "/" {
             DATASPACE  SIMPLE { ( 1 ) / ( H5S_UNLIMITED ) }
          }
          ATTRIBUTE "IMAGE_MINMAXRANGE" {
-            DATATYPE  H5T_STD_U16BE
+            invalid datatype: DatatypeFixedPoint {fixedPointDataElementSize = 1, fixedPointByteOrder = LittleEndian, fixedPointLoPadBit = False, fixedPointHiPadBit = False, fixedPointSigned = False, fixedPointBitOffset = 0, fixedPointBitPrecision = 8}
             DATASPACE  SIMPLE { ( 2 ) / ( H5S_UNLIMITED ) }
             DATA {
                (0): 0
@@ -114,7 +114,7 @@ GROUP "/" {
             DATASPACE  SIMPLE { ( 1 ) / ( H5S_UNLIMITED ) }
          }
          ATTRIBUTE "IMAGE_TRANSPARENCY" {
-            DATATYPE  H5T_STD_U16BE
+            invalid datatype: DatatypeFixedPoint {fixedPointDataElementSize = 4, fixedPointByteOrder = BigEndian, fixedPointLoPadBit = False, fixedPointHiPadBit = False, fixedPointSigned = False, fixedPointBitOffset = 0, fixedPointBitPrecision = 32}
             DATASPACE  SIMPLE { ( 1 ) / ( H5S_UNLIMITED ) }
             DATA {
                (0): 255
@@ -151,7 +151,7 @@ GROUP "/" {
             DATASPACE  SIMPLE { ( 1 ) / ( H5S_UNLIMITED ) }
          }
          ATTRIBUTE "PAL_MINMAXNUMERIC" {
-            DATATYPE  H5T_STD_U16BE
+            invalid datatype: DatatypeFixedPoint {fixedPointDataElementSize = 1, fixedPointByteOrder = LittleEndian, fixedPointLoPadBit = False, fixedPointHiPadBit = False, fixedPointSigned = False, fixedPointBitOffset = 0, fixedPointBitPrecision = 8}
             DATASPACE  SIMPLE { ( 2 ) / ( H5S_UNLIMITED ) }
             DATA {
                (0): 0
@@ -196,7 +196,7 @@ GROUP "/" {
             DATASPACE  SIMPLE { ( 1 ) / ( H5S_UNLIMITED ) }
          }
          ATTRIBUTE "IMAGE_MINMAXRANGE" {
-            DATATYPE  H5T_STD_U16BE
+            invalid datatype: DatatypeFixedPoint {fixedPointDataElementSize = 1, fixedPointByteOrder = LittleEndian, fixedPointLoPadBit = False, fixedPointHiPadBit = False, fixedPointSigned = False, fixedPointBitOffset = 0, fixedPointBitPrecision = 8}
             DATASPACE  SIMPLE { ( 2 ) / ( H5S_UNLIMITED ) }
             DATA {
                (0): 0
@@ -242,7 +242,7 @@ GROUP "/" {
             DATASPACE  SIMPLE { ( 1 ) / ( H5S_UNLIMITED ) }
          }
          ATTRIBUTE "PAL_MINMAXNUMERIC" {
-            DATATYPE  H5T_STD_U16BE
+            invalid datatype: DatatypeFixedPoint {fixedPointDataElementSize = 1, fixedPointByteOrder = LittleEndian, fixedPointLoPadBit = False, fixedPointHiPadBit = False, fixedPointSigned = False, fixedPointBitOffset = 0, fixedPointBitPrecision = 8}
             DATASPACE  SIMPLE { ( 2 ) / ( H5S_UNLIMITED ) }
             DATA {
                (0): 0
@@ -290,7 +290,7 @@ GROUP "/" {
                DATASPACE  SIMPLE { ( 1 ) / ( H5S_UNLIMITED ) }
             }
             ATTRIBUTE "IMAGE_MINMAXRANGE" {
-               DATATYPE  H5T_STD_U16BE
+               invalid datatype: DatatypeFixedPoint {fixedPointDataElementSize = 1, fixedPointByteOrder = LittleEndian, fixedPointLoPadBit = False, fixedPointHiPadBit = False, fixedPointSigned = False, fixedPointBitOffset = 0, fixedPointBitPrecision = 8}
                DATASPACE  SIMPLE { ( 2 ) / ( H5S_UNLIMITED ) }
                DATA {
                   (0): 0
@@ -306,7 +306,7 @@ GROUP "/" {
                DATASPACE  SIMPLE { ( 1 ) / ( H5S_UNLIMITED ) }
             }
             ATTRIBUTE "IMAGE_TRANSPARENCY" {
-               DATATYPE  H5T_STD_U16BE
+               invalid datatype: DatatypeFixedPoint {fixedPointDataElementSize = 4, fixedPointByteOrder = BigEndian, fixedPointLoPadBit = False, fixedPointHiPadBit = False, fixedPointSigned = False, fixedPointBitOffset = 0, fixedPointBitPrecision = 32}
                DATASPACE  SIMPLE { ( 1 ) / ( H5S_UNLIMITED ) }
                DATA {
                   (0): 255

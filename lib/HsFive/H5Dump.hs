@@ -151,7 +151,7 @@ charsetToDoc CharacterSetAscii = "H5T_CSET_ASCII"
 charsetToDoc CharacterSetUtf8 = "H5T_CSET_UTF8"
 
 attributeDatatypeToDoc :: Datatype -> [DataspaceDimension] -> Maybe Text -> Doc ()
-attributeDatatypeToDoc (DatatypeFixedPoint {}) _ _ = "DATATYPE  H5T_STD_U16BE"
+attributeDatatypeToDoc dt@(DatatypeFixedPoint {}) _ _ = datatypeToDoc dt undefined
 attributeDatatypeToDoc (DatatypeFloatingPoint {floatingPointByteOrder = BigEndian, floatingPointBitPrecision = 32}) _ _ = "DATATYPE  H5T_STD_F32BE"
 attributeDatatypeToDoc (DatatypeFloatingPoint {floatingPointByteOrder = LittleEndian, floatingPointBitPrecision = 64}) _ _ = "DATATYPE  H5T_STD_F64LE"
 attributeDatatypeToDoc (DatatypeEnumeration baseType enumValues) _ _ = "DATATYPE  ENUM"

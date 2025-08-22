@@ -459,7 +459,7 @@ GROUP "/" {
             }
          }
          ATTRIBUTE "freq_npts" {
-            DATATYPE  H5T_STD_U16BE
+            DATATYPE  H5T_STD_I32LE
             DATASPACE  SCALAR
             DATA {
                (0): 21
@@ -554,7 +554,7 @@ GROUP "/" {
             }
          }
          ATTRIBUTE "y_subsampling" {
-            DATATYPE  H5T_STD_U16BE
+            DATATYPE  H5T_STD_I32LE
             DATASPACE  SCALAR
             DATA {
                (0): 1
@@ -575,7 +575,7 @@ GROUP "/" {
             }
          }
          ATTRIBUTE "z_subsampling" {
-            DATATYPE  H5T_STD_U16BE
+            DATATYPE  H5T_STD_I32LE
             DATASPACE  SCALAR
             DATA {
                (0): 1
@@ -614,7 +614,7 @@ GROUP "/" {
             }
          }
          ATTRIBUTE "freq_npts" {
-            DATATYPE  H5T_STD_U16BE
+            DATATYPE  H5T_STD_I32LE
             DATASPACE  SCALAR
             DATA {
                (0): 21
@@ -709,7 +709,7 @@ GROUP "/" {
             }
          }
          ATTRIBUTE "y_subsampling" {
-            DATATYPE  H5T_STD_U16BE
+            DATATYPE  H5T_STD_I32LE
             DATASPACE  SCALAR
             DATA {
                (0): 1
@@ -730,7 +730,7 @@ GROUP "/" {
             }
          }
          ATTRIBUTE "z_subsampling" {
-            DATATYPE  H5T_STD_U16BE
+            DATATYPE  H5T_STD_I32LE
             DATASPACE  SCALAR
             DATA {
                (0): 1
@@ -789,7 +789,7 @@ GROUP "/" {
             }
          }
          ATTRIBUTE "freq_npts" {
-            DATATYPE  H5T_STD_U16BE
+            DATATYPE  H5T_STD_I32LE
             DATASPACE  SCALAR
             DATA {
                (0): 21
@@ -884,7 +884,7 @@ GROUP "/" {
             }
          }
          ATTRIBUTE "y_subsampling" {
-            DATATYPE  H5T_STD_U16BE
+            DATATYPE  H5T_STD_I32LE
             DATASPACE  SCALAR
             DATA {
                (0): 1
@@ -905,7 +905,7 @@ GROUP "/" {
             }
          }
          ATTRIBUTE "z_subsampling" {
-            DATATYPE  H5T_STD_U16BE
+            DATATYPE  H5T_STD_I32LE
             DATASPACE  SCALAR
             DATA {
                (0): 1
@@ -944,7 +944,7 @@ GROUP "/" {
             }
          }
          ATTRIBUTE "freq_npts" {
-            DATATYPE  H5T_STD_U16BE
+            DATATYPE  H5T_STD_I32LE
             DATASPACE  SCALAR
             DATA {
                (0): 21
@@ -1039,7 +1039,7 @@ GROUP "/" {
             }
          }
          ATTRIBUTE "y_subsampling" {
-            DATATYPE  H5T_STD_U16BE
+            DATATYPE  H5T_STD_I32LE
             DATASPACE  SCALAR
             DATA {
                (0): 1
@@ -1060,7 +1060,7 @@ GROUP "/" {
             }
          }
          ATTRIBUTE "z_subsampling" {
-            DATATYPE  H5T_STD_U16BE
+            DATATYPE  H5T_STD_I32LE
             DATASPACE  SCALAR
             DATA {
                (0): 1

@@ -13,7 +13,7 @@ GROUP "/" {
    }
    GROUP "default_not_string" {
       ATTRIBUTE "default" {
-         DATATYPE  H5T_STD_U16BE
+         DATATYPE  H5T_STD_I64LE
          DATASPACE  SCALAR
          DATA {
             (0): 42
