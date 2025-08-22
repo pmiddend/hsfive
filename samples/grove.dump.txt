@@ -4,9 +4,6 @@ GROUP "/" {
       ATTRIBUTE "as_attr" {
          DATATYPE  H5T_STD_F64LE
          DATASPACE  SCALAR
-         DATA {
-            (0): -Infinity
-         }
       }
       DATASET "fillValue" {
          DATATYPE  H5T_IEEE_F32LE
@@ -37,23 +34,14 @@ GROUP "/" {
       ATTRIBUTE "oneD" {
          DATATYPE  ENUM
          DATASPACE  SIMPLE { ( 2 ) / ( 2 ) }
-         DATA {
-            (0): 1
-         }
       }
       ATTRIBUTE "scalar" {
          DATATYPE  ENUM
          DATASPACE  SCALAR
-         DATA {
-            (0): 1
-         }
       }
       ATTRIBUTE "twoD" {
          DATATYPE  ENUM
          DATASPACE  SIMPLE { ( 2, 2 ) / ( 2, 2 ) }
-         DATA {
-            (0): 1
-         }
       }
       DATASET "array" {
          DATATYPE  H5T_ENUM {
@@ -76,9 +64,6 @@ GROUP "/" {
       ATTRIBUTE "int" {
          DATATYPE  H5T_STD_I64LE
          DATASPACE  SIMPLE { ( 4 ) / ( 4 ) }
-         DATA {
-            (0): 1
-         }
       }
       DATATYPE COMPOUND TODO
       DATATYPE COMPOUND TODO
@@ -167,9 +152,6 @@ GROUP "/" {
       ATTRIBUTE "as_attr" {
          DATATYPE  H5T_STD_F64LE
          DATASPACE  SCALAR
-         DATA {
-            (0): Infinity
-         }
       }
       DATASET "fillValue" {
          DATATYPE  H5T_IEEE_F32LE
@@ -200,9 +182,6 @@ GROUP "/" {
       ATTRIBUTE "as_attr" {
          DATATYPE  H5T_STD_F64LE
          DATASPACE  SCALAR
-         DATA {
-            (0): NaN
-         }
       }
       DATASET "fillValue" {
          DATATYPE  H5T_IEEE_F32LE
@@ -258,9 +237,6 @@ GROUP "/" {
          ATTRIBUTE "SUBCLASS" {
             DATATYPE  H5T_STD_I64LE
             DATASPACE  SCALAR
-            DATA {
-               (0): 15
-            }
          }
       }
       DATASET "mandrill_bgr" {
@@ -287,9 +263,6 @@ GROUP "/" {
          ATTRIBUTE "SUBCLASS" {
             DATATYPE  H5T_STD_I64LE
             DATASPACE  SCALAR
-            DATA {
-               (0): 15
-            }
          }
       }
       DATASET "mandrill_float" {
@@ -316,9 +289,6 @@ GROUP "/" {
          ATTRIBUTE "SUBCLASS" {
             DATATYPE  H5T_STD_I64LE
             DATASPACE  SCALAR
-            DATA {
-               (0): 15
-            }
          }
       }
    }

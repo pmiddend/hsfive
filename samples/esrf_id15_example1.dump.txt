@@ -654,9 +654,6 @@ GROUP "/" {
                   ATTRIBUTE "vector" {
                      DATATYPE  H5T_STD_I64LE
                      DATASPACE  SIMPLE { ( 3 ) / ( 3 ) }
-                     DATA {
-                        (0): 0
-                     }
                   }
                }
                DATASET "Rpolar" {
@@ -692,9 +689,6 @@ GROUP "/" {
                   ATTRIBUTE "vector" {
                      DATATYPE  H5T_STD_I64LE
                      DATASPACE  SIMPLE { ( 3 ) / ( 3 ) }
-                     DATA {
-                        (0): 1
-                     }
                   }
                }
                DATASET "Tz" {
@@ -730,9 +724,6 @@ GROUP "/" {
                   ATTRIBUTE "vector" {
                      DATATYPE  H5T_STD_I64LE
                      DATASPACE  SIMPLE { ( 3 ) / ( 3 ) }
-                     DATA {
-                        (0): 0
-                     }
                   }
                }
             }
@@ -799,9 +790,6 @@ GROUP "/" {
                   ATTRIBUTE "vector" {
                      DATATYPE  H5T_STD_I64LE
                      DATASPACE  SIMPLE { ( 3 ) / ( 3 ) }
-                     DATA {
-                        (0): 0
-                     }
                   }
                }
                DATASET "Rpolar" {
@@ -837,9 +825,6 @@ GROUP "/" {
                   ATTRIBUTE "vector" {
                      DATATYPE  H5T_STD_I64LE
                      DATASPACE  SIMPLE { ( 3 ) / ( 3 ) }
-                     DATA {
-                        (0): 1
-                     }
                   }
                }
                DATASET "Tz" {
@@ -875,9 +860,6 @@ GROUP "/" {
                   ATTRIBUTE "vector" {
                      DATATYPE  H5T_STD_I64LE
                      DATASPACE  SIMPLE { ( 3 ) / ( 3 ) }
-                     DATA {
-                        (0): 0
-                     }
                   }
                }
             }

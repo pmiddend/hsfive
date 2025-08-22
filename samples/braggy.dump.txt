@@ -26,16 +26,10 @@ GROUP "/" {
             ATTRIBUTE "image_nr_high" {
                DATATYPE  H5T_STD_I32LE
                DATASPACE  SCALAR
-               DATA {
-                  (0): 100
-               }
             }
             ATTRIBUTE "image_nr_low" {
                DATATYPE  H5T_STD_I32LE
                DATASPACE  SCALAR
-               DATA {
-                  (0): 1
-               }
             }
          }
       }

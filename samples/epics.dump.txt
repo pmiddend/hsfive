@@ -64,9 +64,6 @@ GROUP "/" {
          ATTRIBUTE "HDF4_REF_NUM" {
             invalid datatype: DatatypeFixedPoint {fixedPointDataElementSize = 2, fixedPointByteOrder = BigEndian, fixedPointLoPadBit = False, fixedPointHiPadBit = False, fixedPointSigned = False, fixedPointBitOffset = 0, fixedPointBitPrecision = 16}
             DATASPACE  SCALAR
-            DATA {
-               (0): 46
-            }
          }
       }
    }
@@ -100,9 +97,6 @@ GROUP "/" {
          ATTRIBUTE "IMAGE_MINMAXRANGE" {
             invalid datatype: DatatypeFixedPoint {fixedPointDataElementSize = 1, fixedPointByteOrder = LittleEndian, fixedPointLoPadBit = False, fixedPointHiPadBit = False, fixedPointSigned = False, fixedPointBitOffset = 0, fixedPointBitPrecision = 8}
             DATASPACE  SIMPLE { ( 2 ) / ( H5S_UNLIMITED ) }
-            DATA {
-               (0): 0
-            }
          }
          ATTRIBUTE "IMAGE_SUBCLASS" {
             DATATYPE  H5T_STRING {
@@ -116,16 +110,10 @@ GROUP "/" {
          ATTRIBUTE "IMAGE_TRANSPARENCY" {
             invalid datatype: DatatypeFixedPoint {fixedPointDataElementSize = 4, fixedPointByteOrder = BigEndian, fixedPointLoPadBit = False, fixedPointHiPadBit = False, fixedPointSigned = False, fixedPointBitOffset = 0, fixedPointBitPrecision = 32}
             DATASPACE  SIMPLE { ( 1 ) / ( H5S_UNLIMITED ) }
-            DATA {
-               (0): 255
-            }
          }
          ATTRIBUTE "IMAGE_VERSION" {
             DATATYPE  H5T_STD_F32BE
             DATASPACE  SIMPLE { ( 1 ) / ( H5S_UNLIMITED ) }
-            DATA {
-               (0): 1.0
-            }
          }
          DATATYPE  H5T_REFERENCE { H5T_STD_REF_OBJECT }
       }
@@ -153,9 +141,6 @@ GROUP "/" {
          ATTRIBUTE "PAL_MINMAXNUMERIC" {
             invalid datatype: DatatypeFixedPoint {fixedPointDataElementSize = 1, fixedPointByteOrder = LittleEndian, fixedPointLoPadBit = False, fixedPointHiPadBit = False, fixedPointSigned = False, fixedPointBitOffset = 0, fixedPointBitPrecision = 8}
             DATASPACE  SIMPLE { ( 2 ) / ( H5S_UNLIMITED ) }
-            DATA {
-               (0): 0
-            }
          }
          ATTRIBUTE "PAL_TYPE" {
             DATATYPE  H5T_STRING {
@@ -169,9 +154,6 @@ GROUP "/" {
          ATTRIBUTE "PAL_VERSION" {
             DATATYPE  H5T_STD_F32BE
             DATASPACE  SIMPLE { ( 1 ) / ( H5S_UNLIMITED ) }
-            DATA {
-               (0): 1.0
-            }
          }
       }
       DATASET "Iceberg" {
@@ -198,9 +180,6 @@ GROUP "/" {
          ATTRIBUTE "IMAGE_MINMAXRANGE" {
             invalid datatype: DatatypeFixedPoint {fixedPointDataElementSize = 1, fixedPointByteOrder = LittleEndian, fixedPointLoPadBit = False, fixedPointHiPadBit = False, fixedPointSigned = False, fixedPointBitOffset = 0, fixedPointBitPrecision = 8}
             DATASPACE  SIMPLE { ( 2 ) / ( H5S_UNLIMITED ) }
-            DATA {
-               (0): 0
-            }
          }
          ATTRIBUTE "IMAGE_SUBCLASS" {
             DATATYPE  H5T_STRING {
@@ -214,9 +193,6 @@ GROUP "/" {
          ATTRIBUTE "IMAGE_VERSION" {
             DATATYPE  H5T_STD_F32BE
             DATASPACE  SIMPLE { ( 1 ) / ( H5S_UNLIMITED ) }
-            DATA {
-               (0): 1.0
-            }
          }
          DATATYPE  H5T_REFERENCE { H5T_STD_REF_OBJECT }
       }
@@ -244,9 +220,6 @@ GROUP "/" {
          ATTRIBUTE "PAL_MINMAXNUMERIC" {
             invalid datatype: DatatypeFixedPoint {fixedPointDataElementSize = 1, fixedPointByteOrder = LittleEndian, fixedPointLoPadBit = False, fixedPointHiPadBit = False, fixedPointSigned = False, fixedPointBitOffset = 0, fixedPointBitPrecision = 8}
             DATASPACE  SIMPLE { ( 2 ) / ( H5S_UNLIMITED ) }
-            DATA {
-               (0): 0
-            }
          }
          ATTRIBUTE "PAL_TYPE" {
             DATATYPE  H5T_STRING {
@@ -260,9 +233,6 @@ GROUP "/" {
          ATTRIBUTE "PAL_VERSION" {
             DATATYPE  H5T_STD_F32BE
             DATASPACE  SIMPLE { ( 1 ) / ( H5S_UNLIMITED ) }
-            DATA {
-               (0): 1.0
-            }
          }
       }
    }
@@ -292,9 +262,6 @@ GROUP "/" {
             ATTRIBUTE "IMAGE_MINMAXRANGE" {
                invalid datatype: DatatypeFixedPoint {fixedPointDataElementSize = 1, fixedPointByteOrder = LittleEndian, fixedPointLoPadBit = False, fixedPointHiPadBit = False, fixedPointSigned = False, fixedPointBitOffset = 0, fixedPointBitPrecision = 8}
                DATASPACE  SIMPLE { ( 2 ) / ( H5S_UNLIMITED ) }
-               DATA {
-                  (0): 0
-               }
             }
             ATTRIBUTE "IMAGE_SUBCLASS" {
                DATATYPE  H5T_STRING {
@@ -308,16 +275,10 @@ GROUP "/" {
             ATTRIBUTE "IMAGE_TRANSPARENCY" {
                invalid datatype: DatatypeFixedPoint {fixedPointDataElementSize = 4, fixedPointByteOrder = BigEndian, fixedPointLoPadBit = False, fixedPointHiPadBit = False, fixedPointSigned = False, fixedPointBitOffset = 0, fixedPointBitPrecision = 32}
                DATASPACE  SIMPLE { ( 1 ) / ( H5S_UNLIMITED ) }
-               DATA {
-                  (0): 255
-               }
             }
             ATTRIBUTE "IMAGE_VERSION" {
                DATATYPE  H5T_STD_F32BE
                DATASPACE  SIMPLE { ( 1 ) / ( H5S_UNLIMITED ) }
-               DATA {
-                  (0): 1.0
-               }
             }
             DATATYPE  H5T_REFERENCE { H5T_STD_REF_OBJECT }
          }

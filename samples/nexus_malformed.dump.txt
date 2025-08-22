@@ -15,9 +15,6 @@ GROUP "/" {
       ATTRIBUTE "default" {
          DATATYPE  H5T_STD_I64LE
          DATASPACE  SCALAR
-         DATA {
-            (0): 42
-         }
       }
    }
    GROUP "no_signal" {

@@ -199,22 +199,22 @@ attributeToDoc (Attribute {attributeName, attributeType, attributeDimensions, at
   prefixAndBodyToDoc
     (namedPrefix "ATTRIBUTE" (pretty attributeName))
     [ attributeDatatypeToDoc attributeType attributeDimensions Nothing,
-      dataspaceToDoc attributeDimensions,
-      prefixAndBodyToDoc "DATA" ["(0): " <> pretty integralValue]
+      dataspaceToDoc attributeDimensions
+      -- prefixAndBodyToDoc "DATA" ["(0): " <> pretty integralValue]
     ]
 attributeToDoc (Attribute {attributeName, attributeType, attributeDimensions, attributeData = AttributeDataFloating floatingValue}) =
   prefixAndBodyToDoc
     (namedPrefix "ATTRIBUTE" (pretty attributeName))
     [ attributeDatatypeToDoc attributeType attributeDimensions Nothing,
-      dataspaceToDoc attributeDimensions,
-      prefixAndBodyToDoc "DATA" ["(0): " <> pretty floatingValue]
+      dataspaceToDoc attributeDimensions
+      -- prefixAndBodyToDoc "DATA" ["(0): " <> pretty floatingValue]
     ]
 attributeToDoc (Attribute {attributeName, attributeType, attributeDimensions, attributeData = AttributeDataEnumeration enumMap enumValue}) =
   prefixAndBodyToDoc
     (namedPrefix "ATTRIBUTE" (pretty attributeName))
     [ attributeDatatypeToDoc attributeType attributeDimensions Nothing,
-      dataspaceToDoc attributeDimensions,
-      prefixAndBodyToDoc "DATA" ["(0): " <> pretty enumValue]
+      dataspaceToDoc attributeDimensions
+      -- prefixAndBodyToDoc "DATA" ["(0): " <> pretty enumValue]
     ]
 attributeToDoc (Attribute {attributeData = AttributeDataReference ObjectReference _}) = "DATATYPE  H5T_REFERENCE { H5T_STD_REF_OBJECT }"
 attributeToDoc (Attribute {attributeName, attributeType, attributeDimensions, attributeData = AttributeDataCompound members}) = "DATATYPE COMPOUND TODO"

@@ -30,30 +30,18 @@ GROUP "/" {
    ATTRIBUTE "dt" {
       DATATYPE  H5T_STD_F64LE
       DATASPACE  SCALAR
-      DATA {
-         (0): 2.7785495971103085e-17
-      }
    }
    ATTRIBUTE "dx" {
       DATATYPE  H5T_STD_F64LE
       DATASPACE  SCALAR
-      DATA {
-         (0): 2.5000000000000002e-8
-      }
    }
    ATTRIBUTE "dy" {
       DATATYPE  H5T_STD_F64LE
       DATASPACE  SCALAR
-      DATA {
-         (0): 2.5000000000000002e-8
-      }
    }
    ATTRIBUTE "dz" {
       DATATYPE  H5T_STD_F64LE
       DATASPACE  SCALAR
-      DATA {
-         (0): 2.5000000000000002e-8
-      }
    }
    ATTRIBUTE "sim_id" {
       DATATYPE  H5T_STRING {
@@ -447,23 +435,14 @@ GROUP "/" {
          ATTRIBUTE "freq_max" {
             DATATYPE  H5T_STD_F64LE
             DATASPACE  SCALAR
-            DATA {
-               (0): 1.998616387210709e14
-            }
          }
          ATTRIBUTE "freq_min" {
             DATATYPE  H5T_STD_F64LE
             DATASPACE  SCALAR
-            DATA {
-               (0): 1.87370286301004e14
-            }
          }
          ATTRIBUTE "freq_npts" {
             DATATYPE  H5T_STD_I32LE
             DATASPACE  SCALAR
-            DATA {
-               (0): 21
-            }
          }
          ATTRIBUTE "kind" {
             DATATYPE  H5T_STRING {
@@ -477,58 +456,34 @@ GROUP "/" {
          ATTRIBUTE "lambda_max" {
             DATATYPE  H5T_STD_F64LE
             DATASPACE  SCALAR
-            DATA {
-               (0): 1.6e-6
-            }
          }
          ATTRIBUTE "lambda_min" {
             DATATYPE  H5T_STD_F64LE
             DATASPACE  SCALAR
-            DATA {
-               (0): 1.5e-6
-            }
          }
          ATTRIBUTE "save_ex" {
             DATATYPE  ENUM
             DATASPACE  SCALAR
-            DATA {
-               (0): 0
-            }
          }
          ATTRIBUTE "save_ey" {
             DATATYPE  ENUM
             DATASPACE  SCALAR
-            DATA {
-               (0): 1
-            }
          }
          ATTRIBUTE "save_ez" {
             DATATYPE  ENUM
             DATASPACE  SCALAR
-            DATA {
-               (0): 1
-            }
          }
          ATTRIBUTE "save_hx" {
             DATATYPE  ENUM
             DATASPACE  SCALAR
-            DATA {
-               (0): 0
-            }
          }
          ATTRIBUTE "save_hy" {
             DATATYPE  ENUM
             DATASPACE  SCALAR
-            DATA {
-               (0): 1
-            }
          }
          ATTRIBUTE "save_hz" {
             DATATYPE  ENUM
             DATASPACE  SCALAR
-            DATA {
-               (0): 1
-            }
          }
          ATTRIBUTE "type" {
             DATATYPE  H5T_STRING {
@@ -542,44 +497,26 @@ GROUP "/" {
          ATTRIBUTE "y_max" {
             DATATYPE  H5T_STD_F64LE
             DATASPACE  SCALAR
-            DATA {
-               (0): 1.5e-6
-            }
          }
          ATTRIBUTE "y_min" {
             DATATYPE  H5T_STD_F64LE
             DATASPACE  SCALAR
-            DATA {
-               (0): -7.500000000000001e-8
-            }
          }
          ATTRIBUTE "y_subsampling" {
             DATATYPE  H5T_STD_I32LE
             DATASPACE  SCALAR
-            DATA {
-               (0): 1
-            }
          }
          ATTRIBUTE "z_max" {
             DATATYPE  H5T_STD_F64LE
             DATASPACE  SCALAR
-            DATA {
-               (0): 1.3750000000000002e-6
-            }
          }
          ATTRIBUTE "z_min" {
             DATATYPE  H5T_STD_F64LE
             DATASPACE  SCALAR
-            DATA {
-               (0): -1.5000000000000002e-7
-            }
          }
          ATTRIBUTE "z_subsampling" {
             DATATYPE  H5T_STD_I32LE
             DATASPACE  SCALAR
-            DATA {
-               (0): 1
-            }
          }
          DATASET "ey_f" {
             invalid datatype: DatatypeCompoundV1 [CompoundDatatypeMemberV1 {cdm1Name = "r", cdm1ByteOffset = 0, cdm1Dimensions = [], cdm1Datatype = DatatypeMessageData {datatypeMessageVersion = 1, datatypeClass = DatatypeFloatingPoint {floatingPointByteOrder = LittleEndian, floatingPointLowBitPad = False, floatingPointHighBitPad = False, floatingPointInternalBitPad = False, floatingPointMantissaNormalization = NoNormalization, floatingPointSignLocation = 63, floatingPointBitOffset = 0, floatingPointBitPrecision = 64, floatingPointExponentLocation = 52, floatingPointExponentSize = 11, floatingPointMantissaLocation = 0, floatingPointMantissaSize = 52, floatingPointExponentBias = 1023}}},CompoundDatatypeMemberV1 {cdm1Name = "i", cdm1ByteOffset = 8, cdm1Dimensions = [], cdm1Datatype = DatatypeMessageData {datatypeMessageVersion = 1, datatypeClass = DatatypeFloatingPoint {floatingPointByteOrder = LittleEndian, floatingPointLowBitPad = False, floatingPointHighBitPad = False, floatingPointInternalBitPad = False, floatingPointMantissaNormalization = NoNormalization, floatingPointSignLocation = 63, floatingPointBitOffset = 0, floatingPointBitPrecision = 64, floatingPointExponentLocation = 52, floatingPointExponentSize = 11, floatingPointMantissaLocation = 0, floatingPointMantissaSize = 52, floatingPointExponentBias = 1023}}}]
@@ -602,23 +539,14 @@ GROUP "/" {
          ATTRIBUTE "freq_max" {
             DATATYPE  H5T_STD_F64LE
             DATASPACE  SCALAR
-            DATA {
-               (0): 1.998616387210709e14
-            }
          }
          ATTRIBUTE "freq_min" {
             DATATYPE  H5T_STD_F64LE
             DATASPACE  SCALAR
-            DATA {
-               (0): 1.87370286301004e14
-            }
          }
          ATTRIBUTE "freq_npts" {
             DATATYPE  H5T_STD_I32LE
             DATASPACE  SCALAR
-            DATA {
-               (0): 21
-            }
          }
          ATTRIBUTE "kind" {
             DATATYPE  H5T_STRING {
@@ -632,58 +560,34 @@ GROUP "/" {
          ATTRIBUTE "lambda_max" {
             DATATYPE  H5T_STD_F64LE
             DATASPACE  SCALAR
-            DATA {
-               (0): 1.6e-6
-            }
          }
          ATTRIBUTE "lambda_min" {
             DATATYPE  H5T_STD_F64LE
             DATASPACE  SCALAR
-            DATA {
-               (0): 1.5e-6
-            }
          }
          ATTRIBUTE "save_ex" {
             DATATYPE  ENUM
             DATASPACE  SCALAR
-            DATA {
-               (0): 0
-            }
          }
          ATTRIBUTE "save_ey" {
             DATATYPE  ENUM
             DATASPACE  SCALAR
-            DATA {
-               (0): 1
-            }
          }
          ATTRIBUTE "save_ez" {
             DATATYPE  ENUM
             DATASPACE  SCALAR
-            DATA {
-               (0): 1
-            }
          }
          ATTRIBUTE "save_hx" {
             DATATYPE  ENUM
             DATASPACE  SCALAR
-            DATA {
-               (0): 0
-            }
          }
          ATTRIBUTE "save_hy" {
             DATATYPE  ENUM
             DATASPACE  SCALAR
-            DATA {
-               (0): 1
-            }
          }
          ATTRIBUTE "save_hz" {
             DATATYPE  ENUM
             DATASPACE  SCALAR
-            DATA {
-               (0): 1
-            }
          }
          ATTRIBUTE "type" {
             DATATYPE  H5T_STRING {
@@ -697,44 +601,26 @@ GROUP "/" {
          ATTRIBUTE "y_max" {
             DATATYPE  H5T_STD_F64LE
             DATASPACE  SCALAR
-            DATA {
-               (0): 1.5e-6
-            }
          }
          ATTRIBUTE "y_min" {
             DATATYPE  H5T_STD_F64LE
             DATASPACE  SCALAR
-            DATA {
-               (0): -7.500000000000001e-8
-            }
          }
          ATTRIBUTE "y_subsampling" {
             DATATYPE  H5T_STD_I32LE
             DATASPACE  SCALAR
-            DATA {
-               (0): 1
-            }
          }
          ATTRIBUTE "z_max" {
             DATATYPE  H5T_STD_F64LE
             DATASPACE  SCALAR
-            DATA {
-               (0): 1.3750000000000002e-6
-            }
          }
          ATTRIBUTE "z_min" {
             DATATYPE  H5T_STD_F64LE
             DATASPACE  SCALAR
-            DATA {
-               (0): -1.5000000000000002e-7
-            }
          }
          ATTRIBUTE "z_subsampling" {
             DATATYPE  H5T_STD_I32LE
             DATASPACE  SCALAR
-            DATA {
-               (0): 1
-            }
          }
          DATASET "ey_f" {
             invalid datatype: DatatypeCompoundV1 [CompoundDatatypeMemberV1 {cdm1Name = "r", cdm1ByteOffset = 0, cdm1Dimensions = [], cdm1Datatype = DatatypeMessageData {datatypeMessageVersion = 1, datatypeClass = DatatypeFloatingPoint {floatingPointByteOrder = LittleEndian, floatingPointLowBitPad = False, floatingPointHighBitPad = False, floatingPointInternalBitPad = False, floatingPointMantissaNormalization = NoNormalization, floatingPointSignLocation = 63, floatingPointBitOffset = 0, floatingPointBitPrecision = 64, floatingPointExponentLocation = 52, floatingPointExponentSize = 11, floatingPointMantissaLocation = 0, floatingPointMantissaSize = 52, floatingPointExponentBias = 1023}}},CompoundDatatypeMemberV1 {cdm1Name = "i", cdm1ByteOffset = 8, cdm1Dimensions = [], cdm1Datatype = DatatypeMessageData {datatypeMessageVersion = 1, datatypeClass = DatatypeFloatingPoint {floatingPointByteOrder = LittleEndian, floatingPointLowBitPad = False, floatingPointHighBitPad = False, floatingPointInternalBitPad = False, floatingPointMantissaNormalization = NoNormalization, floatingPointSignLocation = 63, floatingPointBitOffset = 0, floatingPointBitPrecision = 64, floatingPointExponentLocation = 52, floatingPointExponentSize = 11, floatingPointMantissaLocation = 0, floatingPointMantissaSize = 52, floatingPointExponentBias = 1023}}}]
@@ -777,23 +663,14 @@ GROUP "/" {
          ATTRIBUTE "freq_max" {
             DATATYPE  H5T_STD_F64LE
             DATASPACE  SCALAR
-            DATA {
-               (0): 1.998616387210709e14
-            }
          }
          ATTRIBUTE "freq_min" {
             DATATYPE  H5T_STD_F64LE
             DATASPACE  SCALAR
-            DATA {
-               (0): 1.87370286301004e14
-            }
          }
          ATTRIBUTE "freq_npts" {
             DATATYPE  H5T_STD_I32LE
             DATASPACE  SCALAR
-            DATA {
-               (0): 21
-            }
          }
          ATTRIBUTE "kind" {
             DATATYPE  H5T_STRING {
@@ -807,58 +684,34 @@ GROUP "/" {
          ATTRIBUTE "lambda_max" {
             DATATYPE  H5T_STD_F64LE
             DATASPACE  SCALAR
-            DATA {
-               (0): 1.6e-6
-            }
          }
          ATTRIBUTE "lambda_min" {
             DATATYPE  H5T_STD_F64LE
             DATASPACE  SCALAR
-            DATA {
-               (0): 1.5e-6
-            }
          }
          ATTRIBUTE "save_ex" {
             DATATYPE  ENUM
             DATASPACE  SCALAR
-            DATA {
-               (0): 0
-            }
          }
          ATTRIBUTE "save_ey" {
             DATATYPE  ENUM
             DATASPACE  SCALAR
-            DATA {
-               (0): 1
-            }
          }
          ATTRIBUTE "save_ez" {
             DATATYPE  ENUM
             DATASPACE  SCALAR
-            DATA {
-               (0): 1
-            }
          }
          ATTRIBUTE "save_hx" {
             DATATYPE  ENUM
             DATASPACE  SCALAR
-            DATA {
-               (0): 0
-            }
          }
          ATTRIBUTE "save_hy" {
             DATATYPE  ENUM
             DATASPACE  SCALAR
-            DATA {
-               (0): 1
-            }
          }
          ATTRIBUTE "save_hz" {
             DATATYPE  ENUM
             DATASPACE  SCALAR
-            DATA {
-               (0): 1
-            }
          }
          ATTRIBUTE "type" {
             DATATYPE  H5T_STRING {
@@ -872,44 +725,26 @@ GROUP "/" {
          ATTRIBUTE "y_max" {
             DATATYPE  H5T_STD_F64LE
             DATASPACE  SCALAR
-            DATA {
-               (0): 1.5e-6
-            }
          }
          ATTRIBUTE "y_min" {
             DATATYPE  H5T_STD_F64LE
             DATASPACE  SCALAR
-            DATA {
-               (0): -7.500000000000001e-8
-            }
          }
          ATTRIBUTE "y_subsampling" {
             DATATYPE  H5T_STD_I32LE
             DATASPACE  SCALAR
-            DATA {
-               (0): 1
-            }
          }
          ATTRIBUTE "z_max" {
             DATATYPE  H5T_STD_F64LE
             DATASPACE  SCALAR
-            DATA {
-               (0): 1.3750000000000002e-6
-            }
          }
          ATTRIBUTE "z_min" {
             DATATYPE  H5T_STD_F64LE
             DATASPACE  SCALAR
-            DATA {
-               (0): -1.5000000000000002e-7
-            }
          }
          ATTRIBUTE "z_subsampling" {
             DATATYPE  H5T_STD_I32LE
             DATASPACE  SCALAR
-            DATA {
-               (0): 1
-            }
          }
          DATASET "ey_f" {
             invalid datatype: DatatypeCompoundV1 [CompoundDatatypeMemberV1 {cdm1Name = "r", cdm1ByteOffset = 0, cdm1Dimensions = [], cdm1Datatype = DatatypeMessageData {datatypeMessageVersion = 1, datatypeClass = DatatypeFloatingPoint {floatingPointByteOrder = LittleEndian, floatingPointLowBitPad = False, floatingPointHighBitPad = False, floatingPointInternalBitPad = False, floatingPointMantissaNormalization = NoNormalization, floatingPointSignLocation = 63, floatingPointBitOffset = 0, floatingPointBitPrecision = 64, floatingPointExponentLocation = 52, floatingPointExponentSize = 11, floatingPointMantissaLocation = 0, floatingPointMantissaSize = 52, floatingPointExponentBias = 1023}}},CompoundDatatypeMemberV1 {cdm1Name = "i", cdm1ByteOffset = 8, cdm1Dimensions = [], cdm1Datatype = DatatypeMessageData {datatypeMessageVersion = 1, datatypeClass = DatatypeFloatingPoint {floatingPointByteOrder = LittleEndian, floatingPointLowBitPad = False, floatingPointHighBitPad = False, floatingPointInternalBitPad = False, floatingPointMantissaNormalization = NoNormalization, floatingPointSignLocation = 63, floatingPointBitOffset = 0, floatingPointBitPrecision = 64, floatingPointExponentLocation = 52, floatingPointExponentSize = 11, floatingPointMantissaLocation = 0, floatingPointMantissaSize = 52, floatingPointExponentBias = 1023}}}]
@@ -932,23 +767,14 @@ GROUP "/" {
          ATTRIBUTE "freq_max" {
             DATATYPE  H5T_STD_F64LE
             DATASPACE  SCALAR
-            DATA {
-               (0): 1.998616387210709e14
-            }
          }
          ATTRIBUTE "freq_min" {
             DATATYPE  H5T_STD_F64LE
             DATASPACE  SCALAR
-            DATA {
-               (0): 1.87370286301004e14
-            }
          }
          ATTRIBUTE "freq_npts" {
             DATATYPE  H5T_STD_I32LE
             DATASPACE  SCALAR
-            DATA {
-               (0): 21
-            }
          }
          ATTRIBUTE "kind" {
             DATATYPE  H5T_STRING {
@@ -962,58 +788,34 @@ GROUP "/" {
          ATTRIBUTE "lambda_max" {
             DATATYPE  H5T_STD_F64LE
             DATASPACE  SCALAR
-            DATA {
-               (0): 1.6e-6
-            }
          }
          ATTRIBUTE "lambda_min" {
             DATATYPE  H5T_STD_F64LE
             DATASPACE  SCALAR
-            DATA {
-               (0): 1.5e-6
-            }
          }
          ATTRIBUTE "save_ex" {
             DATATYPE  ENUM
             DATASPACE  SCALAR
-            DATA {
-               (0): 0
-            }
          }
          ATTRIBUTE "save_ey" {
             DATATYPE  ENUM
             DATASPACE  SCALAR
-            DATA {
-               (0): 1
-            }
          }
          ATTRIBUTE "save_ez" {
             DATATYPE  ENUM
             DATASPACE  SCALAR
-            DATA {
-               (0): 1
-            }
          }
          ATTRIBUTE "save_hx" {
             DATATYPE  ENUM
             DATASPACE  SCALAR
-            DATA {
-               (0): 0
-            }
          }
          ATTRIBUTE "save_hy" {
             DATATYPE  ENUM
             DATASPACE  SCALAR
-            DATA {
-               (0): 1
-            }
          }
          ATTRIBUTE "save_hz" {
             DATATYPE  ENUM
             DATASPACE  SCALAR
-            DATA {
-               (0): 1
-            }
          }
          ATTRIBUTE "type" {
             DATATYPE  H5T_STRING {
@@ -1027,44 +829,26 @@ GROUP "/" {
          ATTRIBUTE "y_max" {
             DATATYPE  H5T_STD_F64LE
             DATASPACE  SCALAR
-            DATA {
-               (0): 1.5e-6
-            }
          }
          ATTRIBUTE "y_min" {
             DATATYPE  H5T_STD_F64LE
             DATASPACE  SCALAR
-            DATA {
-               (0): -7.500000000000001e-8
-            }
          }
          ATTRIBUTE "y_subsampling" {
             DATATYPE  H5T_STD_I32LE
             DATASPACE  SCALAR
-            DATA {
-               (0): 1
-            }
          }
          ATTRIBUTE "z_max" {
             DATATYPE  H5T_STD_F64LE
             DATASPACE  SCALAR
-            DATA {
-               (0): 1.3750000000000002e-6
-            }
          }
          ATTRIBUTE "z_min" {
             DATATYPE  H5T_STD_F64LE
             DATASPACE  SCALAR
-            DATA {
-               (0): -1.5000000000000002e-7
-            }
          }
          ATTRIBUTE "z_subsampling" {
             DATATYPE  H5T_STD_I32LE
             DATASPACE  SCALAR
-            DATA {
-               (0): 1
-            }
          }
          DATASET "ey_f" {
             invalid datatype: DatatypeCompoundV1 [CompoundDatatypeMemberV1 {cdm1Name = "r", cdm1ByteOffset = 0, cdm1Dimensions = [], cdm1Datatype = DatatypeMessageData {datatypeMessageVersion = 1, datatypeClass = DatatypeFloatingPoint {floatingPointByteOrder = LittleEndian, floatingPointLowBitPad = False, floatingPointHighBitPad = False, floatingPointInternalBitPad = False, floatingPointMantissaNormalization = NoNormalization, floatingPointSignLocation = 63, floatingPointBitOffset = 0, floatingPointBitPrecision = 64, floatingPointExponentLocation = 52, floatingPointExponentSize = 11, floatingPointMantissaLocation = 0, floatingPointMantissaSize = 52, floatingPointExponentBias = 1023}}},CompoundDatatypeMemberV1 {cdm1Name = "i", cdm1ByteOffset = 8, cdm1Dimensions = [], cdm1Datatype = DatatypeMessageData {datatypeMessageVersion = 1, datatypeClass = DatatypeFloatingPoint {floatingPointByteOrder = LittleEndian, floatingPointLowBitPad = False, floatingPointHighBitPad = False, floatingPointInternalBitPad = False, floatingPointMantissaNormalization = NoNormalization, floatingPointSignLocation = 63, floatingPointBitOffset = 0, floatingPointBitPrecision = 64, floatingPointExponentLocation = 52, floatingPointExponentSize = 11, floatingPointMantissaLocation = 0, floatingPointMantissaSize = 52, floatingPointExponentBias = 1023}}}]
