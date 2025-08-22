@@ -1,7 +1,8 @@
+HDF5 "epics.h5" {
 GROUP "/" {
    DATASET "2D int array" {
       DATATYPE  H5T_STD_I32LE
-      DATASPACE  SIMPLE { ( 100, 50 ) / ( 100, 50 ) }
+      DATASPACE  SIMPLE { ( 100, 50 ) / ( H5S_UNLIMITED, H5S_UNLIMITED ) }
    }
    DATASET "A note" {
       DATATYPE  H5T_STRING {
@@ -10,16 +11,16 @@ GROUP "/" {
          CSET H5T_CSET_ASCII;
          CTYPE H5T_C_S1;
       }
-      DATASPACE  SIMPLE { ( 2 ) / ( 2 ) }
+      DATASPACE  SIMPLE { ( 2 ) / ( H5S_UNLIMITED ) }
    }
    GROUP "arrays" {
       DATASET "2D float array" {
          DATATYPE  H5T_IEEE_F32LE
-         DATASPACE  SIMPLE { ( 100, 50 ) / ( 100, 50 ) }
+         DATASPACE  SIMPLE { ( 100, 50 ) / ( H5S_UNLIMITED, H5S_UNLIMITED ) }
       }
       DATASET "3D int array" {
          DATATYPE  H5T_STD_I32LE
-         DATASPACE  SIMPLE { ( 100, 50, 10 ) / ( 100, 50, 10 ) }
+         DATASPACE  SIMPLE { ( 100, 50, 10 ) / ( H5S_UNLIMITED, H5S_UNLIMITED, H5S_UNLIMITED ) }
       }
       DATASET "Vdata with mixed types" {
          DATATYPE  H5T_COMPOUND { {
@@ -41,7 +42,7 @@ GROUP "/" {
             invalid datatype: DatatypeArray {arraySizes = [4], arrayBaseType = DatatypeFixedPoint {fixedPointDataElementSize = 4, fixedPointByteOrder = BigEndian, fixedPointLoPadBit = False, fixedPointHiPadBit = False, fixedPointSigned = True, fixedPointBitOffset = 0, fixedPointBitPrecision = 32}}"Integer Array"
             invalid datatype: DatatypeArray {arraySizes = [20], arrayBaseType = DatatypeFloatingPoint {floatingPointByteOrder = BigEndian, floatingPointLowBitPad = False, floatingPointHighBitPad = False, floatingPointInternalBitPad = False, floatingPointMantissaNormalization = NoNormalization, floatingPointSignLocation = 31, floatingPointBitOffset = 0, floatingPointBitPrecision = 32, floatingPointExponentLocation = 23, floatingPointExponentSize = 8, floatingPointMantissaLocation = 0, floatingPointMantissaSize = 23, floatingPointExponentBias = 127}}"Float Array"
          }
-         DATASPACE  SIMPLE { ( 20 ) / ( 20 ) }
+         DATASPACE  SIMPLE { ( 20 ) / ( H5S_UNLIMITED ) }
          ATTRIBUTE "HDF4_OBJECT_NAME" {
             DATATYPE  H5T_STRING {
                STRSIZE 22;
@@ -77,51 +78,51 @@ GROUP "/" {
    GROUP "images" {
       DATASET "Eskimo" {
          invalid datatype: DatatypeFixedPoint {fixedPointDataElementSize = 1, fixedPointByteOrder = LittleEndian, fixedPointLoPadBit = False, fixedPointHiPadBit = False, fixedPointSigned = False, fixedPointBitOffset = 0, fixedPointBitPrecision = 8}
-         DATASPACE  SIMPLE { ( 649, 600 ) / ( 649, 600 ) }
+         DATASPACE  SIMPLE { ( 649, 600 ) / ( H5S_UNLIMITED, H5S_UNLIMITED ) }
          ATTRIBUTE "CLASS" {
             DATATYPE  H5T_STRING {
-               STRSIZE 5;
+               STRSIZE 6;
                STRPAD H5T_STR_NULLTERM;
                CSET H5T_CSET_ASCII;
                CTYPE H5T_C_S1;
             }
-            DATASPACE  SIMPLE { ( 1 ) / ( 1 ) }
+            DATASPACE  SIMPLE { ( 1 ) / ( H5S_UNLIMITED ) }
          }
          ATTRIBUTE "IMAGE_COLORMODEL" {
             DATATYPE  H5T_STRING {
-               STRSIZE 3;
+               STRSIZE 4;
                STRPAD H5T_STR_NULLTERM;
                CSET H5T_CSET_ASCII;
                CTYPE H5T_C_S1;
             }
-            DATASPACE  SIMPLE { ( 1 ) / ( 1 ) }
+            DATASPACE  SIMPLE { ( 1 ) / ( H5S_UNLIMITED ) }
          }
          ATTRIBUTE "IMAGE_MINMAXRANGE" {
             DATATYPE  H5T_STD_U16BE
-            DATASPACE  SIMPLE { ( 2 ) / ( 2 ) }
+            DATASPACE  SIMPLE { ( 2 ) / ( H5S_UNLIMITED ) }
             DATA {
                (0): 0
             }
          }
          ATTRIBUTE "IMAGE_SUBCLASS" {
             DATATYPE  H5T_STRING {
-               STRSIZE 13;
+               STRSIZE 14;
                STRPAD H5T_STR_NULLTERM;
                CSET H5T_CSET_ASCII;
                CTYPE H5T_C_S1;
             }
-            DATASPACE  SIMPLE { ( 1 ) / ( 1 ) }
+            DATASPACE  SIMPLE { ( 1 ) / ( H5S_UNLIMITED ) }
          }
          ATTRIBUTE "IMAGE_TRANSPARENCY" {
             DATATYPE  H5T_STD_U16BE
-            DATASPACE  SIMPLE { ( 1 ) / ( 1 ) }
+            DATASPACE  SIMPLE { ( 1 ) / ( H5S_UNLIMITED ) }
             DATA {
                (0): 255
             }
          }
          ATTRIBUTE "IMAGE_VERSION" {
             DATATYPE  H5T_STD_F32BE
-            DATASPACE  SIMPLE { ( 1 ) / ( 1 ) }
+            DATASPACE  SIMPLE { ( 1 ) / ( H5S_UNLIMITED ) }
             DATA {
                (0): 1.0
             }
@@ -130,44 +131,44 @@ GROUP "/" {
       }
       DATASET "Eskimo_palette" {
          invalid datatype: DatatypeFixedPoint {fixedPointDataElementSize = 1, fixedPointByteOrder = LittleEndian, fixedPointLoPadBit = False, fixedPointHiPadBit = False, fixedPointSigned = False, fixedPointBitOffset = 0, fixedPointBitPrecision = 8}
-         DATASPACE  SIMPLE { ( 256, 3 ) / ( 256, 3 ) }
+         DATASPACE  SIMPLE { ( 256, 3 ) / ( H5S_UNLIMITED, H5S_UNLIMITED ) }
          ATTRIBUTE "CLASS" {
             DATATYPE  H5T_STRING {
-               STRSIZE 7;
+               STRSIZE 8;
                STRPAD H5T_STR_NULLTERM;
                CSET H5T_CSET_ASCII;
                CTYPE H5T_C_S1;
             }
-            DATASPACE  SIMPLE { ( 1 ) / ( 1 ) }
+            DATASPACE  SIMPLE { ( 1 ) / ( H5S_UNLIMITED ) }
          }
          ATTRIBUTE "PAL_COLORMODEL" {
             DATATYPE  H5T_STRING {
-               STRSIZE 3;
+               STRSIZE 4;
                STRPAD H5T_STR_NULLTERM;
                CSET H5T_CSET_ASCII;
                CTYPE H5T_C_S1;
             }
-            DATASPACE  SIMPLE { ( 1 ) / ( 1 ) }
+            DATASPACE  SIMPLE { ( 1 ) / ( H5S_UNLIMITED ) }
          }
          ATTRIBUTE "PAL_MINMAXNUMERIC" {
             DATATYPE  H5T_STD_U16BE
-            DATASPACE  SIMPLE { ( 2 ) / ( 2 ) }
+            DATASPACE  SIMPLE { ( 2 ) / ( H5S_UNLIMITED ) }
             DATA {
                (0): 0
             }
          }
          ATTRIBUTE "PAL_TYPE" {
             DATATYPE  H5T_STRING {
-               STRSIZE 11;
+               STRSIZE 12;
                STRPAD H5T_STR_NULLTERM;
                CSET H5T_CSET_ASCII;
                CTYPE H5T_C_S1;
             }
-            DATASPACE  SIMPLE { ( 1 ) / ( 1 ) }
+            DATASPACE  SIMPLE { ( 1 ) / ( H5S_UNLIMITED ) }
          }
          ATTRIBUTE "PAL_VERSION" {
             DATATYPE  H5T_STD_F32BE
-            DATASPACE  SIMPLE { ( 1 ) / ( 1 ) }
+            DATASPACE  SIMPLE { ( 1 ) / ( H5S_UNLIMITED ) }
             DATA {
                (0): 1.0
             }
@@ -175,44 +176,44 @@ GROUP "/" {
       }
       DATASET "Iceberg" {
          invalid datatype: DatatypeFixedPoint {fixedPointDataElementSize = 1, fixedPointByteOrder = LittleEndian, fixedPointLoPadBit = False, fixedPointHiPadBit = False, fixedPointSigned = False, fixedPointBitOffset = 0, fixedPointBitPrecision = 8}
-         DATASPACE  SIMPLE { ( 375, 375 ) / ( 375, 375 ) }
+         DATASPACE  SIMPLE { ( 375, 375 ) / ( H5S_UNLIMITED, H5S_UNLIMITED ) }
          ATTRIBUTE "CLASS" {
             DATATYPE  H5T_STRING {
-               STRSIZE 5;
+               STRSIZE 6;
                STRPAD H5T_STR_NULLTERM;
                CSET H5T_CSET_ASCII;
                CTYPE H5T_C_S1;
             }
-            DATASPACE  SIMPLE { ( 1 ) / ( 1 ) }
+            DATASPACE  SIMPLE { ( 1 ) / ( H5S_UNLIMITED ) }
          }
          ATTRIBUTE "IMAGE_COLORMODEL" {
             DATATYPE  H5T_STRING {
-               STRSIZE 3;
+               STRSIZE 4;
                STRPAD H5T_STR_NULLTERM;
                CSET H5T_CSET_ASCII;
                CTYPE H5T_C_S1;
             }
-            DATASPACE  SIMPLE { ( 1 ) / ( 1 ) }
+            DATASPACE  SIMPLE { ( 1 ) / ( H5S_UNLIMITED ) }
          }
          ATTRIBUTE "IMAGE_MINMAXRANGE" {
             DATATYPE  H5T_STD_U16BE
-            DATASPACE  SIMPLE { ( 2 ) / ( 2 ) }
+            DATASPACE  SIMPLE { ( 2 ) / ( H5S_UNLIMITED ) }
             DATA {
                (0): 0
             }
          }
          ATTRIBUTE "IMAGE_SUBCLASS" {
             DATATYPE  H5T_STRING {
-               STRSIZE 13;
+               STRSIZE 14;
                STRPAD H5T_STR_NULLTERM;
                CSET H5T_CSET_ASCII;
                CTYPE H5T_C_S1;
             }
-            DATASPACE  SIMPLE { ( 1 ) / ( 1 ) }
+            DATASPACE  SIMPLE { ( 1 ) / ( H5S_UNLIMITED ) }
          }
          ATTRIBUTE "IMAGE_VERSION" {
             DATATYPE  H5T_STD_F32BE
-            DATASPACE  SIMPLE { ( 1 ) / ( 1 ) }
+            DATASPACE  SIMPLE { ( 1 ) / ( H5S_UNLIMITED ) }
             DATA {
                (0): 1.0
             }
@@ -221,44 +222,44 @@ GROUP "/" {
       }
       DATASET "iceberg_palette" {
          invalid datatype: DatatypeFixedPoint {fixedPointDataElementSize = 1, fixedPointByteOrder = LittleEndian, fixedPointLoPadBit = False, fixedPointHiPadBit = False, fixedPointSigned = False, fixedPointBitOffset = 0, fixedPointBitPrecision = 8}
-         DATASPACE  SIMPLE { ( 256, 3 ) / ( 256, 3 ) }
+         DATASPACE  SIMPLE { ( 256, 3 ) / ( H5S_UNLIMITED, H5S_UNLIMITED ) }
          ATTRIBUTE "CLASS" {
             DATATYPE  H5T_STRING {
-               STRSIZE 7;
+               STRSIZE 8;
                STRPAD H5T_STR_NULLTERM;
                CSET H5T_CSET_ASCII;
                CTYPE H5T_C_S1;
             }
-            DATASPACE  SIMPLE { ( 1 ) / ( 1 ) }
+            DATASPACE  SIMPLE { ( 1 ) / ( H5S_UNLIMITED ) }
          }
          ATTRIBUTE "PAL_COLORMODEL" {
             DATATYPE  H5T_STRING {
-               STRSIZE 3;
+               STRSIZE 4;
                STRPAD H5T_STR_NULLTERM;
                CSET H5T_CSET_ASCII;
                CTYPE H5T_C_S1;
             }
-            DATASPACE  SIMPLE { ( 1 ) / ( 1 ) }
+            DATASPACE  SIMPLE { ( 1 ) / ( H5S_UNLIMITED ) }
          }
          ATTRIBUTE "PAL_MINMAXNUMERIC" {
             DATATYPE  H5T_STD_U16BE
-            DATASPACE  SIMPLE { ( 2 ) / ( 2 ) }
+            DATASPACE  SIMPLE { ( 2 ) / ( H5S_UNLIMITED ) }
             DATA {
                (0): 0
             }
          }
          ATTRIBUTE "PAL_TYPE" {
             DATATYPE  H5T_STRING {
-               STRSIZE 11;
+               STRSIZE 12;
                STRPAD H5T_STR_NULLTERM;
                CSET H5T_CSET_ASCII;
                CTYPE H5T_C_S1;
             }
-            DATASPACE  SIMPLE { ( 1 ) / ( 1 ) }
+            DATASPACE  SIMPLE { ( 1 ) / ( H5S_UNLIMITED ) }
          }
          ATTRIBUTE "PAL_VERSION" {
             DATATYPE  H5T_STD_F32BE
-            DATASPACE  SIMPLE { ( 1 ) / ( 1 ) }
+            DATASPACE  SIMPLE { ( 1 ) / ( H5S_UNLIMITED ) }
             DATA {
                (0): 1.0
             }
@@ -269,51 +270,51 @@ GROUP "/" {
       GROUP "hard links" {
          DATASET "Eskimo" {
             invalid datatype: DatatypeFixedPoint {fixedPointDataElementSize = 1, fixedPointByteOrder = LittleEndian, fixedPointLoPadBit = False, fixedPointHiPadBit = False, fixedPointSigned = False, fixedPointBitOffset = 0, fixedPointBitPrecision = 8}
-            DATASPACE  SIMPLE { ( 600, 650 ) / ( 600, 650 ) }
+            DATASPACE  SIMPLE { ( 600, 650 ) / ( H5S_UNLIMITED, H5S_UNLIMITED ) }
             ATTRIBUTE "CLASS" {
                DATATYPE  H5T_STRING {
-                  STRSIZE 5;
+                  STRSIZE 6;
                   STRPAD H5T_STR_NULLTERM;
                   CSET H5T_CSET_ASCII;
                   CTYPE H5T_C_S1;
                }
-               DATASPACE  SIMPLE { ( 1 ) / ( 1 ) }
+               DATASPACE  SIMPLE { ( 1 ) / ( H5S_UNLIMITED ) }
             }
             ATTRIBUTE "IMAGE_COLORMODEL" {
                DATATYPE  H5T_STRING {
-                  STRSIZE 3;
+                  STRSIZE 4;
                   STRPAD H5T_STR_NULLTERM;
                   CSET H5T_CSET_ASCII;
                   CTYPE H5T_C_S1;
                }
-               DATASPACE  SIMPLE { ( 1 ) / ( 1 ) }
+               DATASPACE  SIMPLE { ( 1 ) / ( H5S_UNLIMITED ) }
             }
             ATTRIBUTE "IMAGE_MINMAXRANGE" {
                DATATYPE  H5T_STD_U16BE
-               DATASPACE  SIMPLE { ( 2 ) / ( 2 ) }
+               DATASPACE  SIMPLE { ( 2 ) / ( H5S_UNLIMITED ) }
                DATA {
                   (0): 0
                }
             }
             ATTRIBUTE "IMAGE_SUBCLASS" {
                DATATYPE  H5T_STRING {
-                  STRSIZE 13;
+                  STRSIZE 14;
                   STRPAD H5T_STR_NULLTERM;
                   CSET H5T_CSET_ASCII;
                   CTYPE H5T_C_S1;
                }
-               DATASPACE  SIMPLE { ( 1 ) / ( 1 ) }
+               DATASPACE  SIMPLE { ( 1 ) / ( H5S_UNLIMITED ) }
             }
             ATTRIBUTE "IMAGE_TRANSPARENCY" {
                DATATYPE  H5T_STD_U16BE
-               DATASPACE  SIMPLE { ( 1 ) / ( 1 ) }
+               DATASPACE  SIMPLE { ( 1 ) / ( H5S_UNLIMITED ) }
                DATA {
                   (0): 255
                }
             }
             ATTRIBUTE "IMAGE_VERSION" {
                DATATYPE  H5T_STD_F32BE
-               DATASPACE  SIMPLE { ( 1 ) / ( 1 ) }
+               DATASPACE  SIMPLE { ( 1 ) / ( H5S_UNLIMITED ) }
                DATA {
                   (0): 1.0
                }
@@ -322,11 +323,12 @@ GROUP "/" {
          }
          DATASET "RGB values" {
             invalid datatype: DatatypeCompoundV1 [CompoundDatatypeMemberV1 {cdm1Name = "red", cdm1ByteOffset = 0, cdm1Dimensions = [], cdm1Datatype = DatatypeMessageData {datatypeMessageVersion = 1, datatypeClass = DatatypeFixedPoint {fixedPointDataElementSize = 2, fixedPointByteOrder = LittleEndian, fixedPointLoPadBit = False, fixedPointHiPadBit = False, fixedPointSigned = True, fixedPointBitOffset = 0, fixedPointBitPrecision = 16}}},CompoundDatatypeMemberV1 {cdm1Name = "green", cdm1ByteOffset = 2, cdm1Dimensions = [], cdm1Datatype = DatatypeMessageData {datatypeMessageVersion = 1, datatypeClass = DatatypeFixedPoint {fixedPointDataElementSize = 2, fixedPointByteOrder = LittleEndian, fixedPointLoPadBit = False, fixedPointHiPadBit = False, fixedPointSigned = True, fixedPointBitOffset = 0, fixedPointBitPrecision = 16}}},CompoundDatatypeMemberV1 {cdm1Name = "blue", cdm1ByteOffset = 4, cdm1Dimensions = [], cdm1Datatype = DatatypeMessageData {datatypeMessageVersion = 1, datatypeClass = DatatypeFixedPoint {fixedPointDataElementSize = 2, fixedPointByteOrder = LittleEndian, fixedPointLoPadBit = False, fixedPointHiPadBit = False, fixedPointSigned = True, fixedPointBitOffset = 0, fixedPointBitPrecision = 16}}}]
-            DATASPACE  SIMPLE { ( 300, 250 ) / ( 300, 250 ) }
+            DATASPACE  SIMPLE { ( 300, 250 ) / ( H5S_UNLIMITED, H5S_UNLIMITED ) }
          }
       }
       GROUP "soft links" {
 
       }
    }
+}
 }

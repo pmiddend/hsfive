@@ -163,10 +163,10 @@ attributeDatatypeToDoc (DatatypeVariableLengthString padding charset _word) _ _ 
       "CSET " <> charsetToDoc charset <> ";",
       "CTYPE H5T_C_S1;"
     ]
-attributeDatatypeToDoc (DatatypeString padding charset _size) dimensions (Just s) =
+attributeDatatypeToDoc (DatatypeString padding charset size) dimensions (Just s) =
   prefixAndBodyToDoc
     "DATATYPE  H5T_STRING"
-    [ "STRSIZE " <> pretty (stringSize dimensions s) <> ";",
+    [ "STRSIZE " <> pretty size <> ";",
       "STRPAD " <> paddingToDoc padding <> ";",
       "CSET " <> charsetToDoc charset <> ";",
       "CTYPE H5T_C_S1;"

@@ -1,3 +1,4 @@
+HDF5 "compressed.h5" {
 GROUP "/" {
    DATASET "bitshuffled" {
       DATATYPE  H5T_IEEE_F64LE
@@ -15,4 +16,5 @@ GROUP "/" {
       DATATYPE  H5T_IEEE_F64LE
       DATASPACE  SIMPLE { ( 1000, 1000 ) / ( 1000, 1000 ) }
    }
+}
 }

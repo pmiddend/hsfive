@@ -1,3 +1,4 @@
+HDF5 "issue_1053.h5" {
 GROUP "/" {
    DATASET "dim8192" {
       DATATYPE  H5T_IEEE_F64LE
@@ -7,4 +8,5 @@ GROUP "/" {
       DATATYPE  H5T_IEEE_F64LE
       DATASPACE  SIMPLE { ( 8193, 1600 ) / ( 8193, 1600 ) }
    }
+}
 }

@@ -1,3 +1,4 @@
+HDF5 "compressed-virtual.h5" {
 GROUP "/" {
    DATASET "data" {
       DATATYPE  H5T_IEEE_F64LE
@@ -15,4 +16,5 @@ GROUP "/" {
       DATATYPE  H5T_IEEE_F64LE
       DATASPACE  SIMPLE { ( 50 ) / ( 50 ) }
    }
+}
 }

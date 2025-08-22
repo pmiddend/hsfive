@@ -1,3 +1,4 @@
+HDF5 "filters.h5" {
 GROUP "/" {
    DATASET "blosc" {
       DATATYPE  H5T_IEEE_F32LE
@@ -43,4 +44,5 @@ GROUP "/" {
       DATATYPE  H5T_IEEE_F32LE
       DATASPACE  SIMPLE { ( 20 ) / ( 20 ) }
    }
+}
 }

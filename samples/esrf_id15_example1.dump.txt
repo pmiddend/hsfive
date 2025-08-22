@@ -1,3 +1,4 @@
+HDF5 "esrf_id15_example1.h5" {
 GROUP "/" {
    ATTRIBUTE "NX_class" {
       DATATYPE  H5T_STRING {
@@ -2336,4 +2337,5 @@ GROUP "/" {
          }
       }
    }
+}
 }

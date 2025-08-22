@@ -1,3 +1,4 @@
+HDF5 "nexus_malformed.h5" {
 GROUP "/" {
    GROUP "default_not_found" {
       ATTRIBUTE "default" {
@@ -50,4 +51,5 @@ GROUP "/" {
          DATASPACE  SCALAR
       }
    }
+}
 }

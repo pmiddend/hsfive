@@ -1,3 +1,4 @@
+HDF5 "grove.h5" {
 GROUP "/" {
    GROUP "-inf" {
       ATTRIBUTE "as_attr" {
@@ -55,18 +56,18 @@ GROUP "/" {
          }
       }
       DATASET "array" {
-         DATATYPE  H5T_ENUM { {
+         DATATYPE  H5T_ENUM {
             H5T_STD_I8LE;
-            "FALSE"            0
-            "TRUE"            1
+            "FALSE"            0;
+            "TRUE"             1;
          }
          DATASPACE  SIMPLE { ( 3 ) / ( 3 ) }
       }
       DATASET "scalar" {
-         DATATYPE  H5T_ENUM { {
+         DATATYPE  H5T_ENUM {
             H5T_STD_I8LE;
-            "FALSE"            0
-            "TRUE"            1
+            "FALSE"            0;
+            "TRUE"             1;
          }
          DATASPACE  SCALAR
       }
@@ -120,7 +121,7 @@ GROUP "/" {
          DATASPACE  SIMPLE { ( 5 ) / ( 5 ) }
          ATTRIBUTE "CLASS" {
             DATATYPE  H5T_STRING {
-               STRSIZE 15;
+               STRSIZE 16;
                STRPAD H5T_STR_NULLTERM;
                CSET H5T_CSET_ASCII;
                CTYPE H5T_C_S1;
@@ -134,7 +135,7 @@ GROUP "/" {
          DATASPACE  SIMPLE { ( 4 ) / ( 4 ) }
          ATTRIBUTE "CLASS" {
             DATATYPE  H5T_STRING {
-               STRSIZE 15;
+               STRSIZE 16;
                STRPAD H5T_STR_NULLTERM;
                CSET H5T_CSET_ASCII;
                CTYPE H5T_C_S1;
@@ -143,7 +144,7 @@ GROUP "/" {
          }
          ATTRIBUTE "NAME" {
             DATATYPE  H5T_STRING {
-               STRSIZE 1;
+               STRSIZE 2;
                STRPAD H5T_STR_NULLTERM;
                CSET H5T_CSET_ASCII;
                CTYPE H5T_C_S1;
@@ -323,10 +324,10 @@ GROUP "/" {
    }
    GROUP "scalars" {
       DATASET "bool" {
-         DATATYPE  H5T_ENUM { {
+         DATATYPE  H5T_ENUM {
             H5T_STD_I8LE;
-            "FALSE"            0
-            "TRUE"            1
+            "FALSE"            0;
+            "TRUE"             1;
          }
          DATASPACE  SCALAR
       }
@@ -356,4 +357,5 @@ GROUP "/" {
       DATATYPE  H5T_STD_I64LE
       DATASPACE  SIMPLE { ( 1, 50, 10, 100 ) / ( 1, 50, 10, 100 ) }
    }
+}
 }

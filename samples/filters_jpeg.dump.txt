@@ -1,6 +1,8 @@
+HDF5 "filters_jpeg.h5" {
 GROUP "/" {
    DATASET "DS1" {
       invalid datatype: DatatypeFixedPoint {fixedPointDataElementSize = 1, fixedPointByteOrder = LittleEndian, fixedPointLoPadBit = False, fixedPointHiPadBit = False, fixedPointSigned = False, fixedPointBitOffset = 0, fixedPointBitPrecision = 8}
       DATASPACE  SIMPLE { ( 2, 512, 1024 ) / ( 2, 512, 1024 ) }
    }
+}
 }

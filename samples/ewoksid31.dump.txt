@@ -1,3 +1,4 @@
+HDF5 "ewoksid31.h5" {
 GROUP "/" {
    GROUP "2.1" {
       DATASET "end_time" {
@@ -59,4 +60,5 @@ GROUP "/" {
          }
       }
    }
+}
 }

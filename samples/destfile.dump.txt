@@ -1,3 +1,4 @@
+HDF5 "destfile.h5" {
 GROUP "/" {
    GROUP "destgroup" {
       DATASET "data" {
@@ -5,4 +6,5 @@ GROUP "/" {
          DATASPACE  SIMPLE { ( 3 ) / ( 3 ) }
       }
    }
+}
 }

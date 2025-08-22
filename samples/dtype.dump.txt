@@ -1,3 +1,4 @@
+HDF5 "dtype.h5" {
 GROUP "/" {
    GROUP "inferred" {
       DATASET "binary" {
@@ -5,10 +6,10 @@ GROUP "/" {
          DATASPACE  SCALAR
       }
       DATASET "bool" {
-         DATATYPE  H5T_ENUM { {
+         DATATYPE  H5T_ENUM {
             H5T_STD_I8LE;
-            "FALSE"            0
-            "TRUE"            1
+            "FALSE"            0;
+            "TRUE"             1;
          }
          DATASPACE  SCALAR
       }
@@ -124,10 +125,10 @@ GROUP "/" {
          DATASPACE  SCALAR
       }
       DATASET "?" {
-         DATATYPE  H5T_ENUM { {
+         DATATYPE  H5T_ENUM {
             H5T_STD_I8LE;
-            "FALSE"            0
-            "TRUE"            1
+            "FALSE"            0;
+            "TRUE"             1;
          }
          DATASPACE  SCALAR
       }
@@ -153,10 +154,10 @@ GROUP "/" {
          DATASPACE  SCALAR
       }
       DATASET "enum" {
-         DATATYPE  H5T_ENUM { {
+         DATATYPE  H5T_ENUM {
             H5T_STD_I8LE;
-            "BLUE"            42
-            "RED"            0
+            "BLUE"             42;
+            "RED"              0;
          }
          DATASPACE  SCALAR
       }
@@ -228,4 +229,5 @@ GROUP "/" {
          DATASPACE  SCALAR
       }
    }
+}
 }
