@@ -15,9 +15,10 @@ import HsFive.CoreTypes
     CharacterSet (CharacterSetAscii, CharacterSetUtf8),
     CompoundDatatypeMemberV2 (CompoundDatatypeMemberV2, cdm2Datatype, cdm2Name),
     DataStorageLayout (LayoutContiguous, LayoutContiguousOld, layoutContiguousOldSizes, layoutContiguousSize),
-    DataspaceDimension (DataspaceDimension, ddSize),
+    DataspaceDimension (DataspaceDimension, ddMaxSize, ddSize),
     Datatype (DatatypeCompoundV2, DatatypeEnumeration, DatatypeFixedPoint, DatatypeFloatingPoint, DatatypeString, DatatypeVariableLengthString, fixedPointBitPrecision, fixedPointByteOrder, fixedPointSigned, floatingPointBitPrecision, floatingPointByteOrder),
     DatatypeMessageData (datatypeClass),
+    Length,
     ReferenceType (ObjectReference),
     StringPadding (PaddingNull, PaddingNullTerminate, PaddingSpace),
   )
@@ -163,8 +164,12 @@ dataspaceToDoc dataspaceDimensions =
   case dataspaceDimensions of
     [] -> "DATASPACE  SCALAR"
     dims ->
-      let inner = pretty (intercalate ", " (showText . ddSize <$> dims))
-       in "DATASPACE  SIMPLE { ( " <> inner <> " ) / ( " <> inner <> " ) }"
+      let innerCurrentDims = pretty (intercalate ", " (showText . ddSize <$> dims))
+          prettyOptionalDim :: Maybe Length -> Text
+          prettyOptionalDim Nothing = "H5S_UNLIMITED"
+          prettyOptionalDim (Just d) = showText d
+          innerMaxDims = pretty (intercalate ", " (prettyOptionalDim . ddMaxSize <$> dims))
+       in "DATASPACE  SIMPLE { ( " <> innerCurrentDims <> " ) / ( " <> innerMaxDims <> " ) }"
 
 namedPrefix :: Doc ann -> Doc ann -> Doc ann
 namedPrefix name value = name <> " \"" <> value <> "\""
