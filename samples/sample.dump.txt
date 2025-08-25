@@ -1,26 +1,31 @@
+HDF5 "sample.h5" {
 GROUP "/" {
-  DATASET "/" {
-    invalid datatype: DatatypeFixedPoint {fixedPointDataElementSize = 1, fixedPointByteOrder = LittleEndian, fixedPointLoPadBit = False, fixedPointHiPadBit = False, fixedPointSigned = True, fixedPointBitOffset = 0, fixedPointBitPrecision = 8}
-    DATASPACE  SCALAR
-  }
-  DATASET "/" {
-    invalid datatype: DatatypeFixedPoint {fixedPointDataElementSize = 8, fixedPointByteOrder = LittleEndian, fixedPointLoPadBit = False, fixedPointHiPadBit = False, fixedPointSigned = False, fixedPointBitOffset = 0, fixedPointBitPrecision = 64}
-    DATASPACE  SIMPLE { ( 2, 2, 2 ) / ( 2, 2, 2 ) }
-  }
-  DATASET "/" {
-    DATATYPE  H5T_IEEE_F64LE
-    DATASPACE  SIMPLE { ( 3, 5 ) / ( 3, 5 ) }
-  }
-  DATASET "/" {
-    invalid datatype: DatatypeCompoundV1 [CompoundDatatypeMemberV1 {cdm1Name = "r", cdm1ByteOffset = 0, cdm1Dimensions = [], cdm1Datatype = DatatypeMessageData {datatypeMessageVersion = 1, datatypeClass = DatatypeFloatingPoint {floatingPointByteOrder = LittleEndian, floatingPointLowBitPad = False, floatingPointHighBitPad = False, floatingPointInternalBitPad = False, floatingPointMantissaNormalization = NoNormalization, floatingPointSignLocation = 31, floatingPointBitOffset = 0, floatingPointBitPrecision = 32, floatingPointExponentLocation = 23, floatingPointExponentSize = 8, floatingPointMantissaLocation = 0, floatingPointMantissaSize = 23, floatingPointExponentBias = 127}}},CompoundDatatypeMemberV1 {cdm1Name = "i", cdm1ByteOffset = 4, cdm1Dimensions = [], cdm1Datatype = DatatypeMessageData {datatypeMessageVersion = 1, datatypeClass = DatatypeFloatingPoint {floatingPointByteOrder = LittleEndian, floatingPointLowBitPad = False, floatingPointHighBitPad = False, floatingPointInternalBitPad = False, floatingPointMantissaNormalization = NoNormalization, floatingPointSignLocation = 31, floatingPointBitOffset = 0, floatingPointBitPrecision = 32, floatingPointExponentLocation = 23, floatingPointExponentSize = 8, floatingPointMantissaLocation = 0, floatingPointMantissaSize = 23, floatingPointExponentBias = 127}}}]
-    DATASPACE  SIMPLE { ( 2, 2 ) / ( 2, 2 ) }
-  }
-  DATASET "/" {
-    DATATYPE  H5T_ENUM { {
-      H5T_STD_I8LE;
-      "FALSE"            0
-      "TRUE"            1
-    }
-    DATASPACE  SCALAR
-  }
+   DATASET "/" {
+      invalid datatype: DatatypeFixedPoint {fixedPointDataElementSize = 1, fixedPointByteOrder = LittleEndian, fixedPointLoPadBit = False, fixedPointHiPadBit = False, fixedPointSigned = True, fixedPointBitOffset = 0, fixedPointBitPrecision = 8}
+      DATASPACE  SCALAR
+   }
+   DATASET "/" {
+      invalid datatype: DatatypeFixedPoint {fixedPointDataElementSize = 8, fixedPointByteOrder = LittleEndian, fixedPointLoPadBit = False, fixedPointHiPadBit = False, fixedPointSigned = False, fixedPointBitOffset = 0, fixedPointBitPrecision = 64}
+      DATASPACE  SIMPLE { ( 2, 2, 2 ) / ( 2, 2, 2 ) }
+   }
+   DATASET "/" {
+      DATATYPE  H5T_IEEE_F64LE
+      DATASPACE  SIMPLE { ( 3, 5 ) / ( 3, 5 ) }
+   }
+   DATASET "/" {
+      DATATYPE  H5T_COMPOUND {
+         H5T_IEEE_F32LE "r";
+         H5T_IEEE_F32LE "i";
+      }
+      DATASPACE  SIMPLE { ( 2, 2 ) / ( 2, 2 ) }
+   }
+   DATASET "/" {
+      DATATYPE  H5T_ENUM {
+         H5T_STD_I8LE;
+         "FALSE"            0;
+         "TRUE"             1;
+      }
+      DATASPACE  SCALAR
+   }
+}
 }

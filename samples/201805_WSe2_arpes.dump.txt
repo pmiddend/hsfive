@@ -1050,10 +1050,10 @@ GROUP "/" {
                DATASPACE  SCALAR
             }
             DATASET "top_up" {
-               DATATYPE  H5T_ENUM { {
+               DATATYPE  H5T_ENUM {
                   H5T_STD_I8LE;
-                  "FALSE"            0
-                  "TRUE"            1
+                  "FALSE"            0;
+                  "TRUE"             1;
                }
                DATASPACE  SCALAR
             }

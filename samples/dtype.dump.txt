@@ -27,7 +27,10 @@ GROUP "/" {
          DATASPACE  SCALAR
       }
       DATASET "complex" {
-         invalid datatype: DatatypeCompoundV1 [CompoundDatatypeMemberV1 {cdm1Name = "r", cdm1ByteOffset = 0, cdm1Dimensions = [], cdm1Datatype = DatatypeMessageData {datatypeMessageVersion = 1, datatypeClass = DatatypeFloatingPoint {floatingPointByteOrder = LittleEndian, floatingPointLowBitPad = False, floatingPointHighBitPad = False, floatingPointInternalBitPad = False, floatingPointMantissaNormalization = NoNormalization, floatingPointSignLocation = 63, floatingPointBitOffset = 0, floatingPointBitPrecision = 64, floatingPointExponentLocation = 52, floatingPointExponentSize = 11, floatingPointMantissaLocation = 0, floatingPointMantissaSize = 52, floatingPointExponentBias = 1023}}},CompoundDatatypeMemberV1 {cdm1Name = "i", cdm1ByteOffset = 8, cdm1Dimensions = [], cdm1Datatype = DatatypeMessageData {datatypeMessageVersion = 1, datatypeClass = DatatypeFloatingPoint {floatingPointByteOrder = LittleEndian, floatingPointLowBitPad = False, floatingPointHighBitPad = False, floatingPointInternalBitPad = False, floatingPointMantissaNormalization = NoNormalization, floatingPointSignLocation = 63, floatingPointBitOffset = 0, floatingPointBitPrecision = 64, floatingPointExponentLocation = 52, floatingPointExponentSize = 11, floatingPointMantissaLocation = 0, floatingPointMantissaSize = 52, floatingPointExponentBias = 1023}}}]
+         DATATYPE  H5T_COMPOUND {
+            H5T_IEEE_F64LE "r";
+            H5T_IEEE_F64LE "i";
+         }
          DATASPACE  SCALAR
       }
       DATASET "divmod" {
@@ -141,7 +144,10 @@ GROUP "/" {
          DATASPACE  SCALAR
       }
       DATASET "c8" {
-         invalid datatype: DatatypeCompoundV1 [CompoundDatatypeMemberV1 {cdm1Name = "r", cdm1ByteOffset = 0, cdm1Dimensions = [], cdm1Datatype = DatatypeMessageData {datatypeMessageVersion = 1, datatypeClass = DatatypeFloatingPoint {floatingPointByteOrder = LittleEndian, floatingPointLowBitPad = False, floatingPointHighBitPad = False, floatingPointInternalBitPad = False, floatingPointMantissaNormalization = NoNormalization, floatingPointSignLocation = 31, floatingPointBitOffset = 0, floatingPointBitPrecision = 32, floatingPointExponentLocation = 23, floatingPointExponentSize = 8, floatingPointMantissaLocation = 0, floatingPointMantissaSize = 23, floatingPointExponentBias = 127}}},CompoundDatatypeMemberV1 {cdm1Name = "i", cdm1ByteOffset = 4, cdm1Dimensions = [], cdm1Datatype = DatatypeMessageData {datatypeMessageVersion = 1, datatypeClass = DatatypeFloatingPoint {floatingPointByteOrder = LittleEndian, floatingPointLowBitPad = False, floatingPointHighBitPad = False, floatingPointInternalBitPad = False, floatingPointMantissaNormalization = NoNormalization, floatingPointSignLocation = 31, floatingPointBitOffset = 0, floatingPointBitPrecision = 32, floatingPointExponentLocation = 23, floatingPointExponentSize = 8, floatingPointMantissaLocation = 0, floatingPointMantissaSize = 23, floatingPointExponentBias = 127}}}]
+         DATATYPE  H5T_COMPOUND {
+            H5T_IEEE_F32LE "r";
+            H5T_IEEE_F32LE "i";
+         }
          DATASPACE  SCALAR
       }
       DATASET "c_data" {
@@ -166,10 +172,10 @@ GROUP "/" {
          DATASPACE  SCALAR
       }
       DATASET "fields" {
-         DATATYPE  H5T_COMPOUND { {
-            DATATYPE  H5T_STD_I32LE"f0"
-            invalid datatype: DatatypeArray {arraySizes = [2,3], arrayBaseType = DatatypeFloatingPoint {floatingPointByteOrder = LittleEndian, floatingPointLowBitPad = False, floatingPointHighBitPad = False, floatingPointInternalBitPad = False, floatingPointMantissaNormalization = NoNormalization, floatingPointSignLocation = 63, floatingPointBitOffset = 0, floatingPointBitPrecision = 64, floatingPointExponentLocation = 52, floatingPointExponentSize = 11, floatingPointMantissaLocation = 0, floatingPointMantissaSize = 52, floatingPointExponentBias = 1023}}"f1"
-            DATATYPE  H5T_IEEE_F32LE"f2"
+         DATATYPE  H5T_COMPOUND {
+            H5T_STD_I32LE "f0";
+            invalid datatype: DatatypeArray {arraySizes = [2,3], arrayBaseType = DatatypeFloatingPoint {floatingPointByteOrder = LittleEndian, floatingPointLowBitPad = False, floatingPointHighBitPad = False, floatingPointInternalBitPad = False, floatingPointMantissaNormalization = NoNormalization, floatingPointSignLocation = 63, floatingPointBitOffset = 0, floatingPointBitPrecision = 64, floatingPointExponentLocation = 52, floatingPointExponentSize = 11, floatingPointMantissaLocation = 0, floatingPointMantissaSize = 52, floatingPointExponentBias = 1023}} "f1";
+            H5T_IEEE_F32LE "f2";
          }
          DATASPACE  SCALAR
       }
@@ -196,7 +202,10 @@ GROUP "/" {
          DATASPACE  SCALAR
       }
       DATASET "named_fields" {
-         invalid datatype: DatatypeCompoundV1 [CompoundDatatypeMemberV1 {cdm1Name = "big", cdm1ByteOffset = 0, cdm1Dimensions = [], cdm1Datatype = DatatypeMessageData {datatypeMessageVersion = 1, datatypeClass = DatatypeFixedPoint {fixedPointDataElementSize = 4, fixedPointByteOrder = BigEndian, fixedPointLoPadBit = False, fixedPointHiPadBit = False, fixedPointSigned = True, fixedPointBitOffset = 0, fixedPointBitPrecision = 32}}},CompoundDatatypeMemberV1 {cdm1Name = "little", cdm1ByteOffset = 4, cdm1Dimensions = [], cdm1Datatype = DatatypeMessageData {datatypeMessageVersion = 1, datatypeClass = DatatypeFixedPoint {fixedPointDataElementSize = 4, fixedPointByteOrder = LittleEndian, fixedPointLoPadBit = False, fixedPointHiPadBit = False, fixedPointSigned = True, fixedPointBitOffset = 0, fixedPointBitPrecision = 32}}}]
+         DATATYPE  H5T_COMPOUND {
+            H5T_STD_I32BE "big";
+            H5T_STD_I32LE "little";
+         }
          DATASPACE  SCALAR
       }
       DATASET "opaque" {

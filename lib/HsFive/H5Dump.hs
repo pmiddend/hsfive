@@ -4,23 +4,23 @@
 module HsFive.H5Dump (h5dump) where
 
 import qualified Data.ByteString.Lazy as BSL
-import Data.Int (Int64)
 import Data.List (sortOn)
 import qualified Data.List.NonEmpty as NE
-import Data.String (IsString (fromString))
 import Data.Text (Text, intercalate, length, pack, replicate)
 import Data.Text.Encoding (decodeUtf8Lenient)
 import HsFive.CoreTypes
   ( ByteOrder (BigEndian, LittleEndian),
     CharacterSet (CharacterSetAscii, CharacterSetUtf8),
+    CompoundDatatypeMemberV1 (CompoundDatatypeMemberV1, cdm1Datatype, cdm1Name),
     CompoundDatatypeMemberV2 (CompoundDatatypeMemberV2, cdm2Datatype, cdm2Name),
     DataStorageLayout (LayoutContiguous, LayoutContiguousOld, layoutContiguousOldSizes, layoutContiguousSize),
-    DataspaceDimension (DataspaceDimension, ddMaxSize, ddSize),
-    Datatype (DatatypeCompoundV2, DatatypeEnumeration, DatatypeFixedPoint, DatatypeFloatingPoint, DatatypeString, DatatypeVariableLengthString, fixedPointBitPrecision, fixedPointByteOrder, fixedPointSigned, floatingPointBitPrecision, floatingPointByteOrder),
+    DataspaceDimension (ddSize),
+    Datatype (DatatypeCompoundV1, DatatypeCompoundV2, DatatypeEnumeration, DatatypeFixedPoint, DatatypeFloatingPoint, DatatypeString, DatatypeVariableLengthString, fixedPointBitPrecision, fixedPointByteOrder, fixedPointSigned, floatingPointBitPrecision, floatingPointByteOrder),
     DatatypeMessageData (datatypeClass),
     Length,
     ReferenceType (ObjectReference),
     StringPadding (PaddingNull, PaddingNullTerminate, PaddingSpace),
+    ddMaxSize,
   )
 import HsFive.Types
   ( Attribute (Attribute, attributeData, attributeType),
@@ -35,12 +35,6 @@ import HsFive.Types
 import Prettyprinter (Doc, Pretty (pretty), defaultLayoutOptions, layoutPretty, line, nest, vsep)
 import Prettyprinter.Render.Text (renderStrict)
 import Prelude hiding (length, replicate)
-
-stringSize :: [DataspaceDimension] -> Text -> Int64
-stringSize dataspaceDimensions s = case dataspaceDimensions of
-  [] -> fromIntegral (length s)
-  [DataspaceDimension {ddSize}] -> fromIntegral (length s `div` fromIntegral ddSize)
-  _ -> error ("got string with dataspace dimensions " <> show dataspaceDimensions)
 
 showText :: (Show a) => a -> Text
 showText = pack . show
@@ -57,16 +51,16 @@ rightPad c l t =
         then t
         else t <> replicate remainder c
 
-datatypeToDoc :: Datatype -> Maybe DataStorageLayout -> Doc ann
-datatypeToDoc (DatatypeVariableLengthString padding charset _word) _layout =
+datatypeToDoc :: Datatype -> Maybe DataStorageLayout -> Bool -> Doc ann
+datatypeToDoc (DatatypeVariableLengthString padding charset _word) _layout withPrefix =
   prefixAndBodyToDoc
-    "DATATYPE  H5T_STRING"
+    ((if withPrefix then "DATATYPE  " else mempty) <> "H5T_STRING")
     [ "STRSIZE H5T_VARIABLE;",
       "STRPAD " <> paddingToDoc padding <> ";",
       "CSET " <> charsetToDoc charset <> ";",
       "CTYPE H5T_C_S1;"
     ]
-datatypeToDoc (DatatypeString padding charset _size) (Just (LayoutContiguous {layoutContiguousSize})) =
+datatypeToDoc (DatatypeString padding charset _size) (Just (LayoutContiguous {layoutContiguousSize})) withPrefix =
   prefixAndBodyToDoc
     "DATATYPE  H5T_STRING"
     [ "STRSIZE " <> pretty (showText layoutContiguousSize) <> ";",
@@ -75,7 +69,7 @@ datatypeToDoc (DatatypeString padding charset _size) (Just (LayoutContiguous {la
       "CTYPE H5T_C_S1;"
     ]
 -- This [_, n] is a huge leap, but h5dump seems to do it this way?
-datatypeToDoc (DatatypeString padding charset _size) (Just (LayoutContiguousOld {layoutContiguousOldSizes = [_, n]})) =
+datatypeToDoc (DatatypeString padding charset _size) (Just (LayoutContiguousOld {layoutContiguousOldSizes = [_, n]})) withPrefix =
   prefixAndBodyToDoc
     "DATATYPE  H5T_STRING"
     [ "STRSIZE " <> pretty (showText n) <> ";",
@@ -83,7 +77,7 @@ datatypeToDoc (DatatypeString padding charset _size) (Just (LayoutContiguousOld 
       "CSET " <> charsetToDoc charset <> ";",
       "CTYPE H5T_C_S1;"
     ]
-datatypeToDoc (DatatypeString padding charset size) _layout =
+datatypeToDoc (DatatypeString padding charset size) _layout withPrefix =
   prefixAndBodyToDoc
     "DATATYPE  H5T_STRING"
     [ "STRSIZE " <> pretty size <> ";",
@@ -92,15 +86,15 @@ datatypeToDoc (DatatypeString padding charset size) _layout =
       "CTYPE H5T_C_S1;"
     ]
 -- error ("string with size " <> show size <> ", unknown layout: " <> show _layout)
-datatypeToDoc (DatatypeFloatingPoint {floatingPointByteOrder = LittleEndian, floatingPointBitPrecision = 64}) _layout = "DATATYPE  H5T_IEEE_F64LE"
-datatypeToDoc (DatatypeFloatingPoint {floatingPointByteOrder = LittleEndian, floatingPointBitPrecision = 32}) _layout = "DATATYPE  H5T_IEEE_F32LE"
-datatypeToDoc (DatatypeFloatingPoint {floatingPointByteOrder = BigEndian, floatingPointBitPrecision = 32}) _layout = "DATATYPE  H5T_IEEE_F32BE"
-datatypeToDoc (DatatypeFixedPoint {fixedPointByteOrder = BigEndian, fixedPointBitPrecision = 16, fixedPointSigned = True}) _layout = "DATATYPE  H5T_STD_I16BE"
-datatypeToDoc (DatatypeFixedPoint {fixedPointByteOrder = LittleEndian, fixedPointBitPrecision = 32, fixedPointSigned = True}) _layout = "DATATYPE  H5T_STD_I32LE"
-datatypeToDoc (DatatypeFixedPoint {fixedPointByteOrder = BigEndian, fixedPointBitPrecision = 32, fixedPointSigned = True}) _layout = "DATATYPE  H5T_STD_I32BE"
-datatypeToDoc (DatatypeFixedPoint {fixedPointByteOrder = LittleEndian, fixedPointBitPrecision = 64, fixedPointSigned = True}) _layout = "DATATYPE  H5T_STD_I64LE"
-datatypeToDoc (DatatypeFixedPoint {fixedPointByteOrder = LittleEndian, fixedPointBitPrecision = 16, fixedPointSigned = False}) _layout = "DATATYPE  H5T_STD_U16LE"
-datatypeToDoc (DatatypeEnumeration _baseType enumValues) _layout =
+datatypeToDoc (DatatypeFloatingPoint {floatingPointByteOrder = LittleEndian, floatingPointBitPrecision = 64}) _layout withPrefix = (if withPrefix then "DATATYPE  " else mempty) <> "H5T_IEEE_F64LE"
+datatypeToDoc (DatatypeFloatingPoint {floatingPointByteOrder = LittleEndian, floatingPointBitPrecision = 32}) _layout withPrefix = (if withPrefix then "DATATYPE  " else mempty) <> "H5T_IEEE_F32LE"
+datatypeToDoc (DatatypeFloatingPoint {floatingPointByteOrder = BigEndian, floatingPointBitPrecision = 32}) _layout withPrefix = (if withPrefix then "DATATYPE  " else mempty) <> "H5T_IEEE_F32BE"
+datatypeToDoc (DatatypeFixedPoint {fixedPointByteOrder = BigEndian, fixedPointBitPrecision = 16, fixedPointSigned = True}) _layout withPrefix = (if withPrefix then "DATATYPE  " else mempty) <> "H5T_STD_I16BE"
+datatypeToDoc (DatatypeFixedPoint {fixedPointByteOrder = LittleEndian, fixedPointBitPrecision = 32, fixedPointSigned = True}) _layout withPrefix = (if withPrefix then "DATATYPE  " else mempty) <> "H5T_STD_I32LE"
+datatypeToDoc (DatatypeFixedPoint {fixedPointByteOrder = BigEndian, fixedPointBitPrecision = 32, fixedPointSigned = True}) _layout withPrefix = (if withPrefix then "DATATYPE  " else mempty) <> "H5T_STD_I32BE"
+datatypeToDoc (DatatypeFixedPoint {fixedPointByteOrder = LittleEndian, fixedPointBitPrecision = 64, fixedPointSigned = True}) _layout withPrefix = (if withPrefix then "DATATYPE  " else mempty) <> "H5T_STD_I64LE"
+datatypeToDoc (DatatypeFixedPoint {fixedPointByteOrder = LittleEndian, fixedPointBitPrecision = 16, fixedPointSigned = False}) _layout withPrefix = (if withPrefix then "DATATYPE  " else mempty) <> "H5T_STD_U16LE"
+datatypeToDoc (DatatypeEnumeration _baseType enumValues) _layout withPrefix =
   prefixAndBodyToDoc
     "DATATYPE  H5T_ENUM"
     ( [ "H5T_STD_I8LE;"
@@ -121,18 +115,22 @@ datatypeToDoc (DatatypeEnumeration _baseType enumValues) _layout =
                <$> enumValues
            )
     )
-datatypeToDoc (DatatypeCompoundV2 members) _layout =
+datatypeToDoc (DatatypeCompoundV2 members) _layout withPrefix =
   let compoundToDoc (CompoundDatatypeMemberV2 {cdm2Name, cdm2Datatype}) =
-        datatypeToDoc (datatypeClass cdm2Datatype) Nothing <> pretty ("\"" <> decodeUtf8Lenient cdm2Name <> "\"")
-   in prefixAndBodyToDoc "DATATYPE  H5T_COMPOUND {" (compoundToDoc <$> members)
+        datatypeToDoc (datatypeClass cdm2Datatype) Nothing False <> pretty (" \"" <> decodeUtf8Lenient cdm2Name <> "\";")
+   in prefixAndBodyToDoc "DATATYPE  H5T_COMPOUND" (compoundToDoc <$> members)
 -- datatypeToDoc dt _ = error ("invalid datatype: " <> show dt)
-datatypeToDoc dt _ = pretty ("invalid datatype: " <> show dt)
+datatypeToDoc (DatatypeCompoundV1 members) _layout withPrefix =
+  let compoundToDoc (CompoundDatatypeMemberV1 {cdm1Name, cdm1Datatype}) =
+        datatypeToDoc (datatypeClass cdm1Datatype) Nothing False <> pretty (" \"" <> decodeUtf8Lenient cdm1Name <> "\";")
+   in prefixAndBodyToDoc "DATATYPE  H5T_COMPOUND" (compoundToDoc <$> members)
+datatypeToDoc dt _ _ = pretty ("invalid datatype: " <> show dt)
 
 datasetToDoc :: DatasetData -> Doc ()
 datasetToDoc (DatasetData {datasetPath, datasetDimensions, datasetDatatype, datasetStorageLayout, datasetAttributes}) =
   prefixAndBodyToDoc
     (namedPrefix "DATASET" (pretty (unwrapPath datasetPath "/" NE.last)))
-    ( [ datatypeToDoc datasetDatatype (Just datasetStorageLayout),
+    ( [ datatypeToDoc datasetDatatype (Just datasetStorageLayout) True,
         dataspaceToDoc datasetDimensions
       ]
         <> (attributeToDoc <$> sortOn attributeName datasetAttributes)
@@ -151,8 +149,8 @@ charsetToDoc CharacterSetAscii = "H5T_CSET_ASCII"
 charsetToDoc CharacterSetUtf8 = "H5T_CSET_UTF8"
 
 attributeDatatypeToDoc :: Datatype -> [DataspaceDimension] -> Maybe Text -> Doc ()
-attributeDatatypeToDoc dt@(DatatypeFixedPoint {}) _ _ = datatypeToDoc dt undefined
-attributeDatatypeToDoc dt@(DatatypeFloatingPoint {}) _ _ = datatypeToDoc dt undefined
+attributeDatatypeToDoc dt@(DatatypeFixedPoint {}) _ _ = datatypeToDoc dt Nothing True
+attributeDatatypeToDoc dt@(DatatypeFloatingPoint {}) _ _ = datatypeToDoc dt Nothing True
 -- attributeDatatypeToDoc (DatatypeFloatingPoint {floatingPointByteOrder = BigEndian, floatingPointBitPrecision = 32}) _ _ = "DATATYPE  H5T_STD_F32BE"
 -- attributeDatatypeToDoc (DatatypeFloatingPoint {floatingPointByteOrder = LittleEndian, floatingPointBitPrecision = 64}) _ _ = "DATATYPE  H5T_STD_F64LE"
 attributeDatatypeToDoc (DatatypeEnumeration baseType enumValues) _ _ = "DATATYPE  ENUM"

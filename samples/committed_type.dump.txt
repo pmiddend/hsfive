@@ -4,7 +4,10 @@ GROUP "/" {
       DatatypeCompoundV1 [CompoundDatatypeMemberV1 {cdm1Name = "x", cdm1ByteOffset = 0, cdm1Dimensions = [], cdm1Datatype = DatatypeMessageData {datatypeMessageVersion = 1, datatypeClass = DatatypeFixedPoint {fixedPointDataElementSize = 8, fixedPointByteOrder = LittleEndian, fixedPointLoPadBit = False, fixedPointHiPadBit = False, fixedPointSigned = True, fixedPointBitOffset = 0, fixedPointBitPrecision = 64}}},CompoundDatatypeMemberV1 {cdm1Name = "y", cdm1ByteOffset = 8, cdm1Dimensions = [], cdm1Datatype = DatatypeMessageData {datatypeMessageVersion = 1, datatypeClass = DatatypeFloatingPoint {floatingPointByteOrder = LittleEndian, floatingPointLowBitPad = False, floatingPointHighBitPad = False, floatingPointInternalBitPad = False, floatingPointMantissaNormalization = NoNormalization, floatingPointSignLocation = 63, floatingPointBitOffset = 0, floatingPointBitPrecision = 64, floatingPointExponentLocation = 52, floatingPointExponentSize = 11, floatingPointMantissaLocation = 0, floatingPointMantissaSize = 52, floatingPointExponentBias = 1023}}}]
    }
    DATASET "/" {
-      invalid datatype: DatatypeCompoundV1 [CompoundDatatypeMemberV1 {cdm1Name = "x", cdm1ByteOffset = 0, cdm1Dimensions = [], cdm1Datatype = DatatypeMessageData {datatypeMessageVersion = 1, datatypeClass = DatatypeFixedPoint {fixedPointDataElementSize = 8, fixedPointByteOrder = LittleEndian, fixedPointLoPadBit = False, fixedPointHiPadBit = False, fixedPointSigned = True, fixedPointBitOffset = 0, fixedPointBitPrecision = 64}}},CompoundDatatypeMemberV1 {cdm1Name = "y", cdm1ByteOffset = 8, cdm1Dimensions = [], cdm1Datatype = DatatypeMessageData {datatypeMessageVersion = 1, datatypeClass = DatatypeFloatingPoint {floatingPointByteOrder = LittleEndian, floatingPointLowBitPad = False, floatingPointHighBitPad = False, floatingPointInternalBitPad = False, floatingPointMantissaNormalization = NoNormalization, floatingPointSignLocation = 63, floatingPointBitOffset = 0, floatingPointBitPrecision = 64, floatingPointExponentLocation = 52, floatingPointExponentSize = 11, floatingPointMantissaLocation = 0, floatingPointMantissaSize = 52, floatingPointExponentBias = 1023}}}]
+      DATATYPE  H5T_COMPOUND {
+         H5T_STD_I64LE "x";
+         H5T_IEEE_F64LE "y";
+      }
       DATASPACE  SIMPLE { ( 1, 1 ) / ( 1, 1 ) }
    }
 }

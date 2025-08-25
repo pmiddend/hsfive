@@ -1,57 +1,47 @@
+HDF5 "tall.h5" {
 GROUP "/" {
-  ATTRIBUTE "attr1" {
-    DATATYPE  H5T_STD_U16BE
-    DATASPACE  SIMPLE { ( 10 ) / ( 10 ) }
-    DATA {
-      (0): 97
-    }
-  }
-  ATTRIBUTE "attr2" {
-    DATATYPE  H5T_STD_U16BE
-    DATASPACE  SIMPLE { ( 2, 2 ) / ( 2, 2 ) }
-    DATA {
-      (0): 0
-    }
-  }
-  GROUP "g1" {
-    GROUP "g1.1" {
-      DATASET "dset1.1.1" {
-        DATATYPE  H5T_STD_I32BE
-        DATASPACE  SIMPLE { ( 10, 10 ) / ( 10, 10 ) }
-        ATTRIBUTE "attr1" {
-          DATATYPE  H5T_STD_U16BE
-          DATASPACE  SIMPLE { ( 27 ) / ( 27 ) }
-          DATA {
-            (0): 49
-          }
-        }
-        ATTRIBUTE "attr2" {
-          DATATYPE  H5T_STD_U16BE
-          DATASPACE  SIMPLE { ( 27 ) / ( 27 ) }
-          DATA {
-            (0): 50
-          }
-        }
+   ATTRIBUTE "attr1" {
+      invalid datatype: DatatypeFixedPoint {fixedPointDataElementSize = 1, fixedPointByteOrder = BigEndian, fixedPointLoPadBit = False, fixedPointHiPadBit = False, fixedPointSigned = True, fixedPointBitOffset = 0, fixedPointBitPrecision = 8}
+      DATASPACE  SIMPLE { ( 10 ) / ( H5S_UNLIMITED ) }
+   }
+   ATTRIBUTE "attr2" {
+      DATATYPE  H5T_STD_I32BE
+      DATASPACE  SIMPLE { ( 2, 2 ) / ( H5S_UNLIMITED, H5S_UNLIMITED ) }
+   }
+   GROUP "g1" {
+      GROUP "g1.1" {
+         DATASET "dset1.1.1" {
+            DATATYPE  H5T_STD_I32BE
+            DATASPACE  SIMPLE { ( 10, 10 ) / ( H5S_UNLIMITED, H5S_UNLIMITED ) }
+            ATTRIBUTE "attr1" {
+               invalid datatype: DatatypeFixedPoint {fixedPointDataElementSize = 1, fixedPointByteOrder = BigEndian, fixedPointLoPadBit = False, fixedPointHiPadBit = False, fixedPointSigned = True, fixedPointBitOffset = 0, fixedPointBitPrecision = 8}
+               DATASPACE  SIMPLE { ( 27 ) / ( H5S_UNLIMITED ) }
+            }
+            ATTRIBUTE "attr2" {
+               invalid datatype: DatatypeFixedPoint {fixedPointDataElementSize = 1, fixedPointByteOrder = BigEndian, fixedPointLoPadBit = False, fixedPointHiPadBit = False, fixedPointSigned = True, fixedPointBitOffset = 0, fixedPointBitPrecision = 8}
+               DATASPACE  SIMPLE { ( 27 ) / ( H5S_UNLIMITED ) }
+            }
+         }
+         DATASET "dset1.1.2" {
+            DATATYPE  H5T_STD_I32BE
+            DATASPACE  SIMPLE { ( 20 ) / ( H5S_UNLIMITED ) }
+         }
       }
-      DATASET "dset1.1.2" {
-        DATATYPE  H5T_STD_I32BE
-        DATASPACE  SIMPLE { ( 20 ) / ( 20 ) }
-      }
-    }
-    GROUP "g1.2" {
       GROUP "g1.2" {
+         GROUP "g1.2" {
 
+         }
       }
-    }
-  }
-  GROUP "g2" {
-    DATASET "dset2.1" {
-      DATATYPE  H5T_IEEE_F32BE
-      DATASPACE  SIMPLE { ( 10 ) / ( 10 ) }
-    }
-    DATASET "dset2.2" {
-      DATATYPE  H5T_IEEE_F32BE
-      DATASPACE  SIMPLE { ( 3, 5 ) / ( 3, 5 ) }
-    }
-  }
+   }
+   GROUP "g2" {
+      DATASET "dset2.1" {
+         DATATYPE  H5T_IEEE_F32BE
+         DATASPACE  SIMPLE { ( 10 ) / ( H5S_UNLIMITED ) }
+      }
+      DATASET "dset2.2" {
+         DATATYPE  H5T_IEEE_F32BE
+         DATASPACE  SIMPLE { ( 3, 5 ) / ( H5S_UNLIMITED, H5S_UNLIMITED ) }
+      }
+   }
+}
 }

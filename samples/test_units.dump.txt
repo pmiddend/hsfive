@@ -1,235 +1,237 @@
+HDF5 "test_units.h5" {
 GROUP "/" {
-  GROUP "different_units" {
-    ATTRIBUTE "NX_class" {
-      DATATYPE  H5T_STRING {
-        STRSIZE H5T_VARIABLE;
-        STRPAD H5T_STR_NULLTERM;
-        CSET H5T_CSET_UTF8;
-        CTYPE H5T_C_S1;
+   GROUP "different_units" {
+      ATTRIBUTE "NX_class" {
+         DATATYPE  H5T_STRING {
+            STRSIZE H5T_VARIABLE;
+            STRPAD H5T_STR_NULLTERM;
+            CSET H5T_CSET_UTF8;
+            CTYPE H5T_C_S1;
+         }
+         DATASPACE  SCALAR
       }
-      DATASPACE  SCALAR
-    }
-    ATTRIBUTE "axes" {
-      DATATYPE  H5T_STRING {
-        STRSIZE H5T_VARIABLE;
-        STRPAD H5T_STR_NULLTERM;
-        CSET H5T_CSET_UTF8;
-        CTYPE H5T_C_S1;
+      ATTRIBUTE "axes" {
+         DATATYPE  H5T_STRING {
+            STRSIZE H5T_VARIABLE;
+            STRPAD H5T_STR_NULLTERM;
+            CSET H5T_CSET_UTF8;
+            CTYPE H5T_C_S1;
+         }
+         DATASPACE  SIMPLE { ( 2 ) / ( 2 ) }
       }
-      DATASPACE  SIMPLE { ( 2 ) / ( 2 ) }
-    }
-    ATTRIBUTE "signal" {
-      DATATYPE  H5T_STRING {
-        STRSIZE H5T_VARIABLE;
-        STRPAD H5T_STR_NULLTERM;
-        CSET H5T_CSET_UTF8;
-        CTYPE H5T_C_S1;
+      ATTRIBUTE "signal" {
+         DATATYPE  H5T_STRING {
+            STRSIZE H5T_VARIABLE;
+            STRPAD H5T_STR_NULLTERM;
+            CSET H5T_CSET_UTF8;
+            CTYPE H5T_C_S1;
+         }
+         DATASPACE  SCALAR
       }
-      DATASPACE  SCALAR
-    }
-    DATASET "cols" {
-      DATATYPE  H5T_IEEE_F64LE
-      DATASPACE  SIMPLE { ( 100 ) / ( 100 ) }
-      ATTRIBUTE "units" {
-        DATATYPE  H5T_STRING {
-          STRSIZE H5T_VARIABLE;
-          STRPAD H5T_STR_NULLTERM;
-          CSET H5T_CSET_UTF8;
-          CTYPE H5T_C_S1;
-        }
-        DATASPACE  SCALAR
+      DATASET "cols" {
+         DATATYPE  H5T_IEEE_F64LE
+         DATASPACE  SIMPLE { ( 100 ) / ( 100 ) }
+         ATTRIBUTE "units" {
+            DATATYPE  H5T_STRING {
+               STRSIZE H5T_VARIABLE;
+               STRPAD H5T_STR_NULLTERM;
+               CSET H5T_CSET_UTF8;
+               CTYPE H5T_C_S1;
+            }
+            DATASPACE  SCALAR
+         }
       }
-    }
-    DATASET "data" {
-      DATATYPE  H5T_IEEE_F64LE
-      DATASPACE  SIMPLE { ( 100, 100 ) / ( 100, 100 ) }
-    }
-    DATASET "rows" {
-      DATATYPE  H5T_IEEE_F64LE
-      DATASPACE  SIMPLE { ( 100 ) / ( 100 ) }
-      ATTRIBUTE "units" {
-        DATATYPE  H5T_STRING {
-          STRSIZE H5T_VARIABLE;
-          STRPAD H5T_STR_NULLTERM;
-          CSET H5T_CSET_UTF8;
-          CTYPE H5T_C_S1;
-        }
-        DATASPACE  SCALAR
+      DATASET "data" {
+         DATATYPE  H5T_IEEE_F64LE
+         DATASPACE  SIMPLE { ( 100, 100 ) / ( 100, 100 ) }
       }
-    }
-  }
-  GROUP "no_axes" {
-    ATTRIBUTE "NX_class" {
-      DATATYPE  H5T_STRING {
-        STRSIZE H5T_VARIABLE;
-        STRPAD H5T_STR_NULLTERM;
-        CSET H5T_CSET_UTF8;
-        CTYPE H5T_C_S1;
+      DATASET "rows" {
+         DATATYPE  H5T_IEEE_F64LE
+         DATASPACE  SIMPLE { ( 100 ) / ( 100 ) }
+         ATTRIBUTE "units" {
+            DATATYPE  H5T_STRING {
+               STRSIZE H5T_VARIABLE;
+               STRPAD H5T_STR_NULLTERM;
+               CSET H5T_CSET_UTF8;
+               CTYPE H5T_C_S1;
+            }
+            DATASPACE  SCALAR
+         }
       }
-      DATASPACE  SCALAR
-    }
-    ATTRIBUTE "signal" {
-      DATATYPE  H5T_STRING {
-        STRSIZE H5T_VARIABLE;
-        STRPAD H5T_STR_NULLTERM;
-        CSET H5T_CSET_UTF8;
-        CTYPE H5T_C_S1;
+   }
+   GROUP "no_axes" {
+      ATTRIBUTE "NX_class" {
+         DATATYPE  H5T_STRING {
+            STRSIZE H5T_VARIABLE;
+            STRPAD H5T_STR_NULLTERM;
+            CSET H5T_CSET_UTF8;
+            CTYPE H5T_C_S1;
+         }
+         DATASPACE  SCALAR
       }
-      DATASPACE  SCALAR
-    }
-    DATASET "data" {
-      DATATYPE  H5T_IEEE_F64LE
-      DATASPACE  SIMPLE { ( 100, 100 ) / ( 100, 100 ) }
-    }
-  }
-  GROUP "no_units" {
-    ATTRIBUTE "NX_class" {
-      DATATYPE  H5T_STRING {
-        STRSIZE H5T_VARIABLE;
-        STRPAD H5T_STR_NULLTERM;
-        CSET H5T_CSET_UTF8;
-        CTYPE H5T_C_S1;
+      ATTRIBUTE "signal" {
+         DATATYPE  H5T_STRING {
+            STRSIZE H5T_VARIABLE;
+            STRPAD H5T_STR_NULLTERM;
+            CSET H5T_CSET_UTF8;
+            CTYPE H5T_C_S1;
+         }
+         DATASPACE  SCALAR
       }
-      DATASPACE  SCALAR
-    }
-    ATTRIBUTE "axes" {
-      DATATYPE  H5T_STRING {
-        STRSIZE H5T_VARIABLE;
-        STRPAD H5T_STR_NULLTERM;
-        CSET H5T_CSET_UTF8;
-        CTYPE H5T_C_S1;
+      DATASET "data" {
+         DATATYPE  H5T_IEEE_F64LE
+         DATASPACE  SIMPLE { ( 100, 100 ) / ( 100, 100 ) }
       }
-      DATASPACE  SIMPLE { ( 2 ) / ( 2 ) }
-    }
-    ATTRIBUTE "signal" {
-      DATATYPE  H5T_STRING {
-        STRSIZE H5T_VARIABLE;
-        STRPAD H5T_STR_NULLTERM;
-        CSET H5T_CSET_UTF8;
-        CTYPE H5T_C_S1;
+   }
+   GROUP "no_units" {
+      ATTRIBUTE "NX_class" {
+         DATATYPE  H5T_STRING {
+            STRSIZE H5T_VARIABLE;
+            STRPAD H5T_STR_NULLTERM;
+            CSET H5T_CSET_UTF8;
+            CTYPE H5T_C_S1;
+         }
+         DATASPACE  SCALAR
       }
-      DATASPACE  SCALAR
-    }
-    DATASET "cols" {
-      DATATYPE  H5T_IEEE_F64LE
-      DATASPACE  SIMPLE { ( 100 ) / ( 100 ) }
-    }
-    DATASET "data" {
-      DATATYPE  H5T_IEEE_F64LE
-      DATASPACE  SIMPLE { ( 100, 100 ) / ( 100, 100 ) }
-    }
-    DATASET "rows" {
-      DATATYPE  H5T_IEEE_F64LE
-      DATASPACE  SIMPLE { ( 100 ) / ( 100 ) }
-    }
-  }
-  GROUP "same_units" {
-    ATTRIBUTE "NX_class" {
-      DATATYPE  H5T_STRING {
-        STRSIZE H5T_VARIABLE;
-        STRPAD H5T_STR_NULLTERM;
-        CSET H5T_CSET_UTF8;
-        CTYPE H5T_C_S1;
+      ATTRIBUTE "axes" {
+         DATATYPE  H5T_STRING {
+            STRSIZE H5T_VARIABLE;
+            STRPAD H5T_STR_NULLTERM;
+            CSET H5T_CSET_UTF8;
+            CTYPE H5T_C_S1;
+         }
+         DATASPACE  SIMPLE { ( 2 ) / ( 2 ) }
       }
-      DATASPACE  SCALAR
-    }
-    ATTRIBUTE "axes" {
-      DATATYPE  H5T_STRING {
-        STRSIZE H5T_VARIABLE;
-        STRPAD H5T_STR_NULLTERM;
-        CSET H5T_CSET_UTF8;
-        CTYPE H5T_C_S1;
+      ATTRIBUTE "signal" {
+         DATATYPE  H5T_STRING {
+            STRSIZE H5T_VARIABLE;
+            STRPAD H5T_STR_NULLTERM;
+            CSET H5T_CSET_UTF8;
+            CTYPE H5T_C_S1;
+         }
+         DATASPACE  SCALAR
       }
-      DATASPACE  SIMPLE { ( 2 ) / ( 2 ) }
-    }
-    ATTRIBUTE "signal" {
-      DATATYPE  H5T_STRING {
-        STRSIZE H5T_VARIABLE;
-        STRPAD H5T_STR_NULLTERM;
-        CSET H5T_CSET_UTF8;
-        CTYPE H5T_C_S1;
+      DATASET "cols" {
+         DATATYPE  H5T_IEEE_F64LE
+         DATASPACE  SIMPLE { ( 100 ) / ( 100 ) }
       }
-      DATASPACE  SCALAR
-    }
-    DATASET "cols" {
-      DATATYPE  H5T_IEEE_F64LE
-      DATASPACE  SIMPLE { ( 100 ) / ( 100 ) }
-      ATTRIBUTE "units" {
-        DATATYPE  H5T_STRING {
-          STRSIZE H5T_VARIABLE;
-          STRPAD H5T_STR_NULLTERM;
-          CSET H5T_CSET_UTF8;
-          CTYPE H5T_C_S1;
-        }
-        DATASPACE  SCALAR
+      DATASET "data" {
+         DATATYPE  H5T_IEEE_F64LE
+         DATASPACE  SIMPLE { ( 100, 100 ) / ( 100, 100 ) }
       }
-    }
-    DATASET "data" {
-      DATATYPE  H5T_IEEE_F64LE
-      DATASPACE  SIMPLE { ( 100, 100 ) / ( 100, 100 ) }
-    }
-    DATASET "rows" {
-      DATATYPE  H5T_IEEE_F64LE
-      DATASPACE  SIMPLE { ( 100 ) / ( 100 ) }
-      ATTRIBUTE "units" {
-        DATATYPE  H5T_STRING {
-          STRSIZE H5T_VARIABLE;
-          STRPAD H5T_STR_NULLTERM;
-          CSET H5T_CSET_UTF8;
-          CTYPE H5T_C_S1;
-        }
-        DATASPACE  SCALAR
+      DATASET "rows" {
+         DATATYPE  H5T_IEEE_F64LE
+         DATASPACE  SIMPLE { ( 100 ) / ( 100 ) }
       }
-    }
-  }
-  GROUP "with-without_units" {
-    ATTRIBUTE "NX_class" {
-      DATATYPE  H5T_STRING {
-        STRSIZE H5T_VARIABLE;
-        STRPAD H5T_STR_NULLTERM;
-        CSET H5T_CSET_UTF8;
-        CTYPE H5T_C_S1;
+   }
+   GROUP "same_units" {
+      ATTRIBUTE "NX_class" {
+         DATATYPE  H5T_STRING {
+            STRSIZE H5T_VARIABLE;
+            STRPAD H5T_STR_NULLTERM;
+            CSET H5T_CSET_UTF8;
+            CTYPE H5T_C_S1;
+         }
+         DATASPACE  SCALAR
       }
-      DATASPACE  SCALAR
-    }
-    ATTRIBUTE "axes" {
-      DATATYPE  H5T_STRING {
-        STRSIZE H5T_VARIABLE;
-        STRPAD H5T_STR_NULLTERM;
-        CSET H5T_CSET_UTF8;
-        CTYPE H5T_C_S1;
+      ATTRIBUTE "axes" {
+         DATATYPE  H5T_STRING {
+            STRSIZE H5T_VARIABLE;
+            STRPAD H5T_STR_NULLTERM;
+            CSET H5T_CSET_UTF8;
+            CTYPE H5T_C_S1;
+         }
+         DATASPACE  SIMPLE { ( 2 ) / ( 2 ) }
       }
-      DATASPACE  SIMPLE { ( 2 ) / ( 2 ) }
-    }
-    ATTRIBUTE "signal" {
-      DATATYPE  H5T_STRING {
-        STRSIZE H5T_VARIABLE;
-        STRPAD H5T_STR_NULLTERM;
-        CSET H5T_CSET_UTF8;
-        CTYPE H5T_C_S1;
+      ATTRIBUTE "signal" {
+         DATATYPE  H5T_STRING {
+            STRSIZE H5T_VARIABLE;
+            STRPAD H5T_STR_NULLTERM;
+            CSET H5T_CSET_UTF8;
+            CTYPE H5T_C_S1;
+         }
+         DATASPACE  SCALAR
       }
-      DATASPACE  SCALAR
-    }
-    DATASET "cols" {
-      DATATYPE  H5T_IEEE_F64LE
-      DATASPACE  SIMPLE { ( 100 ) / ( 100 ) }
-    }
-    DATASET "data" {
-      DATATYPE  H5T_IEEE_F64LE
-      DATASPACE  SIMPLE { ( 100, 100 ) / ( 100, 100 ) }
-    }
-    DATASET "rows" {
-      DATATYPE  H5T_IEEE_F64LE
-      DATASPACE  SIMPLE { ( 100 ) / ( 100 ) }
-      ATTRIBUTE "units" {
-        DATATYPE  H5T_STRING {
-          STRSIZE H5T_VARIABLE;
-          STRPAD H5T_STR_NULLTERM;
-          CSET H5T_CSET_UTF8;
-          CTYPE H5T_C_S1;
-        }
-        DATASPACE  SCALAR
+      DATASET "cols" {
+         DATATYPE  H5T_IEEE_F64LE
+         DATASPACE  SIMPLE { ( 100 ) / ( 100 ) }
+         ATTRIBUTE "units" {
+            DATATYPE  H5T_STRING {
+               STRSIZE H5T_VARIABLE;
+               STRPAD H5T_STR_NULLTERM;
+               CSET H5T_CSET_UTF8;
+               CTYPE H5T_C_S1;
+            }
+            DATASPACE  SCALAR
+         }
       }
-    }
-  }
+      DATASET "data" {
+         DATATYPE  H5T_IEEE_F64LE
+         DATASPACE  SIMPLE { ( 100, 100 ) / ( 100, 100 ) }
+      }
+      DATASET "rows" {
+         DATATYPE  H5T_IEEE_F64LE
+         DATASPACE  SIMPLE { ( 100 ) / ( 100 ) }
+         ATTRIBUTE "units" {
+            DATATYPE  H5T_STRING {
+               STRSIZE H5T_VARIABLE;
+               STRPAD H5T_STR_NULLTERM;
+               CSET H5T_CSET_UTF8;
+               CTYPE H5T_C_S1;
+            }
+            DATASPACE  SCALAR
+         }
+      }
+   }
+   GROUP "with-without_units" {
+      ATTRIBUTE "NX_class" {
+         DATATYPE  H5T_STRING {
+            STRSIZE H5T_VARIABLE;
+            STRPAD H5T_STR_NULLTERM;
+            CSET H5T_CSET_UTF8;
+            CTYPE H5T_C_S1;
+         }
+         DATASPACE  SCALAR
+      }
+      ATTRIBUTE "axes" {
+         DATATYPE  H5T_STRING {
+            STRSIZE H5T_VARIABLE;
+            STRPAD H5T_STR_NULLTERM;
+            CSET H5T_CSET_UTF8;
+            CTYPE H5T_C_S1;
+         }
+         DATASPACE  SIMPLE { ( 2 ) / ( 2 ) }
+      }
+      ATTRIBUTE "signal" {
+         DATATYPE  H5T_STRING {
+            STRSIZE H5T_VARIABLE;
+            STRPAD H5T_STR_NULLTERM;
+            CSET H5T_CSET_UTF8;
+            CTYPE H5T_C_S1;
+         }
+         DATASPACE  SCALAR
+      }
+      DATASET "cols" {
+         DATATYPE  H5T_IEEE_F64LE
+         DATASPACE  SIMPLE { ( 100 ) / ( 100 ) }
+      }
+      DATASET "data" {
+         DATATYPE  H5T_IEEE_F64LE
+         DATASPACE  SIMPLE { ( 100, 100 ) / ( 100, 100 ) }
+      }
+      DATASET "rows" {
+         DATATYPE  H5T_IEEE_F64LE
+         DATASPACE  SIMPLE { ( 100 ) / ( 100 ) }
+         ATTRIBUTE "units" {
+            DATATYPE  H5T_STRING {
+               STRSIZE H5T_VARIABLE;
+               STRPAD H5T_STR_NULLTERM;
+               CSET H5T_CSET_UTF8;
+               CTYPE H5T_C_S1;
+            }
+            DATASPACE  SCALAR
+         }
+      }
+   }
+}
 }

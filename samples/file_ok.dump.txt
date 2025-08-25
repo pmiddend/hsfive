@@ -1,248 +1,253 @@
+HDF5 "file_ok.nxs" {
 GROUP "/" {
-  ATTRIBUTE "HDF5_Version" {
-    DATATYPE  H5T_STRING {
-      STRSIZE H5T_VARIABLE;
-      STRPAD H5T_STR_NULLTERM;
-      CSET H5T_CSET_UTF8;
-      CTYPE H5T_C_S1;
-    }
-    DATASPACE  SCALAR
-  }
-  ATTRIBUTE "file_name" {
-    DATATYPE  H5T_STRING {
-      STRSIZE H5T_VARIABLE;
-      STRPAD H5T_STR_NULLTERM;
-      CSET H5T_CSET_UTF8;
-      CTYPE H5T_C_S1;
-    }
-    DATASPACE  SCALAR
-  }
-  ATTRIBUTE "file_time" {
-    DATATYPE  H5T_STRING {
-      STRSIZE H5T_VARIABLE;
-      STRPAD H5T_STR_NULLTERM;
-      CSET H5T_CSET_UTF8;
-      CTYPE H5T_C_S1;
-    }
-    DATASPACE  SCALAR
-  }
-  ATTRIBUTE "h5py_version" {
-    DATATYPE  H5T_STRING {
-      STRSIZE H5T_VARIABLE;
-      STRPAD H5T_STR_NULLTERM;
-      CSET H5T_CSET_UTF8;
-      CTYPE H5T_C_S1;
-    }
-    DATASPACE  SCALAR
-  }
-  ATTRIBUTE "nexusformat_version" {
-    DATATYPE  H5T_STRING {
-      STRSIZE H5T_VARIABLE;
-      STRPAD H5T_STR_NULLTERM;
-      CSET H5T_CSET_UTF8;
-      CTYPE H5T_C_S1;
-    }
-    DATASPACE  SCALAR
-  }
-  GROUP "entry" {
-    ATTRIBUTE "NX_class" {
+   ATTRIBUTE "HDF5_Version" {
       DATATYPE  H5T_STRING {
-        STRSIZE H5T_VARIABLE;
-        STRPAD H5T_STR_NULLTERM;
-        CSET H5T_CSET_UTF8;
-        CTYPE H5T_C_S1;
+         STRSIZE H5T_VARIABLE;
+         STRPAD H5T_STR_NULLTERM;
+         CSET H5T_CSET_UTF8;
+         CTYPE H5T_C_S1;
       }
       DATASPACE  SCALAR
-    }
-    ATTRIBUTE "default" {
+   }
+   ATTRIBUTE "file_name" {
       DATATYPE  H5T_STRING {
-        STRSIZE H5T_VARIABLE;
-        STRPAD H5T_STR_NULLTERM;
-        CSET H5T_CSET_UTF8;
-        CTYPE H5T_C_S1;
+         STRSIZE H5T_VARIABLE;
+         STRPAD H5T_STR_NULLTERM;
+         CSET H5T_CSET_UTF8;
+         CTYPE H5T_C_S1;
       }
       DATASPACE  SCALAR
-    }
-    ATTRIBUTE "definition" {
+   }
+   ATTRIBUTE "file_time" {
       DATATYPE  H5T_STRING {
-        STRSIZE H5T_VARIABLE;
-        STRPAD H5T_STR_NULLTERM;
-        CSET H5T_CSET_UTF8;
-        CTYPE H5T_C_S1;
+         STRSIZE H5T_VARIABLE;
+         STRPAD H5T_STR_NULLTERM;
+         CSET H5T_CSET_UTF8;
+         CTYPE H5T_C_S1;
       }
       DATASPACE  SCALAR
-    }
-    GROUP "complex_field" {
+   }
+   ATTRIBUTE "h5py_version" {
+      DATATYPE  H5T_STRING {
+         STRSIZE H5T_VARIABLE;
+         STRPAD H5T_STR_NULLTERM;
+         CSET H5T_CSET_UTF8;
+         CTYPE H5T_C_S1;
+      }
+      DATASPACE  SCALAR
+   }
+   ATTRIBUTE "nexusformat_version" {
+      DATATYPE  H5T_STRING {
+         STRSIZE H5T_VARIABLE;
+         STRPAD H5T_STR_NULLTERM;
+         CSET H5T_CSET_UTF8;
+         CTYPE H5T_C_S1;
+      }
+      DATASPACE  SCALAR
+   }
+   GROUP "entry" {
       ATTRIBUTE "NX_class" {
-        DATATYPE  H5T_STRING {
-          STRSIZE H5T_VARIABLE;
-          STRPAD H5T_STR_NULLTERM;
-          CSET H5T_CSET_UTF8;
-          CTYPE H5T_C_S1;
-        }
-        DATASPACE  SCALAR
-      }
-      ATTRIBUTE "axes" {
-        DATATYPE  H5T_STRING {
-          STRSIZE H5T_VARIABLE;
-          STRPAD H5T_STR_NULLTERM;
-          CSET H5T_CSET_UTF8;
-          CTYPE H5T_C_S1;
-        }
-        DATASPACE  SIMPLE { ( 3 ) / ( 3 ) }
-      }
-      ATTRIBUTE "signal" {
-        DATATYPE  H5T_STRING {
-          STRSIZE H5T_VARIABLE;
-          STRPAD H5T_STR_NULLTERM;
-          CSET H5T_CSET_UTF8;
-          CTYPE H5T_C_S1;
-        }
-        DATASPACE  SCALAR
-      }
-      DATASET "complex_amplitude" {
-        invalid datatype: DatatypeCompoundV1 [CompoundDatatypeMemberV1 {cdm1Name = "r", cdm1ByteOffset = 0, cdm1Dimensions = [], cdm1Datatype = DatatypeMessageData {datatypeMessageVersion = 1, datatypeClass = DatatypeFloatingPoint {floatingPointByteOrder = LittleEndian, floatingPointLowBitPad = False, floatingPointHighBitPad = False, floatingPointInternalBitPad = False, floatingPointMantissaNormalization = NoNormalization, floatingPointSignLocation = 63, floatingPointBitOffset = 0, floatingPointBitPrecision = 64, floatingPointExponentLocation = 52, floatingPointExponentSize = 11, floatingPointMantissaLocation = 0, floatingPointMantissaSize = 52, floatingPointExponentBias = 1023}}},CompoundDatatypeMemberV1 {cdm1Name = "i", cdm1ByteOffset = 8, cdm1Dimensions = [], cdm1Datatype = DatatypeMessageData {datatypeMessageVersion = 1, datatypeClass = DatatypeFloatingPoint {floatingPointByteOrder = LittleEndian, floatingPointLowBitPad = False, floatingPointHighBitPad = False, floatingPointInternalBitPad = False, floatingPointMantissaNormalization = NoNormalization, floatingPointSignLocation = 63, floatingPointBitOffset = 0, floatingPointBitPrecision = 64, floatingPointExponentLocation = 52, floatingPointExponentSize = 11, floatingPointMantissaLocation = 0, floatingPointMantissaSize = 52, floatingPointExponentBias = 1023}}}]
-        DATASPACE  SIMPLE { ( 7, 41, 41 ) / ( 7, 41, 41 ) }
-        ATTRIBUTE "unit" {
-          DATATYPE  H5T_STRING {
+         DATATYPE  H5T_STRING {
             STRSIZE H5T_VARIABLE;
             STRPAD H5T_STR_NULLTERM;
             CSET H5T_CSET_UTF8;
             CTYPE H5T_C_S1;
-          }
-          DATASPACE  SCALAR
-        }
+         }
+         DATASPACE  SCALAR
       }
-      DATASET "photon_energy" {
-        DATATYPE  H5T_IEEE_F64LE
-        DATASPACE  SIMPLE { ( 7 ) / ( 7 ) }
-        ATTRIBUTE "target" {
-          DATATYPE  H5T_STRING {
+      ATTRIBUTE "default" {
+         DATATYPE  H5T_STRING {
             STRSIZE H5T_VARIABLE;
             STRPAD H5T_STR_NULLTERM;
             CSET H5T_CSET_UTF8;
             CTYPE H5T_C_S1;
-          }
-          DATASPACE  SCALAR
-        }
-        ATTRIBUTE "unit" {
-          DATATYPE  H5T_STRING {
+         }
+         DATASPACE  SCALAR
+      }
+      ATTRIBUTE "definition" {
+         DATATYPE  H5T_STRING {
             STRSIZE H5T_VARIABLE;
             STRPAD H5T_STR_NULLTERM;
             CSET H5T_CSET_UTF8;
             CTYPE H5T_C_S1;
-          }
-          DATASPACE  SCALAR
-        }
+         }
+         DATASPACE  SCALAR
       }
-      DATASET "theta_x" {
-        DATATYPE  H5T_IEEE_F64LE
-        DATASPACE  SIMPLE { ( 41 ) / ( 41 ) }
-        ATTRIBUTE "target" {
-          DATATYPE  H5T_STRING {
-            STRSIZE H5T_VARIABLE;
-            STRPAD H5T_STR_NULLTERM;
-            CSET H5T_CSET_UTF8;
-            CTYPE H5T_C_S1;
-          }
-          DATASPACE  SCALAR
-        }
-        ATTRIBUTE "unit" {
-          DATATYPE  H5T_STRING {
-            STRSIZE H5T_VARIABLE;
-            STRPAD H5T_STR_NULLTERM;
-            CSET H5T_CSET_UTF8;
-            CTYPE H5T_C_S1;
-          }
-          DATASPACE  SCALAR
-        }
+      GROUP "complex_field" {
+         ATTRIBUTE "NX_class" {
+            DATATYPE  H5T_STRING {
+               STRSIZE H5T_VARIABLE;
+               STRPAD H5T_STR_NULLTERM;
+               CSET H5T_CSET_UTF8;
+               CTYPE H5T_C_S1;
+            }
+            DATASPACE  SCALAR
+         }
+         ATTRIBUTE "axes" {
+            DATATYPE  H5T_STRING {
+               STRSIZE H5T_VARIABLE;
+               STRPAD H5T_STR_NULLTERM;
+               CSET H5T_CSET_UTF8;
+               CTYPE H5T_C_S1;
+            }
+            DATASPACE  SIMPLE { ( 3 ) / ( 3 ) }
+         }
+         ATTRIBUTE "signal" {
+            DATATYPE  H5T_STRING {
+               STRSIZE H5T_VARIABLE;
+               STRPAD H5T_STR_NULLTERM;
+               CSET H5T_CSET_UTF8;
+               CTYPE H5T_C_S1;
+            }
+            DATASPACE  SCALAR
+         }
+         DATASET "complex_amplitude" {
+            DATATYPE  H5T_COMPOUND {
+               H5T_IEEE_F64LE "r";
+               H5T_IEEE_F64LE "i";
+            }
+            DATASPACE  SIMPLE { ( 7, 41, 41 ) / ( 7, 41, 41 ) }
+            ATTRIBUTE "unit" {
+               DATATYPE  H5T_STRING {
+                  STRSIZE H5T_VARIABLE;
+                  STRPAD H5T_STR_NULLTERM;
+                  CSET H5T_CSET_UTF8;
+                  CTYPE H5T_C_S1;
+               }
+               DATASPACE  SCALAR
+            }
+         }
+         DATASET "photon_energy" {
+            DATATYPE  H5T_IEEE_F64LE
+            DATASPACE  SIMPLE { ( 7 ) / ( 7 ) }
+            ATTRIBUTE "target" {
+               DATATYPE  H5T_STRING {
+                  STRSIZE H5T_VARIABLE;
+                  STRPAD H5T_STR_NULLTERM;
+                  CSET H5T_CSET_UTF8;
+                  CTYPE H5T_C_S1;
+               }
+               DATASPACE  SCALAR
+            }
+            ATTRIBUTE "unit" {
+               DATATYPE  H5T_STRING {
+                  STRSIZE H5T_VARIABLE;
+                  STRPAD H5T_STR_NULLTERM;
+                  CSET H5T_CSET_UTF8;
+                  CTYPE H5T_C_S1;
+               }
+               DATASPACE  SCALAR
+            }
+         }
+         DATASET "theta_x" {
+            DATATYPE  H5T_IEEE_F64LE
+            DATASPACE  SIMPLE { ( 41 ) / ( 41 ) }
+            ATTRIBUTE "target" {
+               DATATYPE  H5T_STRING {
+                  STRSIZE H5T_VARIABLE;
+                  STRPAD H5T_STR_NULLTERM;
+                  CSET H5T_CSET_UTF8;
+                  CTYPE H5T_C_S1;
+               }
+               DATASPACE  SCALAR
+            }
+            ATTRIBUTE "unit" {
+               DATATYPE  H5T_STRING {
+                  STRSIZE H5T_VARIABLE;
+                  STRPAD H5T_STR_NULLTERM;
+                  CSET H5T_CSET_UTF8;
+                  CTYPE H5T_C_S1;
+               }
+               DATASPACE  SCALAR
+            }
+         }
+         DATASET "theta_y" {
+            DATATYPE  H5T_IEEE_F64LE
+            DATASPACE  SIMPLE { ( 41 ) / ( 41 ) }
+            ATTRIBUTE "target" {
+               DATATYPE  H5T_STRING {
+                  STRSIZE H5T_VARIABLE;
+                  STRPAD H5T_STR_NULLTERM;
+                  CSET H5T_CSET_UTF8;
+                  CTYPE H5T_C_S1;
+               }
+               DATASPACE  SCALAR
+            }
+            ATTRIBUTE "unit" {
+               DATATYPE  H5T_STRING {
+                  STRSIZE H5T_VARIABLE;
+                  STRPAD H5T_STR_NULLTERM;
+                  CSET H5T_CSET_UTF8;
+                  CTYPE H5T_C_S1;
+               }
+               DATASPACE  SCALAR
+            }
+         }
       }
-      DATASET "theta_y" {
-        DATATYPE  H5T_IEEE_F64LE
-        DATASPACE  SIMPLE { ( 41 ) / ( 41 ) }
-        ATTRIBUTE "target" {
-          DATATYPE  H5T_STRING {
-            STRSIZE H5T_VARIABLE;
-            STRPAD H5T_STR_NULLTERM;
-            CSET H5T_CSET_UTF8;
-            CTYPE H5T_C_S1;
-          }
-          DATASPACE  SCALAR
-        }
-        ATTRIBUTE "unit" {
-          DATATYPE  H5T_STRING {
-            STRSIZE H5T_VARIABLE;
-            STRPAD H5T_STR_NULLTERM;
-            CSET H5T_CSET_UTF8;
-            CTYPE H5T_C_S1;
-          }
-          DATASPACE  SCALAR
-        }
+      GROUP "radiated_field" {
+         ATTRIBUTE "NX_class" {
+            DATATYPE  H5T_STRING {
+               STRSIZE H5T_VARIABLE;
+               STRPAD H5T_STR_NULLTERM;
+               CSET H5T_CSET_UTF8;
+               CTYPE H5T_C_S1;
+            }
+            DATASPACE  SCALAR
+         }
+         ATTRIBUTE "auxiliary_signals" {
+            DATATYPE  H5T_STRING {
+               STRSIZE H5T_VARIABLE;
+               STRPAD H5T_STR_NULLTERM;
+               CSET H5T_CSET_UTF8;
+               CTYPE H5T_C_S1;
+            }
+            DATASPACE  SCALAR
+         }
+         ATTRIBUTE "axes" {
+            DATATYPE  H5T_STRING {
+               STRSIZE H5T_VARIABLE;
+               STRPAD H5T_STR_NULLTERM;
+               CSET H5T_CSET_UTF8;
+               CTYPE H5T_C_S1;
+            }
+            DATASPACE  SIMPLE { ( 3 ) / ( 3 ) }
+         }
+         ATTRIBUTE "signal" {
+            DATATYPE  H5T_STRING {
+               STRSIZE H5T_VARIABLE;
+               STRPAD H5T_STR_NULLTERM;
+               CSET H5T_CSET_UTF8;
+               CTYPE H5T_C_S1;
+            }
+            DATASPACE  SCALAR
+         }
+         DATASET "amplitude" {
+            DATATYPE  H5T_IEEE_F64LE
+            DATASPACE  SIMPLE { ( 7, 41, 41 ) / ( 7, 41, 41 ) }
+            ATTRIBUTE "unit" {
+               DATATYPE  H5T_STRING {
+                  STRSIZE H5T_VARIABLE;
+                  STRPAD H5T_STR_NULLTERM;
+                  CSET H5T_CSET_UTF8;
+                  CTYPE H5T_C_S1;
+               }
+               DATASPACE  SCALAR
+            }
+         }
+         DATASET "phase" {
+            DATATYPE  H5T_IEEE_F64LE
+            DATASPACE  SIMPLE { ( 7, 41, 41 ) / ( 7, 41, 41 ) }
+            ATTRIBUTE "unit" {
+               DATATYPE  H5T_STRING {
+                  STRSIZE H5T_VARIABLE;
+                  STRPAD H5T_STR_NULLTERM;
+                  CSET H5T_CSET_UTF8;
+                  CTYPE H5T_C_S1;
+               }
+               DATASPACE  SCALAR
+            }
+         }
       }
-    }
-    GROUP "radiated_field" {
-      ATTRIBUTE "NX_class" {
-        DATATYPE  H5T_STRING {
-          STRSIZE H5T_VARIABLE;
-          STRPAD H5T_STR_NULLTERM;
-          CSET H5T_CSET_UTF8;
-          CTYPE H5T_C_S1;
-        }
-        DATASPACE  SCALAR
-      }
-      ATTRIBUTE "auxiliary_signals" {
-        DATATYPE  H5T_STRING {
-          STRSIZE H5T_VARIABLE;
-          STRPAD H5T_STR_NULLTERM;
-          CSET H5T_CSET_UTF8;
-          CTYPE H5T_C_S1;
-        }
-        DATASPACE  SCALAR
-      }
-      ATTRIBUTE "axes" {
-        DATATYPE  H5T_STRING {
-          STRSIZE H5T_VARIABLE;
-          STRPAD H5T_STR_NULLTERM;
-          CSET H5T_CSET_UTF8;
-          CTYPE H5T_C_S1;
-        }
-        DATASPACE  SIMPLE { ( 3 ) / ( 3 ) }
-      }
-      ATTRIBUTE "signal" {
-        DATATYPE  H5T_STRING {
-          STRSIZE H5T_VARIABLE;
-          STRPAD H5T_STR_NULLTERM;
-          CSET H5T_CSET_UTF8;
-          CTYPE H5T_C_S1;
-        }
-        DATASPACE  SCALAR
-      }
-      DATASET "amplitude" {
-        DATATYPE  H5T_IEEE_F64LE
-        DATASPACE  SIMPLE { ( 7, 41, 41 ) / ( 7, 41, 41 ) }
-        ATTRIBUTE "unit" {
-          DATATYPE  H5T_STRING {
-            STRSIZE H5T_VARIABLE;
-            STRPAD H5T_STR_NULLTERM;
-            CSET H5T_CSET_UTF8;
-            CTYPE H5T_C_S1;
-          }
-          DATASPACE  SCALAR
-        }
-      }
-      DATASET "phase" {
-        DATATYPE  H5T_IEEE_F64LE
-        DATASPACE  SIMPLE { ( 7, 41, 41 ) / ( 7, 41, 41 ) }
-        ATTRIBUTE "unit" {
-          DATATYPE  H5T_STRING {
-            STRSIZE H5T_VARIABLE;
-            STRPAD H5T_STR_NULLTERM;
-            CSET H5T_CSET_UTF8;
-            CTYPE H5T_C_S1;
-          }
-          DATASPACE  SCALAR
-        }
-      }
-    }
-  }
+   }
+}
 }
